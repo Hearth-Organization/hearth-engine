@@ -2934,7 +2934,7 @@ namespace AzToolsFramework
             // This action is only accessible outside of Component Modes
             actionManager->AssignModeToAction(DefaultActionContextModeIdentifier, actionIdentifier);
 
-            hotkeyManager->SetActionHotKey(actionIdentifier, "Ctrl+Shift+L");
+            hotkeyManager->SetActionHotKey(actionIdentifier, "Ctrl+Alt+L"); // Hearth Engine: Ctrl+Shift+L opens the Level Generator
         }
 
         // Transform Mode - Move
