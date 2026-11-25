@@ -414,7 +414,7 @@ public:
         QCommandLineParser parser;
         parser.addHelpOption();
         parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
-        parser.setApplicationDescription(QObject::tr("O3DE Editor"));
+        parser.setApplicationDescription(QObject::tr("Hearth Engine Editor"));
         // nsDocumentRevisionDebugMode is an argument that the macOS system passed into an App bundle that is being debugged.
         // Need to include it here so that Qt argument parser does not error out.
         bool nsDocumentRevisionsDebugMode = false;
@@ -3115,7 +3115,7 @@ void CCryEditApp::SetEditorWindowTitle(QString sTitleStr, QString sPreTitleStr, 
     {
         if (sTitleStr.isEmpty())
         {
-            sTitleStr = QObject::tr("O3DE Editor [%1]").arg(FormatVersion(m_pEditor->GetFileVersion()));
+            sTitleStr = QObject::tr("Hearth Engine [%1]").arg(FormatVersion(m_pEditor->GetFileVersion()));
         }
 
         if (!sPreTitleStr.isEmpty())
