@@ -284,6 +284,8 @@ set(FILES
     HearthAudioPane.h
     HearthPrefabPane.cpp
     HearthPrefabPane.h
+    HearthScriptConsole.cpp
+    HearthScriptConsole.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

@@ -27,6 +27,7 @@
 #include "HearthPhysicsPane.h"
 #include "HearthAudioPane.h"
 #include "HearthPrefabPane.h"
+#include "HearthScriptConsole.h"
 
 #include <algorithm>
 
@@ -722,6 +723,7 @@ void MainWindow::RegisterStdViewClasses()
     HearthPhysicsPane::RegisterViewClass();
     HearthAudioPane::RegisterViewClass();
     HearthPrefabPane::RegisterViewClass();
+    HearthScriptConsole::RegisterViewClass();
     ConsoleVariableEditor::RegisterViewClass();
     CSettingsManagerDialog::RegisterViewClass();
     AzAssetBrowserWindow::RegisterViewClass();
