@@ -266,6 +266,8 @@ set(FILES
     HearthVoiceStudio.h
     HearthSettingsPane.cpp
     HearthSettingsPane.h
+    HearthAssetBrowser.cpp
+    HearthAssetBrowser.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

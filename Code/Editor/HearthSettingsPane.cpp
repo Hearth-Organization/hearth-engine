@@ -45,19 +45,19 @@ namespace
 {
     namespace Hearth = AzQtComponents::Hearth;
 
-    QVariant Get(const QString& key, const QVariant& fallback)
+    QVariant SettingsGet(const QString& key, const QVariant& fallback)
     {
         QScopedPointer<QSettings> settings(Hearth::NewSettings());
         return settings->value(key, fallback);
     }
 
-    void Set(const QString& key, const QVariant& value)
+    void SettingsSet(const QString& key, const QVariant& value)
     {
         QScopedPointer<QSettings> settings(Hearth::NewSettings());
         settings->setValue(key, value);
     }
 
-    void Console(const QString& command)
+    void SettingsConsole(const QString& command)
     {
         // r_renderScale is an AZ cvar; sys_MaxFPS and ed_backgroundUpdatePeriod are older engine cvars.
         if (auto* console = AZ::Interface<AZ::IConsole>::Get())
@@ -74,7 +74,7 @@ namespace
     }
 
     //! "Intel i3-N305 · 8 cores · Intel UHD graphics · 7.6 GB memory"
-    QString DescribeComputer()
+    QString SettingsDescribeComputer()
     {
         QString cpu;
         QFile cpuinfo(QStringLiteral("/proc/cpuinfo"));
@@ -123,13 +123,13 @@ namespace
         return parts.join(QStringLiteral(" · "));
     }
 
-    Hearth::Toggle* SettingToggle(const QString& key, bool fallback, QWidget* parent, std::function<void(bool)> also = {})
+    Hearth::Toggle* SettingsSettingToggle(const QString& key, bool fallback, QWidget* parent, std::function<void(bool)> also = {})
     {
         auto* toggle = new Hearth::Toggle(parent);
-        toggle->setChecked(Get(key, fallback).toBool());
+        toggle->setChecked(SettingsGet(key, fallback).toBool());
         QObject::connect(toggle, &QAbstractButton::toggled, toggle, [key, also](bool on)
         {
-            Set(key, on);
+            SettingsSet(key, on);
             if (also)
             {
                 also(on);
@@ -138,7 +138,7 @@ namespace
         return toggle;
     }
 
-    QWidget* Segmented(const QStringList& labels, int current, QWidget* parent, std::function<void(int)> changed)
+    QWidget* SettingsSegmented(const QStringList& labels, int current, QWidget* parent, std::function<void(int)> changed)
     {
         auto* holder = new QWidget(parent);
         holder->setObjectName(QStringLiteral("Segmented"));
@@ -172,7 +172,7 @@ namespace
         return holder;
     }
 
-    QFrame* Section(QWidget* parent, const QString& title, QVBoxLayout** layout)
+    QFrame* SettingsSection(QWidget* parent, const QString& title, QVBoxLayout** layout)
     {
         QFrame* card = Hearth::MakeCard(parent, layout);
         QLabel* heading = Hearth::MakeLabel(title, QStringLiteral("title"), card);
@@ -261,8 +261,8 @@ QWidget* HearthSettingsPane::BuildPerformance()
     auto* layout = static_cast<QVBoxLayout*>(page->layout());
 
     QVBoxLayout* laptop = nullptr;
-    QFrame* laptopCard = Section(page, tr("This laptop"), &laptop);
-    laptop->addWidget(Hearth::MakeLabel(DescribeComputer(), QStringLiteral("dim"), laptopCard));
+    QFrame* laptopCard = SettingsSection(page, tr("This laptop"), &laptop);
+    laptop->addWidget(Hearth::MakeLabel(SettingsDescribeComputer(), QStringLiteral("dim"), laptopCard));
     auto* presets = new QHBoxLayout();
     presets->setSpacing(8);
     struct Preset
@@ -274,7 +274,7 @@ QWidget* HearthSettingsPane::BuildPerformance()
     const QVector<Preset> list = { { QStringLiteral("light"), tr("Battery"), tr("30 fps cap, low lights, 2 build jobs") },
                                    { QStringLiteral("balanced"), tr("Balanced"), tr("Full viewport, 4 build jobs, shadows on") },
                                    { QStringLiteral("full"), tr("Full power"), tr("Plugged in, nothing else open") } };
-    const QString current = Get(QStringLiteral("laptop/preset"), QStringLiteral("light")).toString();
+    const QString current = SettingsGet(QStringLiteral("laptop/preset"), QStringLiteral("light")).toString();
     auto cards = std::make_shared<QList<QPushButton*>>();
     for (const Preset& preset : list)
     {
@@ -300,13 +300,13 @@ QWidget* HearthSettingsPane::BuildPerformance()
             {
                 other->setChecked(other == card);
             }
-            Set(QStringLiteral("laptop/preset"), key);
-            Set(QStringLiteral("laptop/viewportScale"), key == QLatin1String("light") ? 0.5 : 1.0);
-            Set(QStringLiteral("laptop/shadows"), key != QLatin1String("light"));
-            Set(QStringLiteral("laptop/pauseAssetsWhileGaming"), key == QLatin1String("light"));
-            Set(QStringLiteral("laptop/fpsCap"), key == QLatin1String("light") ? 30 : 0);
-            Console(QStringLiteral("r_renderScale %1").arg(key == QLatin1String("light") ? 0.5 : 1.0));
-            Console(key == QLatin1String("light") ? QStringLiteral("sys_MaxFPS 30") : QStringLiteral("sys_MaxFPS 0"));
+            SettingsSet(QStringLiteral("laptop/preset"), key);
+            SettingsSet(QStringLiteral("laptop/viewportScale"), key == QLatin1String("light") ? 0.5 : 1.0);
+            SettingsSet(QStringLiteral("laptop/shadows"), key != QLatin1String("light"));
+            SettingsSet(QStringLiteral("laptop/pauseAssetsWhileGaming"), key == QLatin1String("light"));
+            SettingsSet(QStringLiteral("laptop/fpsCap"), key == QLatin1String("light") ? 30 : 0);
+            SettingsConsole(QStringLiteral("r_renderScale %1").arg(key == QLatin1String("light") ? 0.5 : 1.0));
+            SettingsConsole(key == QLatin1String("light") ? QStringLiteral("sys_MaxFPS 30") : QStringLiteral("sys_MaxFPS 0"));
         });
         cards->append(card);
         presets->addWidget(card, 1);
@@ -315,46 +315,46 @@ QWidget* HearthSettingsPane::BuildPerformance()
     layout->addWidget(laptopCard);
 
     QVBoxLayout* memory = nullptr;
-    QFrame* memoryCard = Section(page, tr("Memory safety"), &memory);
+    QFrame* memoryCard = SettingsSection(page, tr("Memory safety"), &memory);
     memory->addWidget(Hearth::MakeSettingRow(tr("Never let builds freeze the laptop"), tr("Builds slow down instead of using all memory"),
-                                             SettingToggle(QStringLiteral("laptop/limitBuildMemory"), true, memoryCard), memoryCard));
+                                             SettingsSettingToggle(QStringLiteral("laptop/limitBuildMemory"), true, memoryCard), memoryCard));
     auto* jobs = new QComboBox(memoryCard);
     jobs->addItem(tr("Auto · %1").arg(qMax(1, QThread::idealThreadCount() / 3)), 0);
     for (int n = 1; n <= QThread::idealThreadCount(); ++n)
     {
         jobs->addItem(QString::number(n), n);
     }
-    const int savedJobs = Get(QStringLiteral("laptop/buildJobsChoice"), 0).toInt();
+    const int savedJobs = SettingsGet(QStringLiteral("laptop/buildJobsChoice"), 0).toInt();
     jobs->setCurrentIndex(qMax(0, jobs->findData(savedJobs)));
     connect(jobs, QOverload<int>::of(&QComboBox::currentIndexChanged), jobs, [jobs](int)
     {
         const int choice = jobs->currentData().toInt();
-        Set(QStringLiteral("laptop/buildJobsChoice"), choice);
-        Set(QStringLiteral("laptop/buildJobs"), choice > 0 ? choice : qMax(1, QThread::idealThreadCount() / 3));
+        SettingsSet(QStringLiteral("laptop/buildJobsChoice"), choice);
+        SettingsSet(QStringLiteral("laptop/buildJobs"), choice > 0 ? choice : qMax(1, QThread::idealThreadCount() / 3));
     });
     memory->addWidget(Hearth::MakeSettingRow(tr("Build jobs at once"), tr("Automatic: about one per 900 MB free"), jobs, memoryCard));
     memory->addWidget(Hearth::MakeSettingRow(tr("Wait for builds before opening the editor"), tr("Opening both at once can run out of memory"),
-                                             SettingToggle(QStringLiteral("laptop/waitForBuilds"), true, memoryCard), memoryCard));
+                                             SettingsSettingToggle(QStringLiteral("laptop/waitForBuilds"), true, memoryCard), memoryCard));
     memory->addWidget(Hearth::MakeSettingRow(tr("Build in the cloud"), tr("Big engine builds run on GitHub (32-core), not on the laptop"),
-                                             SettingToggle(QStringLiteral("laptop/cloudEngineBuilds"), true, memoryCard), memoryCard));
+                                             SettingsSettingToggle(QStringLiteral("laptop/cloudEngineBuilds"), true, memoryCard), memoryCard));
     layout->addWidget(memoryCard);
 
     QVBoxLayout* viewport = nullptr;
-    QFrame* viewportCard = Section(page, tr("Viewport"), &viewport);
-    const double scale = Get(QStringLiteral("laptop/viewportScale"), 1.0).toDouble();
+    QFrame* viewportCard = SettingsSection(page, tr("Viewport"), &viewport);
+    const double scale = SettingsGet(QStringLiteral("laptop/viewportScale"), 1.0).toDouble();
     const int scaleIndex = scale <= 0.55 ? 0 : (scale <= 0.8 ? 1 : 2);
     viewport->addWidget(Hearth::MakeSettingRow(tr("Render scale in the editor"), tr("Lower is smoother on built-in graphics"),
-                                               Segmented({ QStringLiteral("50%"), QStringLiteral("75%"), QStringLiteral("100%") }, scaleIndex, viewportCard, [](int i)
+                                               SettingsSegmented({ QStringLiteral("50%"), QStringLiteral("75%"), QStringLiteral("100%") }, scaleIndex, viewportCard, [](int i)
                                                {
                                                    const double value = i == 0 ? 0.5 : (i == 1 ? 0.75 : 1.0);
-                                                   Set(QStringLiteral("laptop/viewportScale"), value);
-                                                   Console(QStringLiteral("r_renderScale %1").arg(value));
+                                                   SettingsSet(QStringLiteral("laptop/viewportScale"), value);
+                                                   SettingsConsole(QStringLiteral("r_renderScale %1").arg(value));
                                                }),
                                                viewportCard));
     viewport->addWidget(Hearth::MakeSettingRow(tr("Pause the viewport when the editor isn't focused"), tr("Saves power while you're in another window"),
-                                               SettingToggle(QStringLiteral("editor/pauseWhenUnfocused"), true, viewportCard, [](bool on)
+                                               SettingsSettingToggle(QStringLiteral("editor/pauseWhenUnfocused"), true, viewportCard, [](bool on)
                                                {
-                                                   Console(on ? QStringLiteral("ed_backgroundUpdatePeriod 0") : QStringLiteral("ed_backgroundUpdatePeriod -1"));
+                                                   SettingsConsole(on ? QStringLiteral("ed_backgroundUpdatePeriod 0") : QStringLiteral("ed_backgroundUpdatePeriod -1"));
                                                }),
                                                viewportCard));
     layout->addWidget(viewportCard);
@@ -367,7 +367,7 @@ QWidget* HearthSettingsPane::BuildEditor()
     QWidget* page = Page(QString(), QString());
     auto* layout = static_cast<QVBoxLayout*>(page->layout());
     QVBoxLayout* backups = nullptr;
-    QFrame* card = Section(page, tr("Backups"), &backups);
+    QFrame* card = SettingsSection(page, tr("Backups"), &backups);
     auto* backupToggle = new Hearth::Toggle(card);
     backupToggle->setChecked(gSettings.autoBackupEnabled);
     connect(backupToggle, &QAbstractButton::toggled, backupToggle, [](bool on)
@@ -389,14 +389,14 @@ QWidget* HearthSettingsPane::BuildEditor()
     layout->addWidget(card);
 
     QVBoxLayout* look = nullptr;
-    QFrame* lookCard = Section(page, tr("Layout"), &look);
+    QFrame* lookCard = SettingsSection(page, tr("Layout"), &look);
     QPushButton* reset = Hearth::MakeButton(tr("Put the panels back"), false, lookCard);
     connect(reset, &QPushButton::clicked, reset, []() { QtViewPaneManager::instance()->RestoreDefaultLayout(true); });
     look->addWidget(Hearth::MakeSettingRow(tr("Hearth layout"), tr("Scene and Assets on the left, Inspector and Claude on the right, Console at the bottom"), reset, lookCard));
     QPushButton* setup = Hearth::MakeButton(tr("Run setup again"), false, lookCard);
     connect(setup, &QPushButton::clicked, setup, []()
     {
-        Set(QStringLiteral("firstRun/done"), false);
+        SettingsSet(QStringLiteral("firstRun/done"), false);
         QProcess::startDetached(QStringLiteral("hearth-engine"), {});
     });
     look->addWidget(Hearth::MakeSettingRow(tr("First-run setup"), tr("Opens the Hub with setup again"), setup, lookCard));
@@ -410,15 +410,15 @@ QWidget* HearthSettingsPane::BuildViewport()
     QWidget* page = Page(QString(), QString());
     auto* layout = static_cast<QVBoxLayout*>(page->layout());
     QVBoxLayout* play = nullptr;
-    QFrame* card = Section(page, tr("Play"), &play);
+    QFrame* card = SettingsSection(page, tr("Play"), &play);
     play->addWidget(Hearth::MakeSettingRow(tr("Let Claude drive"), tr("Claude can press keys in the game while it plays"),
-                                           SettingToggle(QStringLiteral("claude/drive"), true, card), card));
+                                           SettingsSettingToggle(QStringLiteral("claude/drive"), true, card), card));
     play->addWidget(Hearth::MakeSettingRow(tr("Show the playtest bar"), tr("Seed, fps and the F8–F11 keys while testing"),
-                                           SettingToggle(QStringLiteral("play/overlay"), true, card), card));
+                                           SettingsSettingToggle(QStringLiteral("play/overlay"), true, card), card));
     play->addWidget(Hearth::MakeSettingRow(tr("Shadows"), tr("Off on the Battery setting"),
-                                           SettingToggle(QStringLiteral("laptop/shadows"), true, card, [](bool on)
+                                           SettingsSettingToggle(QStringLiteral("laptop/shadows"), true, card, [](bool on)
                                            {
-                                               Console(on ? QStringLiteral("r_directionalShadowFilteringMethod -1") : QStringLiteral("r_directionalShadowFilteringMethod 0"));
+                                               SettingsConsole(on ? QStringLiteral("r_directionalShadowFilteringMethod -1") : QStringLiteral("r_directionalShadowFilteringMethod 0"));
                                            }),
                                            card));
     layout->addWidget(card);
@@ -431,7 +431,7 @@ QWidget* HearthSettingsPane::BuildKeys()
     QWidget* page = Page(QString(), QString());
     auto* layout = static_cast<QVBoxLayout*>(page->layout());
     QVBoxLayout* keys = nullptr;
-    QFrame* card = Section(page, tr("Hearth keys"), &keys);
+    QFrame* card = SettingsSection(page, tr("Hearth keys"), &keys);
     const QVector<QPair<QString, QString>> list = { { tr("Search or run a command"), QStringLiteral("Ctrl+K") },
                                                     { tr("Play in the viewport"), QStringLiteral("Ctrl+G") },
                                                     { tr("Play full screen"), QStringLiteral("F11") },
@@ -456,9 +456,9 @@ QWidget* HearthSettingsPane::BuildClaude()
     QWidget* page = Page(QString(), QString());
     auto* layout = static_cast<QVBoxLayout*>(page->layout());
     QVBoxLayout* claude = nullptr;
-    QFrame* card = Section(page, tr("Claude"), &claude);
+    QFrame* card = SettingsSection(page, tr("Claude"), &claude);
     claude->addWidget(Hearth::MakeSettingRow(tr("Let Claude help"), tr("Crash, build-failure and console buttons hand problems to Claude"),
-                                             SettingToggle(QStringLiteral("claude/help"), true, card), card));
+                                             SettingsSettingToggle(QStringLiteral("claude/help"), true, card), card));
     claude->addWidget(Hearth::MakeSettingRow(tr("Where Claude's notes go"), QString(),
                                              Hearth::MakeLabel(QDir::toNativeSeparators(QDir(Hearth::HomeFolder()).filePath(QStringLiteral("claude-results"))), QStringLiteral("mono"), card), card));
     layout->addWidget(card);
@@ -471,14 +471,14 @@ QWidget* HearthSettingsPane::BuildLogs()
     QWidget* page = Page(QString(), QString());
     auto* layout = static_cast<QVBoxLayout*>(page->layout());
     QVBoxLayout* logs = nullptr;
-    QFrame* card = Section(page, tr("Logs"), &logs);
+    QFrame* card = SettingsSection(page, tr("Logs"), &logs);
     QPushButton* open = Hearth::MakeButton(tr("Open the logs folder"), false, card);
     connect(open, &QPushButton::clicked, open, []() { QDesktopServices::openUrl(QUrl::fromLocalFile(Hearth::LogsFolder())); });
     logs->addWidget(Hearth::MakeSettingRow(tr("Every run is logged"), QDir::toNativeSeparators(Hearth::LogsFolder()), open, card));
     auto* keep = new QSpinBox(card);
     keep->setRange(5, 200);
-    keep->setValue(Get(QStringLiteral("logs/keep"), 30).toInt());
-    connect(keep, QOverload<int>::of(&QSpinBox::valueChanged), keep, [](int value) { Set(QStringLiteral("logs/keep"), value); });
+    keep->setValue(SettingsGet(QStringLiteral("logs/keep"), 30).toInt());
+    connect(keep, QOverload<int>::of(&QSpinBox::valueChanged), keep, [](int value) { SettingsSet(QStringLiteral("logs/keep"), value); });
     logs->addWidget(Hearth::MakeSettingRow(tr("Keep this many logs"), tr("Older ones are deleted"), keep, card));
     QPushButton* console = Hearth::MakeButton(tr("Open Console and logs"), false, card);
     connect(console, &QPushButton::clicked, console, []() { QtViewPaneManager::instance()->OpenPane(QStringLiteral("Console and logs")); });
@@ -493,7 +493,7 @@ QWidget* HearthSettingsPane::BuildParts()
     QWidget* page = Page(QString(), QString());
     auto* layout = static_cast<QVBoxLayout*>(page->layout());
     QVBoxLayout* parts = nullptr;
-    QFrame* card = Section(page, tr("Engine parts"), &parts);
+    QFrame* card = SettingsSection(page, tr("Engine parts"), &parts);
     parts->addWidget(Hearth::MakeLabel(tr("Which parts of the engine this game uses is set in the Hub (changes need a rebuild)."), QStringLiteral("dim"), card));
     QPushButton* hub = Hearth::MakeButton(tr("Open the Hub"), true, card);
     connect(hub, &QPushButton::clicked, hub, []() { QProcess::startDetached(QStringLiteral("hearth-engine"), {}); });
@@ -508,7 +508,7 @@ QWidget* HearthSettingsPane::BuildUpdates()
     QWidget* page = Page(QString(), QString());
     auto* layout = static_cast<QVBoxLayout*>(page->layout());
     QVBoxLayout* updates = nullptr;
-    QFrame* card = Section(page, tr("Updates"), &updates);
+    QFrame* card = SettingsSection(page, tr("Updates"), &updates);
     updates->addWidget(Hearth::MakeSettingRow(tr("This version"), QString(), Hearth::MakeLabel(Hearth::Version(), QStringLiteral("mono"), card), card));
     QPushButton* check = Hearth::MakeButton(tr("See new versions"), false, card);
     connect(check, &QPushButton::clicked, check, []()
@@ -526,7 +526,7 @@ QWidget* HearthSettingsPane::BuildAbout()
     QWidget* page = Page(QString(), QString());
     auto* layout = static_cast<QVBoxLayout*>(page->layout());
     QVBoxLayout* about = nullptr;
-    QFrame* card = Section(page, tr("About"), &about);
+    QFrame* card = SettingsSection(page, tr("About"), &about);
     about->addWidget(Hearth::MakeLabel(tr("Made by Dragongamer9 for Hearth OS. Built on O3DE, the Open 3D Engine (Apache 2.0)."), QStringLiteral("dim"), card));
     QPushButton* open = Hearth::MakeButton(tr("About Hearth Engine"), false, card);
     connect(open, &QPushButton::clicked, this, [this]()
@@ -600,7 +600,7 @@ QWidget* HearthSettingsPane::ClaudeCard()
     {
         auto* line = new QHBoxLayout();
         line->addWidget(Hearth::MakeLabel(name, QStringLiteral("body"), card), 1);
-        line->addWidget(SettingToggle(key, true, card));
+        line->addWidget(SettingsSettingToggle(key, true, card));
         claude->addLayout(line);
     };
     row(tr("Can read logs"), QStringLiteral("claude/readLogs"));

@@ -5,6 +5,7 @@
 #include "EditorDefs.h"
 
 #include "HearthAssetsSummary.h"
+#include "HearthAssetBrowser.h"
 #include "HearthEditorShell.h"
 #include "LyViewPaneNames.h"
 #include "QtViewPaneManager.h"
@@ -81,12 +82,17 @@ HearthAssetsSummary::HearthAssetsSummary(QWidget* parent)
         name->setAttribute(Qt::WA_TransparentForMouseEvents);
         layout->addWidget(m_counts[i]);
         layout->addWidget(name);
-        const QString search = QString::fromLatin1(Kinds()[i].search);
-        connect(tile, &QPushButton::clicked, this, [search]()
+        static const char* browserKinds[] = { "MATERIAL", "TEXTURE", "PREFAB", "SOUND" };
+        const QString kind = QString::fromLatin1(browserKinds[i]);
+        connect(tile, &QPushButton::clicked, this, [kind]()
         {
-            if (HearthEditorShell* shell = HearthEditorShell::Instance())
+            // Opens the Hearth asset browser on that kind.
+            if (const QtViewPane* pane = QtViewPaneManager::instance()->OpenPane(QStringLiteral("Browse assets")))
             {
-                shell->OpenCommandPalette(search); // @ .material lists the materials; picking one shows it in the Asset Browser
+                if (auto* browser = qobject_cast<HearthAssetBrowser*>(pane->Widget()))
+                {
+                    browser->ShowKind(kind);
+                }
             }
         });
         grid->addWidget(tile, i / 2, i % 2);
