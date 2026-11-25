@@ -142,6 +142,14 @@ void HearthCommandPalette::CollectCommands()
         m_commands.push_back({ QStringLiteral("◎"), tr("Co-op test with 2 players"), tr("Game"), QString(), [shell]() { shell->OpenCoopTest(); } });
         m_commands.push_back({ QStringLiteral("⌁"), tr("Rebuild game code"), tr("Build"), QStringLiteral("Ctrl+B"), [shell]() { shell->RequestBuild(); } });
     }
+    for (const auto& pane : QVector<QPair<QString, QString>>{ { QStringLiteral("Level Generator"), QStringLiteral("Ctrl+Shift+L") },
+                                                               { QStringLiteral("Console and logs"), QString() },
+                                                               { QStringLiteral("Claude"), QString() } })
+    {
+        const QString name = pane.first;
+        m_commands.push_back({ QStringLiteral("◫"), tr("Open %1").arg(name), tr("Tools"), pane.second,
+                               [name]() { QtViewPaneManager::instance()->OpenPane(name); } });
+    }
     m_commands.push_back({ QStringLiteral("!"), tr("Open the logs folder"), tr("Console"), QString(),
                            []() { QDesktopServices::openUrl(QUrl::fromLocalFile(Hearth::LogsFolder())); } });
 
