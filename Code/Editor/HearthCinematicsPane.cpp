@@ -64,6 +64,8 @@
 #include <QVBoxLayout>
 
 #include <cmath>
+#include <functional>
+#include <memory>
 
 namespace
 {
