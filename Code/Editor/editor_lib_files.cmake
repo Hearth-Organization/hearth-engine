@@ -300,6 +300,8 @@ set(FILES
     HearthAnimationPane.h
     HearthMaterialCanvasPane.cpp
     HearthMaterialCanvasPane.h
+    HearthPathingPane.cpp
+    HearthPathingPane.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h
