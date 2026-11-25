@@ -245,6 +245,7 @@ set(FILES
     Components/Widgets/VectorInput.qss
     Components/Widgets/WindowDecorationWrapper.qss
     Components/Widgets/Hearth.qss
+    Components/HearthWidgets.h
     Components/Widgets/ColorPicker/ColorController.cpp
     Components/Widgets/ColorPicker/ColorController.h
     Components/Widgets/ColorPicker/ColorComponentSliders.cpp

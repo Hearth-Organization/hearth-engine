@@ -443,7 +443,6 @@ set(FILES
     SelectSequenceDialog.h
     StartupLogoDialog.cpp
     StartupLogoDialog.h
-    StartupLogoDialog.ui
     StartupLogoDialog.qrc
     ToolsConfigPage.cpp
     ToolsConfigPage.h

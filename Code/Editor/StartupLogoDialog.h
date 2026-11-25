@@ -13,19 +13,18 @@
 #include <QPixmap>
 #include <QString>
 
-namespace Ui
-{
-    class StartupLogoDialog;
-}
+QT_FORWARD_DECLARE_CLASS(QLabel)
+QT_FORWARD_DECLARE_CLASS(QProgressBar)
 
+//! Hearth Engine splash screen (Loading) and About box (About), drawn to match the approved mockups.
 class CStartupLogoDialog
     : public QDialog
     , public IInitializeUIInfo
 {
     Q_OBJECT
 public:
-    static constexpr int EnforcedWidth = 668;
-    static constexpr int EnforcedHeight = 368;
+    static constexpr int EnforcedWidth = 720;
+    static constexpr int EnforcedHeight = 450;
 
     enum DialogType
     {
@@ -48,12 +47,16 @@ protected:
     virtual void focusOutEvent([[maybe_unused]] QFocusEvent* event) override;
 
 private:
-    void SetInfo(const char* text);
+    void BuildLoading();
+    void BuildAbout();
     void paintEvent(QPaintEvent* event) override;
 
     static CStartupLogoDialog* s_pLogoWindow;
 
-    QScopedPointer<Ui::StartupLogoDialog> m_ui;
     DialogType m_dialogType;
-    QPixmap m_backgroundImage;
+    QLabel* m_stepLabel = nullptr;
+    QLabel* m_percentLabel = nullptr;
+    QProgressBar* m_progress = nullptr;
+    int m_stepsSeen = 0;
+    int m_stepsExpected = 40;
 };

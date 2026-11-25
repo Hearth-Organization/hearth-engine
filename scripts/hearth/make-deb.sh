@@ -21,6 +21,8 @@ cat > "$pkg/usr/bin/hearth-engine" <<'LAUNCH'
 # so problems can be read afterwards (by you or by Claude): ~/O3DE/HearthEngine/logs/
 ENGINE=/opt/hearth-engine
 export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-xcb}"
+export HEARTH_ENGINE_ROOT="$ENGINE"
+export HEARTH_ENGINE_VERSION="$(cat "$ENGINE/HEARTH_VERSION" 2>/dev/null)"
 LOGS="${HEARTH_ENGINE_LOGS:-$HOME/O3DE/HearthEngine/logs}"
 mkdir -p "$LOGS"
 stamp="$(date +%Y-%m-%d_%H-%M-%S)"
@@ -56,6 +58,8 @@ fi
 run "$exe" "$@"
 code=$?
 echo "== exited with code $code at $(date) ==" >> "$log"
+# The Hub reads this to tell you when a tool closed unexpectedly (and offer Claude's help).
+printf 'code=%s\nlog=%s\ntime=%s\n' "$code" "$log" "$(date +%s)" > "$LOGS/last-exit-$tool"
 # Also collect the engine's own log files from this run (project manager, editor, asset processor).
 for own in "$HOME"/.o3de/Logs/*.log "$ENGINE"/bin/Linux/*/Default/user/log/*.log; do
     [ -f "$own" ] || continue
@@ -71,6 +75,11 @@ printf '#!/bin/sh\nHEARTH_ENGINE_TOOL=Editor exec hearth-engine "$@"\n' > "$pkg/
 printf '#!/bin/sh\nHEARTH_ENGINE_TOOL=AssetProcessor exec hearth-engine "$@"\n' > "$pkg/usr/bin/hearth-engine-assets"
 chmod 755 "$pkg/usr/bin/hearth-engine-editor" "$pkg/usr/bin/hearth-engine-assets"
 echo "$version" > "$pkg/opt/hearth-engine/HEARTH_VERSION"
+# GitHub build number (shown in About), and the notes and licences the About box links to.
+[ -n "${GITHUB_RUN_NUMBER:-}" ] && echo "$GITHUB_RUN_NUMBER" > "$pkg/opt/hearth-engine/HEARTH_BUILD"
+for f in HEARTH.md HEARTH_CHANGES.md LICENSE.txt LICENSE_APACHE2.TXT LICENSE_MIT.TXT; do
+    [ -f "$here/../../$f" ] && cp "$here/../../$f" "$pkg/opt/hearth-engine/$f"
+done
 
 cp "$here/../../Code/Editor/o3de_logo.svg" "$pkg/usr/share/icons/hicolor/scalable/apps/hearth-engine.svg"
 cat > "$pkg/usr/share/applications/hearth-engine.desktop" <<'DESK'
