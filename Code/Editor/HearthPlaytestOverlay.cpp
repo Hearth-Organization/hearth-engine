@@ -8,6 +8,7 @@
 
 #include <AzCore/Console/IConsole.h>
 #include <AzCore/Interface/Interface.h>
+#include <AzCore/Settings/SettingsRegistry.h>
 #include <AzCore/Utils/Utils.h>
 #include <AzQtComponents/Components/HearthWidgets.h>
 #include <AzToolsFramework/ActionManager/Action/ActionManagerInterface.h>
@@ -160,8 +161,12 @@ HearthPlaytestOverlay::HearthPlaytestOverlay(QMainWindow* mainWindow, std::funct
     m_frameMs->setStyleSheet(chip);
     m_memory = new QLabel(m_stats);
     m_memory->setStyleSheet(chip);
+    m_chunks = new QLabel(m_stats);
+    m_chunks->setStyleSheet(chip);
+    m_chunks->hide();
     stats->addWidget(m_frameMs);
     stats->addWidget(m_memory);
+    stats->addWidget(m_chunks);
 
     // Bottom right: keys.
     m_shortcuts = PlaytestPill(this);
@@ -259,6 +264,18 @@ void HearthPlaytestOverlay::Tick()
                 m_memory->setText(tr("game %1 MB").arg(resident * 4096 / (1024 * 1024)));
             }
             fclose(statm);
+        }
+        // The endless level reports "9 chunks · 412 pieces"; the bar shows the chunk part.
+        AZStd::string stats;
+        if (auto* registry = AZ::SettingsRegistry::Get(); registry && registry->Get(stats, "/Hearth/Viewport/Stats") && !stats.empty())
+        {
+            const QString text = QString::fromUtf8(stats.c_str());
+            m_chunks->setText(text.section(QStringLiteral(" · "), 0, 0));
+            m_chunks->show();
+        }
+        else
+        {
+            m_chunks->hide();
         }
     }
 

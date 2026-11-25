@@ -56,6 +56,7 @@ private:
     QWidget* m_stats = nullptr;
     QLabel* m_frameMs = nullptr;
     QLabel* m_memory = nullptr;
+    QLabel* m_chunks = nullptr; //!< "9 chunks" from the game (/Hearth/Viewport/Stats)
     QWidget* m_shortcuts = nullptr;
     QTimer* m_timer = nullptr;
     QElapsedTimer m_clock;
