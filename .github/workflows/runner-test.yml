@@ -1,5 +1,5 @@
-# Quick check that the paid 96-core runner (hearth-96) will start. Runs only when this file changes.
-name: Runner test (hearth-96)
+# Quick check that a paid larger runner will start. Runs only when this file changes.
+name: Runner test (larger runners)
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     paths: [ ".github/workflows/runner-test.yml" ]
 
 jobs:
-  test:
-    runs-on: hearth-96
+  test32:
+    runs-on: hearth-32
     timeout-minutes: 5
     steps:
-      - run: echo "hearth-96 is working, $(nproc) cores, $(free -g | awk '/Mem/{print $2}') GB RAM"
+      - run: echo "hearth-32 is working, $(nproc) cores, $(free -g | awk '/Mem/{print $2}') GB RAM"
