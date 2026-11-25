@@ -69,11 +69,23 @@ CTRL
 cat > "$pkg/DEBIAN/postinst" <<'POST'
 #!/bin/sh
 set -e
+# The engine's Python setup (python/get_python.sh) runs "pip install -e scripts/o3de" as the user, which
+# writes scripts/o3de/o3de.egg-info inside the engine folder. Give it a folder it can write to.
+egg=/opt/hearth-engine/scripts/o3de/o3de.egg-info
+mkdir -p "$egg" && chmod 1777 "$egg" || true
 command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database -q /usr/share/applications || true
 command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -t /usr/share/icons/hicolor || true
 exit 0
 POST
 chmod 755 "$pkg/DEBIAN/postinst"
+# Removing the package also removes what the Python setup wrote there.
+cat > "$pkg/DEBIAN/postrm" <<'POSTRM'
+#!/bin/sh
+set -e
+[ "$1" = remove ] || [ "$1" = purge ] && rm -rf /opt/hearth-engine/scripts/o3de/o3de.egg-info || true
+exit 0
+POSTRM
+chmod 755 "$pkg/DEBIAN/postrm"
 
 dpkg-deb --root-owner-group -Zzstd -z12 -b "$pkg" "$out"
 ls -lh "$out"
