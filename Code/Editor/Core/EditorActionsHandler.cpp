@@ -57,6 +57,10 @@
 #include <QUrl>
 #include <QUrlQuery>
 #include <QWidget>
+#include <QPushButton>
+#include <AzCore/Component/ComponentApplicationBus.h>
+#include <AzCore/Component/Entity.h>
+#include <AzToolsFramework/Component/EditorComponentAPIBus.h>
 
 static const int maxRecentFiles = 10;
 
@@ -238,8 +242,92 @@ void EditorActionsHandler::OnActionUpdaterRegistrationHook()
     m_actionManagerInterface->RegisterActionUpdater(EditorIdentifiers::ViewportDisplayInfoStateChangedUpdaterIdentifier);
 }
 
+namespace
+{
+    // Hearth Engine: the Level and Create menus (approved mockup "Menus and command palette").
+    void HearthOpenPane(const char* name)
+    {
+        QtViewPaneManager::instance()->OpenPane(QString::fromLatin1(name));
+    }
+
+    //! Create menu: a new entity (in front of the camera, as Create entity does) with one component on it.
+    void HearthCreateWith(const char* entityName, const char* componentName)
+    {
+        AZ::EntityId entity;
+        AzToolsFramework::EditorRequestBus::BroadcastResult(entity, &AzToolsFramework::EditorRequests::CreateNewEntity, AZ::EntityId());
+        if (!entity.IsValid())
+        {
+            return;
+        }
+        AZ::Entity* created = nullptr;
+        AZ::ComponentApplicationBus::BroadcastResult(created, &AZ::ComponentApplicationRequests::FindEntity, entity);
+        if (created)
+        {
+            created->SetName(entityName);
+        }
+        if (componentName)
+        {
+            using Components = AzToolsFramework::EditorComponentAPIRequests;
+            AZStd::vector<AZ::Uuid> types;
+            AzToolsFramework::EditorComponentAPIBus::BroadcastResult(types, &Components::FindComponentTypeIdsByEntityType,
+                                                                     AZStd::vector<AZStd::string>{ componentName }, Components::EntityType::Game);
+            if (!types.empty() && !types.front().IsNull())
+            {
+                Components::AddComponentsOutcome added = AZ::Failure(AZStd::string());
+                AzToolsFramework::EditorComponentAPIBus::BroadcastResult(added, &Components::AddComponentOfType, entity, types.front());
+            }
+        }
+        AzToolsFramework::ToolsApplicationRequestBus::Broadcast(&AzToolsFramework::ToolsApplicationRequests::SetSelectedEntities, AzToolsFramework::EntityIdList{ entity });
+    }
+} // namespace
+
 void EditorActionsHandler::OnActionRegistrationHook()
 {
+    // --- Hearth Engine: Level and Create menu actions
+    {
+        struct HearthAction
+        {
+            const char* id;
+            const char* name;
+            const char* description;
+            AZStd::function<void()> handler;
+        };
+        const HearthAction hearthActions[] = {
+            { "o3de.action.hearth.levelGenerator", "Level Generator", "The endless level's layout, horror and seed", [] { HearthOpenPane("Level Generator"); } },
+            { "o3de.action.hearth.lightingAndLook", "Lighting and look", "Fog, exposure, bloom and the rest of the level's look", [] { HearthOpenPane("Lighting and look"); } },
+            { "o3de.action.hearth.monsterPathing", "Monster pathing", "Where entities can walk and how they find the player", [] { HearthOpenPane("Monster pathing"); } },
+            { "o3de.action.hearth.exportLevel", "Export level...", "Package the game with this level", [] { HearthOpenPane("Package the game"); } },
+            { "o3de.action.hearth.levelProperties", "Level properties", "The level's own settings", [] { HearthOpenPane(LyViewPane::LevelInspector); } },
+            { "o3de.action.hearth.physics", "Physics", "Collisions, gravity and the player's body", [] { HearthOpenPane("Physics"); } },
+            { "o3de.action.hearth.audio", "Audio", "Every sound in the level and how loud it plays", [] { HearthOpenPane("Audio"); } },
+            { "o3de.action.hearth.create.entity", "Empty entity", "A new entity with nothing on it", [] { HearthCreateWith("Entity", nullptr); } },
+            { "o3de.action.hearth.create.light", "Light", "A light that shines in every direction", [] { HearthCreateWith("Light", "Light"); } },
+            { "o3de.action.hearth.create.sound", "Sound emitter", "Plays a sound here, with distance falloff", [] { HearthCreateWith("Sound", "MiniAudio Playback"); } },
+            { "o3de.action.hearth.create.camera", "Camera", "A camera to look through", [] { HearthCreateWith("Camera", "Camera"); } },
+            { "o3de.action.hearth.create.trigger", "Trigger area", "Runs something when a player walks in", [] { HearthCreateWith("Trigger area", "PhysX Primitive Collider"); } },
+            { "o3de.action.hearth.create.component", "Add component...", "Add a component to the selected entity", [] {
+                // The Inspector's own Add component button (the Hearth component picker).
+                for (QPushButton* button : QApplication::activeWindow() ? QApplication::activeWindow()->findChildren<QPushButton*>(QStringLiteral("m_addComponentButton")) : QList<QPushButton*>())
+                {
+                    if (button->isVisible() && button->isEnabled())
+                    {
+                        button->click();
+                        return;
+                    }
+                }
+            } },
+        };
+        for (const HearthAction& action : hearthActions)
+        {
+            AzToolsFramework::ActionProperties actionProperties;
+            actionProperties.m_name = action.name;
+            actionProperties.m_description = action.description;
+            actionProperties.m_category = "Hearth";
+            m_actionManagerInterface->RegisterAction(EditorIdentifiers::MainWindowActionContextIdentifier, action.id, actionProperties, action.handler);
+        }
+        m_hotKeyManagerInterface->SetActionHotKey("o3de.action.hearth.levelGenerator", "Ctrl+Shift+L");
+    }
+
     // --- File Actions
 
     // New Level
@@ -1694,6 +1782,17 @@ void EditorActionsHandler::OnMenuBarRegistrationHook()
 
 void EditorActionsHandler::OnMenuRegistrationHook()
 {
+    // Hearth Engine: Level and Create menus.
+    {
+        AzToolsFramework::MenuProperties menuProperties;
+        menuProperties.m_name = "&Level";
+        m_menuManagerInterface->RegisterMenu("o3de.menu.editor.hearth.level", menuProperties);
+        menuProperties.m_name = "Level settings";
+        m_menuManagerInterface->RegisterMenu("o3de.menu.editor.hearth.levelSettings", menuProperties);
+        menuProperties.m_name = "&Create";
+        m_menuManagerInterface->RegisterMenu("o3de.menu.editor.hearth.create", menuProperties);
+    }
+
     // Initialize Menus
     {
         AzToolsFramework::MenuProperties menuProperties;
@@ -1837,8 +1936,38 @@ void EditorActionsHandler::OnMenuBindingHook()
     // We space the sortkeys by 100 to allow external systems to add menus in-between.
     m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, EditorIdentifiers::FileMenuIdentifier, 100);
     m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, EditorIdentifiers::EditMenuIdentifier, 200);
-    m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, EditorIdentifiers::GameMenuIdentifier, 300);
-    m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, EditorIdentifiers::ToolsMenuIdentifier, 400);
+    // Hearth Engine order: File, Edit, Level, Create, Tools, Game, View, Help.
+    m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, "o3de.menu.editor.hearth.level", 250);
+    m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, "o3de.menu.editor.hearth.create", 270);
+    m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, EditorIdentifiers::ToolsMenuIdentifier, 300);
+    m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, EditorIdentifiers::GameMenuIdentifier, 400);
+    {
+        const char* level = "o3de.menu.editor.hearth.level";
+        m_menuManagerInterface->AddActionToMenu(level, "o3de.action.file.new", 100);
+        m_menuManagerInterface->AddActionToMenu(level, "o3de.action.file.open", 200);
+        m_menuManagerInterface->AddActionToMenu(level, "o3de.action.file.save", 300);
+        m_menuManagerInterface->AddSeparatorToMenu(level, 400);
+        m_menuManagerInterface->AddActionToMenu(level, "o3de.action.hearth.levelGenerator", 500);
+        m_menuManagerInterface->AddActionToMenu(level, "o3de.action.hearth.lightingAndLook", 600);
+        m_menuManagerInterface->AddActionToMenu(level, "o3de.action.hearth.monsterPathing", 700);
+        m_menuManagerInterface->AddSeparatorToMenu(level, 800);
+        m_menuManagerInterface->AddActionToMenu(level, "o3de.action.hearth.exportLevel", 900);
+        m_menuManagerInterface->AddSubMenuToMenu(level, "o3de.menu.editor.hearth.levelSettings", 1000);
+        const char* settings = "o3de.menu.editor.hearth.levelSettings";
+        m_menuManagerInterface->AddActionToMenu(settings, "o3de.action.hearth.levelProperties", 100);
+        m_menuManagerInterface->AddActionToMenu(settings, "o3de.action.hearth.lightingAndLook", 200);
+        m_menuManagerInterface->AddActionToMenu(settings, "o3de.action.hearth.physics", 300);
+        m_menuManagerInterface->AddActionToMenu(settings, "o3de.action.hearth.audio", 400);
+        const char* create = "o3de.menu.editor.hearth.create";
+        m_menuManagerInterface->AddActionToMenu(create, "o3de.action.hearth.create.entity", 100);
+        m_menuManagerInterface->AddActionToMenu(create, "o3de.action.hearth.create.light", 200);
+        m_menuManagerInterface->AddActionToMenu(create, "o3de.action.hearth.create.sound", 300);
+        m_menuManagerInterface->AddActionToMenu(create, "o3de.action.hearth.create.camera", 400);
+        m_menuManagerInterface->AddActionToMenu(create, "o3de.action.hearth.create.trigger", 500);
+        m_menuManagerInterface->AddSeparatorToMenu(create, 600);
+        m_menuManagerInterface->AddActionToMenu(create, "o3de.action.prefabs.instantiate", 700);
+        m_menuManagerInterface->AddActionToMenu(create, "o3de.action.hearth.create.component", 800);
+    }
     m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, EditorIdentifiers::ViewMenuIdentifier, 500);
     m_menuManagerInterface->AddMenuToMenuBar(EditorIdentifiers::EditorMainWindowMenuBarIdentifier, EditorIdentifiers::HelpMenuIdentifier, 600);
 
