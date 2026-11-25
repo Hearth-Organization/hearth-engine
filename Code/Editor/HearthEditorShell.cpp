@@ -116,6 +116,18 @@ HearthEditorShell::HearthEditorShell(QMainWindow* mainWindow)
 
     // The renderer is ready a moment after the main window: apply the laptop settings then.
     QTimer::singleShot(4000, this, &HearthEditorShell::ApplyLaptopSettings);
+
+    // First start of the Hearth layout: put the panels where the Hearth Engine design has them, once.
+    // (After that the owner's own arrangement is kept; View > Layouts > Restore default brings it back.)
+    QTimer::singleShot(1500, this, []()
+    {
+        QScopedPointer<QSettings> settings(Hearth::NewSettings());
+        if (settings->value(QStringLiteral("editor/layout")).toString() != QLatin1String("hearth-1"))
+        {
+            settings->setValue(QStringLiteral("editor/layout"), QStringLiteral("hearth-1"));
+            QtViewPaneManager::instance()->RestoreDefaultLayout(true);
+        }
+    });
 }
 
 void HearthEditorShell::BuildHeader()
