@@ -22,7 +22,9 @@ AZ_PUSH_DISABLE_WARNING(4244 4251, "-Wunknown-warning-option") // 4244: conversi
 #include <QRegularExpression>
 AZ_POP_DISABLE_WARNING
 
+class QLabel;
 class QLineEdit;
+class QListWidget;
 class QPushButton;
 class QSortFilterProxyModel;
 class QTreeView;
@@ -94,5 +96,16 @@ namespace AzToolsFramework
         AZ::ComponentDescriptor::DependencyArrayType m_serviceFilter;
         AZ::ComponentDescriptor::DependencyArrayType m_incompatibleServiceFilter;
         AZStd::map<QString, bool> m_categoryExpandedState;
+
+        // Hearth Engine layout (approved mockup "AddComponent"): title, categories with counts, Add button.
+        void RebuildCategories();
+        void ShowCategory(const QString& category);
+        void UpdateAddButton();
+        void RememberRecent(const QString& componentName);
+        QLabel* m_titleLabel = nullptr;
+        QLabel* m_resultCount = nullptr;
+        QListWidget* m_categoryList = nullptr;
+        QPushButton* m_addButton = nullptr;
+        QString m_currentCategory;
     };
 }
