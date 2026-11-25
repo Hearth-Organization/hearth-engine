@@ -260,6 +260,8 @@ set(FILES
     HearthPlaytestOverlay.h
     HearthLookPane.cpp
     HearthLookPane.h
+    HearthProfilerPane.cpp
+    HearthProfilerPane.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h
