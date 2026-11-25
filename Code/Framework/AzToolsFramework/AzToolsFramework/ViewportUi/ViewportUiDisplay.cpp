@@ -20,7 +20,7 @@
 namespace AzToolsFramework::ViewportUi::Internal
 {
     const static int HighlightBorderSize = ViewportUiLeftRightBottomBorderSize;
-    const static char* const HighlightBorderColor = "#4A90E2";
+    const static char* const HighlightBorderColor = "#E8743B";
     const static int HighlightBorderBackButtonIconSize = 20;
     const static char* const HighlightBorderBackButtonIconFile = "X_axis.svg";
 

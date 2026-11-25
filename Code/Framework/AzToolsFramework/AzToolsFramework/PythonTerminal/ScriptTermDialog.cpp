@@ -76,8 +76,8 @@ namespace AzToolsFramework
         // Set the debug/warning text colors appropriately for the background theme
         // (e.g. not have black text on black background)
         m_textColor = Qt::black;
-        m_errorColor = QColor(200, 0, 0);                   // Error (Red)
-        m_warningColor = QColor(128, 112, 0);               // Warning (Yellow)
+        m_errorColor = QColor(0xFF, 0x9F, 0x8F);                   // Error (Red)
+        m_warningColor = QColor(0xF0, 0xD1, 0x7A);               // Warning (Yellow)
 
         ConsoleColorTheme consoleColorTheme(ConsoleColorTheme::Dark);
         EditorSettingsAPIBus::BroadcastResult(consoleColorTheme, &EditorSettingsAPIBus::Handler::GetConsoleColorTheme);

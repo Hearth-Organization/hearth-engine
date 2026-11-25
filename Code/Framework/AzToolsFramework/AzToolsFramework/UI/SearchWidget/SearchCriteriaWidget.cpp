@@ -146,15 +146,15 @@ namespace AzToolsFramework
     void SearchCriteriaButton::SetFilterEnabled(bool enabled)
     {
         m_filterEnabled = enabled;
-        QString borderColor = "#808080";
-        QString bgColor = "#404040";
+        QString borderColor = "#4A443D";
+        QString bgColor = "#211E1B";
         if (!m_filterEnabled)
         {
-            borderColor = "#666666";
+            borderColor = "#35302B";
         }
         if (m_mouseHover)
         {
-            bgColor = "#505050";
+            bgColor = "#2A2622";
         }
 
         QString labelText;

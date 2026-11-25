@@ -76,12 +76,12 @@ namespace AzToolsFramework
 
         static AzFramework::EntityContextId s_editorEntityContextId;
 
-        QColor m_backgroundColor = QColor("#444444");
-        QColor m_backgroundHoverColor = QColor("#5A5A5A");
-        QColor m_backgroundSelectedColor = QColor("#656565");
-        QColor m_prefabCapsuleColor = QColor("#1E252F");
-        QColor m_prefabCapsuleDisabledColor = QColor("#35383C");
-        QColor m_prefabCapsuleEditColor = QColor("#4A90E2");
+        QColor m_backgroundColor = QColor("#211E1B");
+        QColor m_backgroundHoverColor = QColor("#2D2925");
+        QColor m_backgroundSelectedColor = QColor("#3A2418");
+        QColor m_prefabCapsuleColor = QColor("#2A1A10");
+        QColor m_prefabCapsuleDisabledColor = QColor("#2A2622");
+        QColor m_prefabCapsuleEditColor = QColor("#E8743B");
         QString m_prefabIconPath = QString(":/Entity/prefab.svg");
         QString m_prefabEditIconPath = QString(":/Entity/prefab_edit.svg");
         QString m_prefabEditOpenIconPath = QString(":/Entity/prefab_edit_open.svg");

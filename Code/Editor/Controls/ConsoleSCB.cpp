@@ -441,8 +441,8 @@ void CConsoleSCB::RefreshStyle()
     // Set the debug/warning text colors appropriately for the background theme
     // (e.g. not have black text on black background)
     QColor textColor = Qt::black;
-    m_colorTable[4] = QColor(200, 0, 0);                // Error (Red)
-    m_colorTable[6] = QColor(128, 112, 0);              // Warning (Yellow)
+    m_colorTable[4] = QColor(0xFF, 0x9F, 0x8F);                // Error (Red)
+    m_colorTable[6] = QColor(0xF0, 0xD1, 0x7A);              // Warning (Yellow)
     m_backgroundTheme = gSettings.consoleBackgroundColorTheme;
 
     if (m_backgroundTheme == AzToolsFramework::ConsoleColorTheme::Dark)
