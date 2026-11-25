@@ -128,3 +128,7 @@ Gems/AtomLyIntegration/CommonFeatures/Assets/Objects/Lucy/.wip/stone/stone_bake.
 
 # Hearth Engine: our own binary files are stored in git itself (the O3DE LFS server is upstream only)
 Code/Framework/AzQtComponents/AzQtComponents/Components/Fonts/Geist/*.ttf !filter !diff !merge binary
+Code/Editor/res/o3de_editor.ico !filter !diff !merge binary
+Code/Tools/AssetProcessor/native/ui/style/o3de_assetprocessor.ico !filter !diff !merge binary
+Code/Tools/ProjectManager/Resources/ProjectManager-Icon.ico !filter !diff !merge binary
+Code/Tools/AssetProcessor/native/ui/style/o3de_assetprocessor.png !filter !diff !merge binary
