@@ -99,7 +99,7 @@ namespace
             }
             else if (event->button() == Qt::RightButton && m_onMenu)
             {
-                m_onMenu(event->globalPos());
+                m_onMenu(event->globalPosition().toPoint());
             }
         }
         void mouseDoubleClickEvent(QMouseEvent*) override

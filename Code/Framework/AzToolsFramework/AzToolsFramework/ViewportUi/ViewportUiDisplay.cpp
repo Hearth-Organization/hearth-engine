@@ -553,7 +553,7 @@ namespace AzToolsFramework::ViewportUi::Internal
             }
 
         private:
-            AzFramework::ViewportId m_viewportId;
+            [[maybe_unused]] AzFramework::ViewportId m_viewportId;
         };
 
         QPushButton* PillButton(QWidget* parent, const QString& text, bool checkable)
