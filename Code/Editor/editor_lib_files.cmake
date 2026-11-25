@@ -282,6 +282,8 @@ set(FILES
     HearthPhysicsPane.h
     HearthAudioPane.cpp
     HearthAudioPane.h
+    HearthPrefabPane.cpp
+    HearthPrefabPane.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h
