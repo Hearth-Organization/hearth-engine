@@ -94,6 +94,17 @@ namespace MiniAudio
         void LoadSound();
         void UnloadSound();
 
+    public:
+        // Hearth Engine: the editor's Audio window (buses, and whether each sound is really heard).
+        void HearthApplyVolume();
+        float HearthBusGain() const;
+        AZStd::string HearthSoundName() const;
+        AZStd::string HearthBusName() const;
+        void HearthDescribe(AZStd::string& json) const;
+        AZ::u32 m_hearthRequests = 0;
+        AZ::u32 m_hearthHeard = 0;
+
+    private:
         AZStd::unique_ptr<ma_sound> m_sound;
     };
 } // namespace MiniAudio

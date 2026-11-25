@@ -280,6 +280,8 @@ set(FILES
     HearthPackagePane.h
     HearthPhysicsPane.cpp
     HearthPhysicsPane.h
+    HearthAudioPane.cpp
+    HearthAudioPane.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

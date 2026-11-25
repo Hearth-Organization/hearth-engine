@@ -14,9 +14,183 @@
 
 #include "AzCore/Math/MathUtils.h"
 #include <miniaudio.h>
+#include <AzCore/Component/ComponentApplicationBus.h>
+#include <AzCore/Console/IConsole.h>
+#include <AzCore/IO/SystemFile.h>
+#include <AzCore/Settings/SettingsRegistry.h>
+#include <AzCore/std/containers/unordered_set.h>
+#include <AzCore/std/parallel/mutex.h>
+#include <AzCore/std/string/conversions.h>
+#include <AzFramework/Entity/EntityContextBus.h>
+#include <AzFramework/Entity/GameEntityContextBus.h>
 
 namespace MiniAudio
 {
+    // Hearth Engine: every playback controller that's active, for the Audio window's list and buses.
+    namespace
+    {
+        AZStd::mutex& HearthLiveMutex()
+        {
+            static AZStd::mutex mutex;
+            return mutex;
+        }
+        AZStd::unordered_set<MiniAudioPlaybackComponentController*>& HearthLive()
+        {
+            static AZStd::unordered_set<MiniAudioPlaybackComponentController*> live;
+            return live;
+        }
+
+        //! Which bus a sound plays on when the project hasn't said: by the words in its name.
+        AZStd::string HearthDefaultBus(const AZStd::string& name)
+        {
+            AZStd::string lower = name;
+            AZStd::to_lower(lower.begin(), lower.end());
+            auto has = [&lower](const char* word) { return lower.find(word) != AZStd::string::npos; };
+            if (has("music") || has("theme") || has("song")) return "Music";
+            if (has("step") || has("foot") || has("breath") || has("player") || has("land") || has("jump")) return "Player";
+            if (has("hum") || has("zap") || has("light") || has("flicker") || has("buzz") || has("crackle")) return "Lights";
+            if (has("entity") || has("monster") || has("smiler") || has("hound") || has("creature")) return "Entities";
+            return "Ambience";
+        }
+
+        float HearthDecibelsToGain(double decibels)
+        {
+            return decibels <= -60.0 ? 0.0f : ma_volume_db_to_linear(float(decibels));
+        }
+
+        void hearth_audioRefresh([[maybe_unused]] const AZ::ConsoleCommandContainer& arguments)
+        {
+            AZStd::lock_guard<AZStd::mutex> lock(HearthLiveMutex());
+            for (MiniAudioPlaybackComponentController* controller : HearthLive())
+            {
+                controller->HearthApplyVolume();
+            }
+        }
+        AZ_CONSOLEFREEFUNC(hearth_audioRefresh, AZ::ConsoleFunctorFlags::Null, "Hearth Engine: apply the Audio window's bus volumes to every sound");
+
+        void hearth_audioStats(const AZ::ConsoleCommandContainer& arguments)
+        {
+            if (arguments.empty())
+            {
+                return;
+            }
+            AZStd::string json = "{\"sounds\":[";
+            {
+                AZStd::lock_guard<AZStd::mutex> lock(HearthLiveMutex());
+                bool first = true;
+                for (MiniAudioPlaybackComponentController* controller : HearthLive())
+                {
+                    if (!first)
+                    {
+                        json += ",";
+                    }
+                    first = false;
+                    controller->HearthDescribe(json);
+                }
+            }
+            float global = 1.0f;
+            if (auto* audio = MiniAudioInterface::Get())
+            {
+                global = audio->GetGlobalVolume();
+            }
+            json += AZStd::string::format("],\"globalVolume\":%.3f}", global);
+            const AZStd::string path(arguments[0]);
+            AZ::IO::SystemFile file;
+            if (file.Open(path.c_str(), AZ::IO::SystemFile::SF_OPEN_CREATE | AZ::IO::SystemFile::SF_OPEN_CREATE_PATH | AZ::IO::SystemFile::SF_OPEN_WRITE_ONLY))
+            {
+                file.Write(json.c_str(), json.size());
+            }
+        }
+        AZ_CONSOLEFREEFUNC(hearth_audioStats, AZ::ConsoleFunctorFlags::Null, "Hearth Engine: write every active sound's state as JSON to the given file");
+
+        AZStd::string HearthEscape(const AZStd::string& text)
+        {
+            AZStd::string out;
+            for (char c : text)
+            {
+                if (c == '"' || c == '\\')
+                {
+                    out += '\\';
+                }
+                if (static_cast<unsigned char>(c) >= 0x20)
+                {
+                    out += c;
+                }
+            }
+            return out;
+        }
+    } // namespace
+
+    AZStd::string MiniAudioPlaybackComponentController::HearthSoundName() const
+    {
+        // "assets/sounds/level0/step_carpet_1.wav.miniaudio" -> "step_carpet_1"
+        AZStd::string hint = m_config.m_sound.GetHint();
+        const size_t slash = hint.find_last_of("/\\");
+        if (slash != AZStd::string::npos)
+        {
+            hint = hint.substr(slash + 1);
+        }
+        const size_t dot = hint.find('.');
+        return dot != AZStd::string::npos ? hint.substr(0, dot) : hint;
+    }
+
+    AZStd::string MiniAudioPlaybackComponentController::HearthBusName() const
+    {
+        const AZStd::string name = HearthSoundName();
+        AZ::SettingsRegistryInterface::FixedValueString bus;
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            if (registry->Get(bus, AZStd::string::format("/Hearth/Audio/Assign/%s", name.c_str())) && !bus.empty())
+            {
+                return AZStd::string(bus.c_str());
+            }
+        }
+        return HearthDefaultBus(name);
+    }
+
+    float MiniAudioPlaybackComponentController::HearthBusGain() const
+    {
+        double bus = 0.0;
+        double master = 0.0;
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            registry->Get(bus, AZStd::string::format("/Hearth/Audio/Buses/%s", HearthBusName().c_str()));
+            registry->Get(master, "/Hearth/Audio/Buses/Master");
+        }
+        return HearthDecibelsToGain(bus) * HearthDecibelsToGain(master);
+    }
+
+    void MiniAudioPlaybackComponentController::HearthApplyVolume()
+    {
+        if (m_sound)
+        {
+            ma_sound_set_volume(m_sound.get(), (m_config.m_volume / 100.f) * HearthBusGain());
+        }
+    }
+
+    void MiniAudioPlaybackComponentController::HearthDescribe(AZStd::string& json) const
+    {
+        AZStd::string entityName;
+        AZ::ComponentApplicationBus::BroadcastResult(entityName, &AZ::ComponentApplicationRequests::GetEntityName, m_entityComponentIdPair.GetEntityId());
+        AzFramework::EntityContextId owner = AzFramework::EntityContextId::CreateNull();
+        AzFramework::EntityIdContextQueryBus::EventResult(owner, m_entityComponentIdPair.GetEntityId(), &AzFramework::EntityIdContextQueries::GetOwningContextId);
+        AzFramework::EntityContextId game = AzFramework::EntityContextId::CreateNull();
+        AzFramework::GameEntityContextRequestBus::BroadcastResult(game, &AzFramework::GameEntityContextRequestBus::Events::GetGameEntityContextId);
+        const bool playing = m_sound && ma_sound_is_playing(m_sound.get());
+        float seconds = 0.0f;
+        if (m_sound)
+        {
+            ma_sound_get_length_in_seconds(m_sound.get(), &seconds);
+        }
+        json += AZStd::string::format(
+            "{\"sound\":\"%s\",\"hint\":\"%s\",\"entity\":\"%s\",\"game\":%s,\"bus\":\"%s\",\"volume\":%.1f,\"gain\":%.4f,"
+            "\"loaded\":%s,\"playing\":%s,\"loop\":%s,\"spatial\":%s,\"maxDistance\":%.1f,\"seconds\":%.3f,\"requests\":%u,\"heard\":%u}",
+            HearthEscape(HearthSoundName()).c_str(), HearthEscape(m_config.m_sound.GetHint()).c_str(), HearthEscape(entityName).c_str(),
+            (!game.IsNull() && owner == game) ? "true" : "false", HearthEscape(HearthBusName()).c_str(), m_config.m_volume, HearthBusGain(),
+            m_sound ? "true" : "false", playing ? "true" : "false", m_config.m_loop ? "true" : "false",
+            m_config.m_enableSpatialization ? "true" : "false", m_config.m_maximumDistance, seconds, m_hearthRequests, m_hearthHeard);
+    }
+
     MiniAudioPlaybackComponentController::MiniAudioPlaybackComponentController()
     {
     }
@@ -57,6 +231,10 @@ namespace MiniAudio
         m_config.m_outerAngleInRadians = AZ::DegToRad(m_config.m_outerAngleInDegrees);
 
         MiniAudioPlaybackRequestBus::Handler::BusConnect(m_entityComponentIdPair.GetEntityId());
+        {
+            AZStd::lock_guard<AZStd::mutex> lock(HearthLiveMutex());
+            HearthLive().insert(this);
+        }
         OnConfigurationUpdated();
     }
 
@@ -73,6 +251,10 @@ namespace MiniAudio
 
     void MiniAudioPlaybackComponentController::Deactivate()
     {
+        {
+            AZStd::lock_guard<AZStd::mutex> lock(HearthLiveMutex());
+            HearthLive().erase(this);
+        }
         m_entityMovedHandler.Disconnect();
         UnloadSound();
         m_config.m_sound.Release();
@@ -83,9 +265,20 @@ namespace MiniAudio
 
     void MiniAudioPlaybackComponentController::Play()
     {
+        ++m_hearthRequests;
         if (m_sound)
         {
-            ma_sound_start(m_sound.get());
+            const bool started = ma_sound_start(m_sound.get()) == MA_SUCCESS;
+            float global = 1.0f;
+            if (auto* audio = MiniAudioInterface::Get())
+            {
+                global = audio->GetGlobalVolume();
+            }
+            // Heard: it started, and its volume, bus and the global volume let something come out.
+            if (started && (m_config.m_volume / 100.f) * HearthBusGain() * global > 0.001f)
+            {
+                ++m_hearthHeard;
+            }
         }
     }
 
@@ -108,30 +301,24 @@ namespace MiniAudio
 
     float MiniAudioPlaybackComponentController::GetVolumePercentage() const
     {
-        return ma_sound_get_volume(m_sound.get()) * 100.f;
+        return m_config.m_volume; // the sound's own volume, without its bus
     }
 
     void MiniAudioPlaybackComponentController::SetVolumePercentage(float volume)
     {
         m_config.m_volume = AZ::GetClamp(volume, 0.f, 100.f);
-        if (m_sound)
-        {
-            ma_sound_set_volume(m_sound.get(), (m_config.m_volume / 100.f));
-        }
+        HearthApplyVolume();
     }
 
     float MiniAudioPlaybackComponentController::GetVolumeDecibels() const
     {
-        return ma_volume_linear_to_db(ma_sound_get_volume(m_sound.get()));
+        return ma_volume_linear_to_db(m_config.m_volume / 100.f);
     }
 
     void MiniAudioPlaybackComponentController::SetVolumeDecibels(float volumeDecibels)
     {
         m_config.m_volume = ma_volume_db_to_linear(volumeDecibels) * 100.f;
-        if (m_sound)
-        {
-            ma_sound_set_volume(m_sound.get(), (m_config.m_volume / 100.f));
-        }
+        HearthApplyVolume();
     }
 
     void MiniAudioPlaybackComponentController::SetLooping(bool loop)
@@ -365,7 +552,7 @@ namespace MiniAudio
                     return;
                 }
 
-                ma_sound_set_volume(m_sound.get(), (m_config.m_volume / 100.f));
+                HearthApplyVolume();
                 ma_sound_set_looping(m_sound.get(), m_config.m_loop);
 
                 ma_sound_set_spatialization_enabled(m_sound.get(), m_config.m_enableSpatialization);
