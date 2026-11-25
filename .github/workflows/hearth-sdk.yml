@@ -14,15 +14,16 @@ on:
 
 concurrency:
   group: hearth-sdk
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
   sdk:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 355
+    # The 96-core GitHub-hosted runner in Hearth-Organization (paid per minute, only while a build runs).
+    runs-on: hearth-96
+    timeout-minutes: 90  # caps a stuck build at about $23 on 96 cores
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_MAXSIZE: 8G
@@ -104,7 +105,7 @@ jobs:
       - name: Build and install the SDK
         id: build
         # Stop a little before GitHub's limit so the compiler cache still gets saved for the next run.
-        timeout-minutes: 300
+        timeout-minutes: 75
         run: |
           set -o pipefail
           cmake --build "$HEARTH_BUILD_DIR" --config profile --target install -j "$(nproc)" 2>&1 | tee build.log
