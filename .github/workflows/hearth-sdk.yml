@@ -22,7 +22,7 @@ permissions:
 jobs:
   sdk:
     # The 96-core GitHub-hosted runner "hearth-96" in Hearth-Organization (paid per minute, only while a build runs).
-    runs-on: hearth-96
+    runs-on: hearth-96 # 96 cores, Actions budget $25/month
     timeout-minutes: 90  # caps a stuck build at about $23 on 96 cores
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
