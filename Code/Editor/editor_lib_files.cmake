@@ -254,6 +254,8 @@ set(FILES
     HearthAgentClient.h
     HearthLevelGenerator.cpp
     HearthLevelGenerator.h
+    HearthCoopPane.cpp
+    HearthCoopPane.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

@@ -13,6 +13,7 @@
 #include "HearthClaudePane.h"
 #include "HearthAssetsSummary.h"
 #include "HearthLevelGenerator.h"
+#include "HearthCoopPane.h"
 
 #include <algorithm>
 
@@ -694,6 +695,7 @@ void MainWindow::RegisterStdViewClasses()
     HearthClaudePane::RegisterViewClass();
     HearthAssetsSummary::RegisterViewClass();
     HearthLevelGenerator::RegisterViewClass();
+    HearthCoopPane::RegisterViewClass();
     ConsoleVariableEditor::RegisterViewClass();
     CSettingsManagerDialog::RegisterViewClass();
     AzAssetBrowserWindow::RegisterViewClass();
