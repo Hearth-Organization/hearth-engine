@@ -1074,7 +1074,8 @@ void QtViewPaneManager::RestoreDefaultLayout(bool resetSettings)
         state.viewPanes.push_back(LyViewPane::EntityOutliner);
         state.viewPanes.push_back(LyViewPane::Inspector);
         state.viewPanes.push_back(LyViewPane::AssetBrowser);
-        state.viewPanes.push_back(LyViewPane::Console);
+        state.viewPanes.push_back(QStringLiteral("Console and logs")); // Hearth Engine console
+        state.viewPanes.push_back(QStringLiteral("Claude"));           // Hearth Engine Claude panel
 
         state.mainWindowState = m_defaultMainWindowState;
 
@@ -1098,14 +1099,17 @@ void QtViewPaneManager::RestoreDefaultLayout(bool resetSettings)
     const QtViewPane* entityOutlinerViewPane = OpenPane(LyViewPane::EntityOutliner, QtViewPane::OpenMode::UseDefaultState);
     const QtViewPane* assetBrowserViewPane = OpenPane(LyViewPane::AssetBrowser, QtViewPane::OpenMode::UseDefaultState);
     const QtViewPane* InspectorViewPane = OpenPane(LyViewPane::Inspector, QtViewPane::OpenMode::UseDefaultState);
-    const QtViewPane* consoleViewPane = OpenPane(LyViewPane::Console, QtViewPane::OpenMode::UseDefaultState);
+    // Hearth Engine default layout (approved mockup "Editor"): the Hearth console at the bottom, the Claude panel
+    // under the Inspector on the right.
+    const QtViewPane* consoleViewPane = OpenPane(QStringLiteral("Console and logs"), QtViewPane::OpenMode::UseDefaultState);
+    const QtViewPane* claudeViewPane = OpenPane(QStringLiteral("Claude"), QtViewPane::OpenMode::UseDefaultState);
 
     const QtViewPane* levelInspectorPane = nullptr;
 
     // This class does all kinds of behind the scenes magic to make docking / restore work, especially with groups
     // so instead of doing our special default layout attach / docking right now, we want to make it happen
     // after all of the other events have been processed.
-    QTimer::singleShot(0, [this, consoleViewPane, assetBrowserViewPane, InspectorViewPane, levelInspectorPane, entityOutlinerViewPane, resetSettings, selectedEntityIds]
+    QTimer::singleShot(0, [this, consoleViewPane, claudeViewPane, assetBrowserViewPane, InspectorViewPane, levelInspectorPane, entityOutlinerViewPane, resetSettings, selectedEntityIds]
     {
         // If we are using the new docking, set the right dock area to be absolute
         // so that the inspector will be to the right of the viewport and console
@@ -1178,6 +1182,15 @@ void QtViewPaneManager::RestoreDefaultLayout(bool resetSettings)
             {
                 m_mainWindow->resizeDocks({ InspectorViewPane->m_dockWidget }, { newWidth }, Qt::Horizontal);
             }
+        }
+
+        if (claudeViewPane && InspectorViewPane)
+        {
+            m_mainWindow->addDockWidget(Qt::RightDockWidgetArea, claudeViewPane->m_dockWidget);
+            claudeViewPane->m_dockWidget->setFloating(false);
+            m_mainWindow->splitDockWidget(InspectorViewPane->m_dockWidget, claudeViewPane->m_dockWidget, Qt::Vertical);
+            m_mainWindow->resizeDocks({ InspectorViewPane->m_dockWidget, claudeViewPane->m_dockWidget },
+                                      { screenHeight / 3, screenHeight / 2 }, Qt::Vertical);
         }
 
         if (entityOutlinerViewPane)

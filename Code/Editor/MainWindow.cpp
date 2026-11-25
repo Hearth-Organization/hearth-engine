@@ -10,6 +10,7 @@
 #include "MainWindow.h"
 #include "HearthEditorShell.h"
 #include "HearthConsolePane.h"
+#include "HearthClaudePane.h"
 
 #include <algorithm>
 
@@ -688,6 +689,7 @@ void MainWindow::RegisterStdViewClasses()
     AzToolsFramework::CScriptTermDialog::RegisterViewClass();
     CConsoleSCB::RegisterViewClass();
     HearthConsolePane::RegisterViewClass();
+    HearthClaudePane::RegisterViewClass();
     ConsoleVariableEditor::RegisterViewClass();
     CSettingsManagerDialog::RegisterViewClass();
     AzAssetBrowserWindow::RegisterViewClass();

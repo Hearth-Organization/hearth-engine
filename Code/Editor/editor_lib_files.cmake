@@ -247,6 +247,8 @@ set(FILES
     HearthCommandPalette.h
     HearthConsolePane.cpp
     HearthConsolePane.h
+    HearthClaudePane.cpp
+    HearthClaudePane.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h
