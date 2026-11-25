@@ -153,6 +153,13 @@ jobs:
           split -b 1900M -d hearth-engine-sdk-linux.tar.zst hearth-engine-sdk-linux.tar.zst.part
           sha256sum hearth-engine-sdk-linux.tar.zst > hearth-engine-sdk-linux.sha256
           ls -lh hearth-engine-sdk-linux.tar.zst*
-          gh release create "$tag" hearth-engine-sdk-linux.tar.zst.part* hearth-engine-sdk-linux.sha256 \
-            --title "Hearth Engine SDK (Linux) ${{ github.run_number }}" \
-            --notes "Built from ${{ github.sha }} on branch hearth/main. Download all parts, join them, check the sha256, unpack."
+          rm -f hearth-engine-sdk-linux.tar.zst
+          # The installable package: hearth-engine_<version>_amd64.deb (version from scripts/hearth/VERSION).
+          version="$(tr -d ' \n' < scripts/hearth/VERSION)"
+          deb="hearth-engine_${version}_amd64.deb"
+          scripts/hearth/make-deb.sh install "$deb"
+          if [ "$(stat -c %s "$deb")" -gt 2000000000 ]; then echo "::error::$deb is over GitHub's 2 GB file limit"; exit 1; fi
+          sha256sum "$deb" >> hearth-engine-sdk-linux.sha256
+          gh release create "$tag" "$deb" hearth-engine-sdk-linux.tar.zst.part* hearth-engine-sdk-linux.sha256 \
+            --title "Hearth Engine ${version} (Linux, build ${{ github.run_number }})" \
+            --notes "Built from ${{ github.sha }} on branch hearth/main. Install: sudo apt install ./${deb} (adds the Hearth Engine app and the hearth-engine command). Or the plain SDK: join the .part files, check the sha256, unpack."
