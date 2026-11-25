@@ -7,6 +7,7 @@
 #include "HearthProfilerPane.h"
 
 #include <AzCore/Debug/ProfilerBus.h>
+#include <Atom/RPI.Public/Pass/PassSystemInterface.h>
 #include <AzCore/Utils/Utils.h>
 #include <AzQtComponents/Components/HearthWidgets.h>
 #include <AzToolsFramework/API/ToolsApplicationAPI.h>
@@ -15,6 +16,8 @@
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QDir>
+#include <QElapsedTimer>
+#include <QFileInfo>
 #include <QFile>
 #include <QHBoxLayout>
 #include <QHash>
@@ -22,6 +25,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
+#include <QLocale>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPushButton>
@@ -69,7 +73,8 @@ namespace
         return total - available;
     }
 
-    //! Busy percentage of the graphics chip where the driver tells us (AMD); Intel needs root, so "—" there.
+    //! Busy percentage of the graphics chip. AMD tells us directly. Intel (i915 and xe) doesn't without root, but it
+    //! does say how long the chip has been asleep (rc6 / idle residency), so busy = 1 - asleep time / wall time.
     QString GpuBusy()
     {
         for (const QString& card : { QStringLiteral("card0"), QStringLiteral("card1") })
@@ -80,7 +85,83 @@ namespace
                 return QString::fromUtf8(busy.readAll()).trimmed() + QLatin1Char('%');
             }
         }
-        return QStringLiteral("—");
+        static QString idleFile;
+        static double lastIdleMs = -1.0;
+        static QElapsedTimer clock;
+        static QString lastText = QStringLiteral("—");
+        if (idleFile.isEmpty())
+        {
+            for (const QString& card : { QStringLiteral("card0"), QStringLiteral("card1") })
+            {
+                for (const QString& path : { QStringLiteral("/sys/class/drm/%1/gt/gt0/rc6_residency_ms"),
+                                             QStringLiteral("/sys/class/drm/%1/power/rc6_residency_ms"),
+                                             QStringLiteral("/sys/class/drm/%1/device/tile0/gt0/gtidle/idle_residency_ms") })
+                {
+                    if (idleFile.isEmpty() && QFileInfo(path.arg(card)).isReadable())
+                    {
+                        idleFile = path.arg(card);
+                    }
+                }
+            }
+            if (idleFile.isEmpty())
+            {
+                idleFile = QStringLiteral("none");
+            }
+        }
+        if (idleFile == QLatin1String("none"))
+        {
+            return lastText;
+        }
+        QFile idle(idleFile);
+        if (!idle.open(QIODevice::ReadOnly))
+        {
+            return lastText;
+        }
+        const double idleMs = QString::fromUtf8(idle.readAll()).trimmed().toDouble();
+        if (lastIdleMs >= 0.0 && clock.isValid() && clock.elapsed() > 200)
+        {
+            const double wall = static_cast<double>(clock.elapsed());
+            const double busy = qBound(0.0, 1.0 - (idleMs - lastIdleMs) / wall, 1.0);
+            lastText = QStringLiteral("%1%").arg(qRound(busy * 100.0));
+        }
+        lastIdleMs = idleMs;
+        clock.restart();
+        return lastText;
+    }
+
+    //! What a profiler region is about, for the Show chips: 0 CPU, 1 GPU, 2 Memory, 3 Network, 4 Asset loads.
+    int ProfilerRegionKind(const QString& name)
+    {
+        static const QStringList gpu = { QStringLiteral("render"), QStringLiteral("pass"), QStringLiteral("rhi"), QStringLiteral("atom"),
+                                         QStringLiteral("draw"), QStringLiteral("shadow"), QStringLiteral("light"), QStringLiteral("post"),
+                                         QStringLiteral("cull"), QStringLiteral("shader"), QStringLiteral("present"), QStringLiteral("gpu") };
+        static const QStringList memory = { QStringLiteral("alloc"), QStringLiteral("memory"), QStringLiteral("garbage"), QStringLiteral("free") };
+        static const QStringList network = { QStringLiteral("net"), QStringLiteral("multiplayer"), QStringLiteral("replica"),
+                                             QStringLiteral("socket"), QStringLiteral("packet") };
+        static const QStringList assets = { QStringLiteral("asset"), QStringLiteral("load"), QStringLiteral("stream"),
+                                            QStringLiteral("spawn"), QStringLiteral("prefab") };
+        const QString lower = name.toLower();
+        auto any = [&lower](const QStringList& words)
+        {
+            return std::any_of(words.begin(), words.end(), [&lower](const QString& word) { return lower.contains(word); });
+        };
+        if (any(assets))
+        {
+            return 4;
+        }
+        if (any(network))
+        {
+            return 3;
+        }
+        if (any(memory))
+        {
+            return 2;
+        }
+        if (any(gpu))
+        {
+            return 1;
+        }
+        return 0;
     }
 } // namespace
 
@@ -145,6 +226,7 @@ public:
         setMinimumHeight(4 * 28);
     }
     HearthProfilerPane::Frame m_frame;
+    bool m_show[5] = { true, true, true, true, true }; //!< CPU, GPU, Memory, Network, Asset loads
 
 protected:
     void paintEvent(QPaintEvent*) override
@@ -173,6 +255,9 @@ protected:
                 continue;
             }
             const QRectF box(x, region.depth * 28, w - 2, 26);
+            // Frame-level blocks always show; the rest follow the Show chips (hidden kinds are drawn faint).
+            const bool shown = region.depth == 0 || m_show[ProfilerRegionKind(region.name)];
+            g.setOpacity(shown ? 1.0 : 0.15);
             g.setPen(Qt::NoPen);
             g.setBrush(depthColors[region.depth]);
             g.drawRoundedRect(box, 5, 5);
@@ -180,6 +265,7 @@ protected:
             const QString text = QStringLiteral("%1 %2").arg(region.name).arg(region.endMs - region.startMs, 0, 'f', 1);
             g.drawText(box.adjusted(6, 0, -4, 0), Qt::AlignVCenter | Qt::AlignLeft, g.fontMetrics().elidedText(text, Qt::ElideRight, static_cast<int>(box.width()) - 10));
         }
+        g.setOpacity(1.0);
     }
 };
 
@@ -202,9 +288,14 @@ HearthProfilerPane::HearthProfilerPane(QWidget* parent)
     root->setSpacing(10);
 
     QHBoxLayout* header = Hearth::MakeHeader(this, tr("Profiler"), tr("Records the editor and the game while it plays"));
+    if (auto* titles = qobject_cast<QLayout*>(header->itemAt(1) ? header->itemAt(1)->layout() : nullptr))
+    {
+        m_subtitle = titles->itemAt(1) ? qobject_cast<QLabel*>(titles->itemAt(1)->widget()) : nullptr;
+    }
     m_recordingChip = Hearth::MakeChip(tr("Not recording"), QStringLiteral("plain"), this);
     m_record = Hearth::MakeButton(tr("Record"), false, this);
-    QPushButton* save = Hearth::MakeButton(tr("Open captures"), false, this);
+    QPushButton* save = Hearth::MakeButton(tr("Save capture"), false, this);
+    save->setToolTip(tr("Keep this capture with a name, in the captures folder"));
     QPushButton* explain = Hearth::MakeButton(tr("Ask Claude to explain"), true, this);
     header->addWidget(m_recordingChip);
     header->addWidget(m_record);
@@ -212,7 +303,7 @@ HearthProfilerPane::HearthProfilerPane(QWidget* parent)
     header->addWidget(explain);
     root->addLayout(header);
     connect(m_record, &QPushButton::clicked, this, &HearthProfilerPane::ToggleRecording);
-    connect(save, &QPushButton::clicked, this, []() { QDesktopServices::openUrl(QUrl::fromLocalFile(CaptureFolder())); });
+    connect(save, &QPushButton::clicked, this, &HearthProfilerPane::SaveCapture);
     connect(explain, &QPushButton::clicked, this, [this]()
     {
         QStringList report;
@@ -230,7 +321,7 @@ HearthProfilerPane::HearthProfilerPane(QWidget* parent)
     QFrame* mainCard = Hearth::MakeCard(this, &main);
     auto* stats = new QHBoxLayout();
     stats->setSpacing(8);
-    const QStringList names = { tr("Frame rate"), tr("Worst frame"), tr("RAM"), tr("GPU"), tr("Frames recorded") };
+    const QStringList names = { tr("Frame rate"), tr("Worst frame"), tr("RAM"), tr("GPU"), tr("Draw calls") };
     for (int i = 0; i < 5; ++i)
     {
         auto* tile = new QFrame(mainCard);
@@ -246,7 +337,12 @@ HearthProfilerPane::HearthProfilerPane(QWidget* parent)
         stats->addWidget(tile);
     }
     main->addLayout(stats);
-    main->addWidget(Hearth::MakeLabel(tr("Frames"), QStringLiteral("title"), mainCard));
+    auto* framesRow = new QHBoxLayout();
+    framesRow->addWidget(Hearth::MakeLabel(tr("Frames"), QStringLiteral("title"), mainCard));
+    m_framesLine = Hearth::MakeLabel(tr("live"), QStringLiteral("dim"), mainCard);
+    framesRow->addWidget(m_framesLine);
+    framesRow->addStretch(1);
+    main->addLayout(framesRow);
     m_bars = new HearthFrameBars(mainCard);
     m_bars->m_onPick = [this](int index) { PickFrame(index); };
     main->addWidget(m_bars);
@@ -254,6 +350,26 @@ HearthProfilerPane::HearthProfilerPane(QWidget* parent)
     main->addWidget(m_frameTitle);
     m_flame = new HearthFlameView(mainCard);
     main->addWidget(m_flame);
+    auto* showRow = new QHBoxLayout();
+    showRow->setSpacing(6);
+    showRow->addWidget(Hearth::MakeLabel(tr("Show"), QStringLiteral("small"), mainCard));
+    const QStringList kinds = { tr("CPU"), tr("GPU"), tr("Memory"), tr("Network"), tr("Asset loads") };
+    for (int i = 0; i < kinds.size(); ++i)
+    {
+        QPushButton* chip = Hearth::MakeButton(kinds[i], false, mainCard);
+        chip->setCheckable(true);
+        chip->setChecked(true);
+        chip->setStyleSheet(QStringLiteral("QPushButton { border-radius: 12px; padding: 3px 12px; font-size: 12px; background-color: rgba(255, 255, 255, 10); color: #8D857B; }"
+                                           "QPushButton:checked { background-color: rgba(232, 116, 59, 46); color: #ECE6DE; }"));
+        connect(chip, &QPushButton::toggled, this, [this, i](bool on)
+        {
+            m_flame->m_show[i] = on;
+            m_flame->update();
+        });
+        showRow->addWidget(chip);
+    }
+    showRow->addStretch(1);
+    main->addLayout(showRow);
     main->addStretch(1);
     body->addWidget(mainCard, 1);
 
@@ -322,7 +438,23 @@ void HearthProfilerPane::UpdateStats()
     m_stat[2]->setStyleSheet(QStringLiteral("background: transparent; font-family: \"Geist Mono\"; font-size: 18px; font-weight: 600; color: %1;")
                                  .arg(total > 0 && used / total > 0.8 ? QStringLiteral("#F0D17A") : QStringLiteral("#ECE6DE")));
     m_stat[3]->setText(GpuBusy());
-    m_stat[4]->setText(QString::number(m_frames.size()));
+    // Draw calls: everything the renderer drew last frame.
+    if (auto* passes = AZ::RPI::PassSystemInterface::Get())
+    {
+        const AZ::RPI::PassSystemFrameStatistics frame = passes->GetFrameStatistics();
+        m_stat[4]->setText(QLocale().toString(static_cast<qlonglong>(frame.m_totalDrawItemsRendered)));
+    }
+    if (m_subtitle)
+    {
+        const bool inGame = GetIEditor() && GetIEditor()->IsInGameMode();
+        const QString level = GetIEditor() ? GetIEditor()->GetLevelName() : QString();
+        m_subtitle->setText(m_recording ? (inGame ? tr("Recording the game · %1").arg(level) : tr("Recording the editor · %1").arg(level))
+                                        : tr("Records the editor and the game while it plays"));
+    }
+    if (m_frames.isEmpty())
+    {
+        m_framesLine->setText(tr("live · last %1").arg(qMin(ShownFrames, m_liveFrames.size())));
+    }
     if (!m_recording && m_frames.isEmpty())
     {
         // Before a capture, show the live frames as bars.
@@ -466,6 +598,29 @@ bool HearthProfilerPane::LoadCapture(const QString& path)
     return true;
 }
 
+void HearthProfilerPane::SaveCapture()
+{
+    if (m_capturePath.isEmpty() || !QFile::exists(m_capturePath))
+    {
+        m_recordingChip->setText(tr("Record something first"));
+        return;
+    }
+    const QString level = GetIEditor() && !GetIEditor()->GetLevelName().isEmpty() ? GetIEditor()->GetLevelName() : QStringLiteral("editor");
+    const QString name = QStringLiteral("%1-%2.json").arg(level.toLower(), QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd-HHmm")));
+    const QString target = QDir(CaptureFolder()).filePath(QStringLiteral("saved/") + name);
+    QDir().mkpath(QFileInfo(target).absolutePath());
+    QFile::remove(target);
+    if (QFile::copy(m_capturePath, target))
+    {
+        m_recordingChip->setText(tr("Saved as %1").arg(name));
+        QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(target).absolutePath()));
+    }
+    else
+    {
+        m_recordingChip->setText(tr("Couldn't save the capture"));
+    }
+}
+
 void HearthProfilerPane::PickFrame(int index)
 {
     const int first = qMax(0, m_frames.size() - ShownFrames);
@@ -478,7 +633,8 @@ void HearthProfilerPane::PickFrame(int index)
     m_bars->update();
     m_flame->m_frame = m_frames[m_picked];
     m_flame->update();
-    m_frameTitle->setText(tr("Frame %1, where the time went (%2 ms)").arg(m_picked + 1).arg(m_frames[m_picked].ms, 0, 'f', 1));
+    m_frameTitle->setText(tr("Frame %1, where the time went (%2 ms)").arg(index + 1).arg(m_frames[m_picked].ms, 0, 'f', 1));
+    m_framesLine->setText(tr("last %1 · frame %2 picked").arg(qMin(ShownFrames, m_frames.size())).arg(index + 1));
 }
 
 void HearthProfilerPane::UpdateTips()
