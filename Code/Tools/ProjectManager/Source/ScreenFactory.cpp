@@ -20,6 +20,7 @@
 #include <GemRepo/GemRepoScreen.h>
 #include <CreateAGemScreen.h>
 #include <EditAGemScreen.h>
+#include <HubScreen.h>
 #include <DownloadController.h>
 
 namespace O3DE::ProjectManager
@@ -68,6 +69,9 @@ namespace O3DE::ProjectManager
             break;
         case (ProjectManagerScreen::EditGem):
             newScreen = new EditGem(parent);
+            break;
+        case (ProjectManagerScreen::Hub):
+            newScreen = new HubScreen(parent);
             break;
         case (ProjectManagerScreen::Empty):
         default:

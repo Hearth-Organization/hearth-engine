@@ -40,6 +40,7 @@ ly_add_target(
             3rdParty::Qt::Core
             3rdParty::Qt::Concurrent
             3rdParty::Qt::Widgets
+            3rdParty::Qt::Network
             3rdParty::Python
             3rdParty::pybind11
             AZ::AzCore

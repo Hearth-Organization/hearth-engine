@@ -73,6 +73,8 @@ set(FILES
     Source/UpdateProjectCtrl.h
     Source/UpdateProjectCtrl.cpp
     Source/ProjectsScreen.h
+    Source/HubScreen.cpp
+    Source/HubScreen.h
     Source/ProjectsScreen.cpp
     Source/ProjectSettingsScreen.h
     Source/ProjectSettingsScreen.cpp

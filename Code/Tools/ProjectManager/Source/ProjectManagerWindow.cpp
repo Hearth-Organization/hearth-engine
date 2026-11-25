@@ -25,11 +25,12 @@ namespace O3DE::ProjectManager
             auto engineInfo = engineInfoOutcome.GetValue<EngineInfo>();
             auto versionToDisplay = engineInfo.m_displayVersion == "00.00" ?
                                         engineInfo.m_version : engineInfo.m_displayVersion;
-            setWindowTitle(QString("%1 %2 %3").arg(engineInfo.m_name.toUpper(), versionToDisplay, tr("Project Manager")));
+            Q_UNUSED(versionToDisplay);
+            setWindowTitle(tr("Hearth Engine"));
         }
         else
         {
-            setWindowTitle(QString("O3DE %1").arg(tr("Project Manager")));
+            setWindowTitle(tr("Hearth Engine"));
         }
 
         m_downloadController = new DownloadController(this);
@@ -39,6 +40,7 @@ namespace O3DE::ProjectManager
         // currently the tab order on the home page is based on the order of this list
         QVector<ProjectManagerScreen> screenEnums =
         {
+            ProjectManagerScreen::Hub,
             ProjectManagerScreen::Projects,
             ProjectManagerScreen::CreateGem,
             ProjectManagerScreen::EditGem,
@@ -52,11 +54,11 @@ namespace O3DE::ProjectManager
 
         setCentralWidget(screensCtrl);
 
-        // Projects is the default first screen because it is first in the above order
-        if (startScreen != ProjectManagerScreen::Projects)
+        // Hearth Engine: the Hub is the home screen (it replaces the project list). Other screens open on top of it,
+        // so Back always comes home to the Hub.
+        screensCtrl->ForceChangeToScreen(ProjectManagerScreen::Hub, false);
+        if (startScreen != ProjectManagerScreen::Projects && startScreen != ProjectManagerScreen::Hub)
         {
-            // always push the projects screen first so we have something to come back to
-            screensCtrl->ForceChangeToScreen(ProjectManagerScreen::Projects);
             screensCtrl->ForceChangeToScreen(startScreen);
         }
 

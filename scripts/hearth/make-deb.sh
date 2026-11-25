@@ -77,6 +77,9 @@ chmod 755 "$pkg/usr/bin/hearth-engine-editor" "$pkg/usr/bin/hearth-engine-assets
 echo "$version" > "$pkg/opt/hearth-engine/HEARTH_VERSION"
 # GitHub build number (shown in About), and the notes and licences the About box links to.
 [ -n "${GITHUB_RUN_NUMBER:-}" ] && echo "$GITHUB_RUN_NUMBER" > "$pkg/opt/hearth-engine/HEARTH_BUILD"
+# The Hearth Engine agent (the Hub's helper: builds, runs and measures the game, lets Claude help).
+mkdir -p "$pkg/opt/hearth-engine/scripts/hearth/agent"
+cp "$here/agent/hearth_agent.py" "$pkg/opt/hearth-engine/scripts/hearth/agent/hearth_agent.py"
 for f in HEARTH.md HEARTH_CHANGES.md LICENSE.txt LICENSE_APACHE2.TXT LICENSE_MIT.TXT; do
     [ -f "$here/../../$f" ] && cp "$here/../../$f" "$pkg/opt/hearth-engine/$f"
 done
