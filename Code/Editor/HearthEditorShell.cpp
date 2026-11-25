@@ -100,8 +100,7 @@ HearthEditorShell::HearthEditorShell(QMainWindow* mainWindow)
     connect(fullScreen, &QShortcut::activated, this, &HearthEditorShell::PlayFullScreen);
     auto* standalone = new QShortcut(QKeySequence(QStringLiteral("Ctrl+F11")), mainWindow);
     connect(standalone, &QShortcut::activated, this, &HearthEditorShell::StartStandaloneGame);
-    auto* levelGen = new QShortcut(QKeySequence(QStringLiteral("Ctrl+Shift+L")), mainWindow);
-    connect(levelGen, &QShortcut::activated, this, []() { QtViewPaneManager::instance()->OpenPane(QStringLiteral("Level Generator")); });
+    // Ctrl+Shift+L (Level Generator) is the Level menu's action hotkey (EditorActionsHandler).
     auto* build = new QShortcut(QKeySequence(QStringLiteral("Ctrl+B")), mainWindow);
     connect(build, &QShortcut::activated, this, &HearthEditorShell::RequestBuild);
 
