@@ -10,6 +10,7 @@
 #include "EditorDefs.h"
 
 #include "CryEditDoc.h"
+#include "HearthLevelDialogs.h"
 
 // Qt
 #include <QDateTime>
@@ -492,7 +493,7 @@ bool CCryEditDoc::SaveModified()
         return true;
     }
 
-    int prefabSaveSelection = m_prefabIntegrationInterface->HandleRootPrefabClosure(rootPrefabTemplateId);
+    int prefabSaveSelection = HearthAskToSaveLevel(rootPrefabTemplateId); // Hearth: "Save Level 0 first?" 
 
     // In order to get the accept and reject codes of QDialog and QDialogButtonBox aligned, we do (1-prefabSaveSelection) here.
     // For example, QDialog::Rejected(0) is emitted when dialog is closed. But the int value corresponds to

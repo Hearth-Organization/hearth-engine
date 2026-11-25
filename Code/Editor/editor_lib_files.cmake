@@ -286,6 +286,8 @@ set(FILES
     HearthPrefabPane.h
     HearthScriptConsole.cpp
     HearthScriptConsole.h
+    HearthLevelDialogs.cpp
+    HearthLevelDialogs.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

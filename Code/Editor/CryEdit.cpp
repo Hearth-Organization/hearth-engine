@@ -95,6 +95,7 @@ AZ_POP_DISABLE_WARNING
 
 #include "Core/QtEditorApplication.h"
 #include "NewLevelDialog.h"
+#include "HearthLevelDialogs.h"
 #include "LayoutConfigDialog.h"
 #include "ViewManager.h"
 #include "FileTypeUtils.h"
@@ -269,6 +270,16 @@ void CCryDocManager::OnFileNew()
 }
 bool CCryDocManager::DoPromptFileName(QString& fileName, bool bOpenFileDialog)
 {
+    if (bOpenFileDialog)
+    {
+        HearthOpenLevelDialog levelDialog(AzToolsFramework::GetActiveWindow());
+        if (levelDialog.exec() == QDialog::Accepted && !levelDialog.GetFileName().isEmpty())
+        {
+            fileName = levelDialog.GetFileName();
+            return true;
+        }
+        return false;
+    }
     CLevelFileDialog levelFileDialog(bOpenFileDialog);
     levelFileDialog.show();
     levelFileDialog.adjustSize();
@@ -2676,7 +2687,7 @@ bool CCryEditApp::CreateLevel(bool& wasCreateLevelOperationCancelled)
         }
 
         AzToolsFramework::Prefab::TemplateId rootPrefabTemplateId = prefabEditorEntityOwnershipInterface->GetRootPrefabTemplateId();
-        int prefabSaveSelection = prefabIntegrationInterface->HandleRootPrefabClosure(rootPrefabTemplateId);
+        int prefabSaveSelection = HearthAskToSaveLevel(rootPrefabTemplateId); // Hearth: "Save Level 0 first?" 
 
         // In order to get the accept and reject codes of QDialog and QDialogButtonBox aligned, we do (1-prefabSaveSelection) here.
         // For example, QDialog::Rejected(0) is emitted when dialog is closed. But the int value corresponds to
@@ -2699,8 +2710,7 @@ bool CCryEditApp::CreateLevel(bool& wasCreateLevelOperationCancelled)
 
     const char* temporaryLevelName = GetIEditor()->GetDocument()->GetTemporaryLevelName();
 
-    CNewLevelDialog dlg;
-    dlg.m_level = "";
+    HearthNewLevelDialog dlg(AzToolsFramework::GetActiveWindow()); // Hearth: New level
 
     if (dlg.exec() != QDialog::Accepted)
     {
@@ -2829,13 +2839,11 @@ void CCryEditApp::OnNewComponent()
 //////////////////////////////////////////////////////////////////////////
 void CCryEditApp::OnOpenLevel()
 {
-    CLevelFileDialog levelFileDialog(true);
-    levelFileDialog.show();
-    levelFileDialog.adjustSize();
-
-    if (levelFileDialog.exec() == QDialog::Accepted)
+    // Hearth: Open level (the project's levels, with when each was last open).
+    HearthOpenLevelDialog levelDialog(AzToolsFramework::GetActiveWindow());
+    if (levelDialog.exec() == QDialog::Accepted && !levelDialog.GetFileName().isEmpty())
     {
-        OpenDocumentFile(levelFileDialog.GetFileName().toUtf8().data(), true, COpenSameLevelOptions::ReopenLevelIfSame);
+        OpenDocumentFile(levelDialog.GetFileName().toUtf8().data(), true, COpenSameLevelOptions::ReopenLevelIfSame);
     }
 }
 

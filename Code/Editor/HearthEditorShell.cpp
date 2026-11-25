@@ -5,6 +5,7 @@
 #include "EditorDefs.h"
 
 #include "HearthEditorShell.h"
+#include "CryEditDoc.h"
 #include "HearthCommandPalette.h"
 #include "HearthPlaytestOverlay.h"
 #include "QtViewPaneManager.h"
@@ -29,6 +30,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QPushButton>
+#include <QDateTime>
 #include <QSettings>
 #include <QShortcut>
 #include <QStandardPaths>
@@ -278,6 +280,18 @@ void HearthEditorShell::UpdateTitle()
     m_projectLabel->setText(Pretty(QString::fromUtf8(projectName.c_str(), static_cast<int>(projectName.size()))));
     const QString level = GetIEditor() ? GetIEditor()->GetLevelName() : QString();
     m_levelLabel->setText(level.isEmpty() ? tr("Hearth Engine") : tr("%1 · Hearth Engine").arg(level));
+    // When each level was last open, for the Open level dialog ("Opened 2 hours ago").
+    static QString lastLevel;
+    if (!level.isEmpty() && GetIEditor()->GetDocument() && GetIEditor()->GetDocument()->IsDocumentReady())
+    {
+        QScopedPointer<QSettings> settings(Hearth::NewSettings());
+        const QString key = QStringLiteral("levels/%1/%2").arg(QString::fromUtf8(projectName.c_str(), static_cast<int>(projectName.size())), level);
+        if (level != lastLevel || settings->value(key).toLongLong() < QDateTime::currentSecsSinceEpoch() - 600)
+        {
+            settings->setValue(key, QDateTime::currentSecsSinceEpoch());
+        }
+        lastLevel = level;
+    }
 }
 
 void HearthEditorShell::ApplyLaptopSettings()
