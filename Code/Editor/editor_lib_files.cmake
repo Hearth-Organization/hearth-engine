@@ -270,6 +270,8 @@ set(FILES
     HearthAssetBrowser.h
     HearthImportPane.cpp
     HearthImportPane.h
+    HearthProcessingPane.cpp
+    HearthProcessingPane.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

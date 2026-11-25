@@ -20,6 +20,11 @@
 #include <native/utilities/UuidManager.h>
 
 #include <qwindowdefs.h>
+#include <QByteArray>
+#include <QHash>
+#include <QString>
+
+class QTimer;
 
 namespace AzToolsFramework
 {
@@ -267,6 +272,15 @@ protected:
 
     unsigned int m_highestConnId = 0;
     AzToolsFramework::Ticker* m_ticker = nullptr; // for ticking the tickbus.
+
+    // Hearth Engine: the editor's Asset processing window reads <project>/user/AssetProcessor/hearth-status.json
+    // (queue, working jobs, failures and how often they failed) and asks for pause / process changes / try again
+    // through hearth-control.json.
+    void HearthStatusTick();
+    QTimer* m_hearthStatusTimer = nullptr;
+    QByteArray m_hearthLastStatus;
+    QHash<QString, int> m_hearthFailures;
+    bool m_hearthPaused = false;
 
     QList<QMetaObject::Connection> m_connectionsToRemoveOnShutdown;
     QString m_dependencyScanPattern;

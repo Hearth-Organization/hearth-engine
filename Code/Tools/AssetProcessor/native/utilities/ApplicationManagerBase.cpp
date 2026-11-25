@@ -35,6 +35,16 @@
 #include <QCoreApplication>
 
 #include <QElapsedTimer>
+#include <QDateTime>
+#include <QDir>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QSaveFile>
+#include <QTimer>
+#include <AzCore/Utils/Utils.h>
+#include <native/resourcecompiler/rcjoblistmodel.h>
 
 //! CreateJobs will wait up to 2 minutes before timing out
 //! This shouldn't need to be so high but very large slices can take a while to process currently
@@ -394,6 +404,115 @@ void ApplicationManagerBase::InitRCController()
     QObject::connect(m_assetProcessorManager, &AssetProcessor::AssetProcessorManager::SourceDeleted, m_rcController, &AssetProcessor::RCController::RemoveJobsBySource);
     QObject::connect(m_assetProcessorManager, &AssetProcessor::AssetProcessorManager::JobComplete, m_rcController, &AssetProcessor::RCController::OnJobComplete);
     QObject::connect(m_assetProcessorManager, &AssetProcessor::AssetProcessorManager::AddedToCatalog, m_rcController, &AssetProcessor::RCController::OnAddedToCatalog);
+
+    // Hearth Engine: count how many times each file has failed, for the editor's Asset processing window.
+    QObject::connect(m_rcController, &AssetProcessor::RCController::FileFailed, this, [this](AssetProcessor::JobEntry entry)
+    {
+        m_hearthFailures[QString::fromUtf8(entry.m_sourceAssetReference.AbsolutePath().c_str())] += 1;
+    });
+    QObject::connect(m_rcController, &AssetProcessor::RCController::FileCompiled, this, [this](AssetProcessor::JobEntry entry, AssetBuilderSDK::ProcessJobResponse)
+    {
+        m_hearthFailures.remove(QString::fromUtf8(entry.m_sourceAssetReference.AbsolutePath().c_str()));
+    });
+}
+
+void ApplicationManagerBase::HearthStatusTick()
+{
+    if (!m_rcController)
+    {
+        return;
+    }
+    const QString folder = QDir(QString::fromUtf8(AZ::Utils::GetProjectPath().c_str())).filePath(QStringLiteral("user/AssetProcessor"));
+    QDir().mkpath(folder);
+
+    // Requests from the editor (the file is removed once read).
+    QFile control(QDir(folder).filePath(QStringLiteral("hearth-control.json")));
+    if (control.exists() && control.open(QIODevice::ReadOnly))
+    {
+        const QJsonObject request = QJsonDocument::fromJson(control.readAll()).object();
+        control.close();
+        control.remove();
+        if (request.contains(QStringLiteral("pause")))
+        {
+            m_hearthPaused = request.value(QStringLiteral("pause")).toBool();
+            m_rcController->SetDispatchPaused(m_hearthPaused);
+        }
+        if (request.value(QStringLiteral("processChanges")).toBool())
+        {
+            if (m_hearthPaused)
+            {
+                m_hearthPaused = false;
+                m_rcController->SetDispatchPaused(false);
+            }
+            FastScan();
+        }
+        for (const QJsonValue& path : request.value(QStringLiteral("reprocess")).toArray())
+        {
+            const QString source = path.toString();
+            QMetaObject::invokeMethod(m_assetProcessorManager, [manager = m_assetProcessorManager, source]() { manager->RequestReprocess(source); }, Qt::QueuedConnection);
+        }
+    }
+    if (m_hearthPaused && !m_rcController->IsDispatchPaused())
+    {
+        m_rcController->SetDispatchPaused(true);
+    }
+
+    // What's happening now.
+    QJsonArray jobs;
+    int working = 0;
+    int waiting = 0;
+    AssetProcessor::RCJobListModel* queue = m_rcController->GetQueueModel();
+    for (int i = 0; queue && i < queue->itemCount(); ++i)
+    {
+        const AssetProcessor::RCJob* job = queue->getItem(i);
+        if (!job)
+        {
+            continue;
+        }
+        const bool inFlight = job->GetState() == AssetProcessor::RCJob::processing;
+        const bool pending = job->GetState() == AssetProcessor::RCJob::pending;
+        if (!inFlight && !pending)
+        {
+            continue;
+        }
+        working += inFlight ? 1 : 0;
+        waiting += pending ? 1 : 0;
+        if (jobs.size() < 400 || inFlight)
+        {
+            const AssetProcessor::JobEntry& entry = job->GetJobEntry();
+            jobs.append(QJsonObject{ { QStringLiteral("source"), QString::fromUtf8(entry.m_sourceAssetReference.AbsolutePath().c_str()) },
+                                     { QStringLiteral("relative"), QString::fromUtf8(entry.m_sourceAssetReference.RelativePath().c_str()) },
+                                     { QStringLiteral("state"), inFlight ? QStringLiteral("working") : QStringLiteral("waiting") },
+                                     { QStringLiteral("platform"), QString::fromUtf8(job->GetPlatformInfo().m_identifier.c_str()) },
+                                     { QStringLiteral("jobKey"), job->GetJobKey() } });
+        }
+    }
+    QJsonObject failures;
+    for (auto it = m_hearthFailures.begin(); it != m_hearthFailures.end(); ++it)
+    {
+        failures.insert(it.key(), it.value());
+    }
+    QJsonObject status{ { QStringLiteral("paused"), m_hearthPaused }, { QStringLiteral("working"), working }, { QStringLiteral("waiting"), waiting },
+                        { QStringLiteral("maxJobs"), int(m_rcController->GetMaxJobs()) }, { QStringLiteral("jobs"), jobs },
+                        { QStringLiteral("failures"), failures }, { QStringLiteral("pid"), qint64(QCoreApplication::applicationPid()) } };
+    const QByteArray bytes = QJsonDocument(status).toJson(QJsonDocument::Compact);
+    // Rewrite when something changed, and at least every 10 seconds so the editor can tell the Asset Processor is alive.
+    static qint64 lastWrite = 0;
+    const qint64 now = QDateTime::currentMSecsSinceEpoch();
+    if (bytes == m_hearthLastStatus && now - lastWrite < 10000)
+    {
+        return;
+    }
+    QSaveFile out(QDir(folder).filePath(QStringLiteral("hearth-status.json")));
+    if (out.open(QIODevice::WriteOnly))
+    {
+        out.write(bytes);
+        if (out.commit())
+        {
+            m_hearthLastStatus = bytes;
+            lastWrite = now;
+        }
+    }
 }
 
 void ApplicationManagerBase::DestroyRCController()
@@ -1660,6 +1779,23 @@ bool ApplicationManagerBase::PostActivate()
     Q_EMIT OnBuildersRegistered();
 
     // 25 milliseconds is above the 'while loop' thing that QT does on windows (where small time ticks will spin loop instead of sleep)
+    // Hearth Engine: keep the editor's Asset processing window up to date. Failure counts carry over between runs.
+    {
+        QFile previous(QDir(QString::fromUtf8(AZ::Utils::GetProjectPath().c_str())).filePath(QStringLiteral("user/AssetProcessor/hearth-status.json")));
+        if (previous.open(QIODevice::ReadOnly))
+        {
+            const QJsonObject failures = QJsonDocument::fromJson(previous.readAll()).object().value(QStringLiteral("failures")).toObject();
+            for (auto it = failures.begin(); it != failures.end(); ++it)
+            {
+                m_hearthFailures.insert(it.key(), it.value().toInt());
+            }
+        }
+    }
+    m_hearthStatusTimer = new QTimer(this);
+    m_hearthStatusTimer->setInterval(1000);
+    connect(m_hearthStatusTimer, &QTimer::timeout, this, &ApplicationManagerBase::HearthStatusTick);
+    m_hearthStatusTimer->start();
+
     m_ticker = new AzToolsFramework::Ticker(nullptr, 25.0f);
     m_ticker->Start();
     connect(m_ticker, &AzToolsFramework::Ticker::Tick, this, []()

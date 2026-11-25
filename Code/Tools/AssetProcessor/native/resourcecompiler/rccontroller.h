@@ -46,6 +46,9 @@ namespace AssetProcessor
         virtual ~RCController();
 
         AssetProcessor::RCJobListModel* GetQueueModel();
+        //! Hearth Engine: for the editor's Asset processing window.
+        bool IsDispatchPaused() const { return m_dispatchingPaused; }
+        unsigned int GetMaxJobs() const { return m_maxJobs; }
 
         void StartJob(AssetProcessor::RCJob* rcJob);
         int NumberOfPendingCriticalJobsPerPlatform(QString platform);
