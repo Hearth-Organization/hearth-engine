@@ -8,6 +8,12 @@
 #pragma once
 
 #include <QAbstractButton>
+#include <QApplication>
+#include <QClipboard>
+#include <QDateTime>
+#include <QDesktopServices>
+#include <QUrl>
+#include <QUrlQuery>
 #include <QColor>
 #include <QCoreApplication>
 #include <QDir>
@@ -121,6 +127,37 @@ namespace AzQtComponents
         inline QSettings* NewSettings(QObject* parent = nullptr)
         {
             return new QSettings(SettingsPath(), QSettings::IniFormat, parent);
+        }
+
+        // ---------- Claude ----------
+
+        //! Hand a problem to Claude: the full report goes to ~/O3DE/HearthEngine/claude-requests/<time>.md, a short
+        //! message about it goes on the clipboard and claude.ai opens with it filled in. When Claude is done it leaves
+        //! a note in ~/O3DE/HearthEngine/claude-results/ (the Hub shows it as "Claude fixed it").
+        inline QString AskClaude(const QString& title, const QString& details, const QString& projectPath = {})
+        {
+            QDir requests(QDir(HomeFolder()).filePath(QStringLiteral("claude-requests")));
+            requests.mkpath(QStringLiteral("."));
+            const QString stamp = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd_HH-mm-ss"));
+            const QString path = requests.filePath(stamp + QStringLiteral(".md"));
+            QFile file(path);
+            if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+            {
+                const QString text = QStringLiteral("# %1\n\n- Time: %2\n- Hearth Engine: %3\n- Project: %4\n- Logs: %5\n\n```\n%6\n```\n")
+                                         .arg(title, QDateTime::currentDateTime().toString(Qt::ISODate), Version(), projectPath,
+                                              LogsFolder(), details);
+                file.write(text.toUtf8());
+            }
+            const QString message = QCoreApplication::translate("Hearth",
+                "%1. The report is in %2 and the logs in %3. Please read them, fix the cause, and leave a note in %4 when it's done.")
+                                        .arg(title, path, LogsFolder(), QDir(HomeFolder()).filePath(QStringLiteral("claude-results")));
+            QApplication::clipboard()->setText(message);
+            QUrl url(QStringLiteral("https://claude.ai/new"));
+            QUrlQuery query;
+            query.addQueryItem(QStringLiteral("q"), message);
+            url.setQuery(query);
+            QDesktopServices::openUrl(url);
+            return path;
         }
 
         // ---------- The flame ----------
