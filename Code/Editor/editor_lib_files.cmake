@@ -288,6 +288,8 @@ set(FILES
     HearthScriptConsole.h
     HearthLevelDialogs.cpp
     HearthLevelDialogs.h
+    HearthUiEditor.cpp
+    HearthUiEditor.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

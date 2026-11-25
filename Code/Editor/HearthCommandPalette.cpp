@@ -159,7 +159,8 @@ void HearthCommandPalette::CollectCommands()
                                                                { QStringLiteral("Physics"), QString() },
                                                                { QStringLiteral("Audio"), QString() },
                                                                { QStringLiteral("Prefab editing"), QString() },
-                                                               { QStringLiteral("Script console"), QString() } })
+                                                               { QStringLiteral("Script console"), QString() },
+                                                               { QStringLiteral("Game UI editor"), QString() } })
     {
         const QString name = pane.first;
         m_commands.push_back({ QStringLiteral("◫"), tr("Open %1").arg(name), tr("Tools"), pane.second,
