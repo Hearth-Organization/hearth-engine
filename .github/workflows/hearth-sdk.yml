@@ -160,6 +160,7 @@ jobs:
           scripts/hearth/make-deb.sh install "$deb"
           if [ "$(stat -c %s "$deb")" -gt 2000000000 ]; then echo "::error::$deb is over GitHub's 2 GB file limit"; exit 1; fi
           sha256sum "$deb" >> hearth-engine-sdk-linux.sha256
-          gh release create "$tag" "$deb" hearth-engine-sdk-linux.tar.zst.part* hearth-engine-sdk-linux.sha256 \
+          # Made as a draft: it's published once every screen has been checked against its mockup.
+          gh release create "$tag" "$deb" hearth-engine-sdk-linux.tar.zst.part* hearth-engine-sdk-linux.sha256 --draft \
             --title "Hearth Engine ${version} (Linux, build ${{ github.run_number }})" \
             --notes "Built from ${{ github.sha }} on branch hearth/main. Install: sudo apt install ./${deb} (adds the Hearth Engine app and the hearth-engine command). Or the plain SDK: join the .part files, check the sha256, unpack."
