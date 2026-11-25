@@ -401,7 +401,7 @@ namespace AzQtComponents
         config.rootThumbnail.borderThickness = 1.0;
         config.rootThumbnail.selectedBorderThickness = 1.0;
         config.rootThumbnail.borderColor = QColor(0x22, 0x22, 0x22);
-        config.rootThumbnail.selectedBorderColor = QColor(30, 112, 235);
+        config.rootThumbnail.selectedBorderColor = QColor(232, 116, 59);
 
         config.childThumbnail.width = 70;
         config.childThumbnail.height = 80;

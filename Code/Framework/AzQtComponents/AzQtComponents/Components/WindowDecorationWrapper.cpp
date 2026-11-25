@@ -906,7 +906,7 @@ namespace AzQtComponents
     {
         Q_UNUSED(widget);
         painter->save();
-        painter->setPen(QColor(33, 34, 35));
+        painter->setPen(QColor(13, 12, 11));
         painter->drawRect(option->rect.adjusted(0, 0, -1, -1));
         painter->restore();
     }

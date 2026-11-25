@@ -1,6 +1,6 @@
 /************** General (MainWindow) **************/
 QMainWindow {
-    background:#131313 url(:/o3de.svg) no-repeat top left;
+    background:#0E0D0C url(:/o3de.svg) no-repeat top left;
     /* position the logo using padding and background-origin, Qt does not support background-position pixels */
     background-origin:content;
     padding:25px 16px;
@@ -15,33 +15,33 @@ QMainWindow {
 QPushButton[primary="true"] {
     qproperty-flat: true;
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                            stop: 0 #0095f2, stop: 1.0 #1e70eb);
+                            stop: 0 #f08a55, stop: 1.0 #e8743b);
 }
 QPushButton[primary="true"]:hover {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                            stop: 0 #10A5f2, stop: 1.0 #2e80eb);
+                            stop: 0 #EC5D16, stop: 1.0 #e66f33);
 }
 QPushButton[primary="true"]:pressed {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                            stop: 0 #0085e2, stop: 1.0 #0e60db);
+                            stop: 0 #dc4d06, stop: 1.0 #d65413);
 }
 QPushButton[primary="true"]:disabled {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                            stop: 0 #777777, stop: 1.0 #444444);
+                            stop: 0 #4A443D, stop: 1.0 #211E1B);
 }
 
 QPushButton[secondary="true"] {
     qproperty-flat: true;
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                            stop: 0 #888888, stop: 1.0 #555555);
+                            stop: 0 #6E675E, stop: 1.0 #2A2622);
 }
 QPushButton[secondary="true"]:hover {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                            stop: 0 #999999, stop: 1.0 #666666);
+                            stop: 0 #8D857B, stop: 1.0 #35302B);
 }
 QPushButton[secondary="true"]:pressed {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                            stop: 0 #555555, stop: 1.0 #777777);
+                            stop: 0 #2A2622, stop: 1.0 #4A443D);
 }
 
 QPushButton[danger="true"] {
@@ -81,17 +81,17 @@ QTabBar::tab:text {
     height: 40px;
     min-width: 180px;
     spacing: 10px;
-    color: #6b6b6b;
+    color: #3b3630;
 }
 
 #createAGemLHS QRadioButton:enabled{
-    color: #aaaaaa;
+    color: #a29a90;
 }
 
 #createAGemLHS QRadioButton:checked{
-    background-color: #333333;
+    background-color: #171513;
     spacing: 30px;
-    color: #FFFFFF;
+    color: #ECE6DE;
 }
 
 #createAGemLHS QRadioButton::indicator{
@@ -99,7 +99,7 @@ QTabBar::tab:text {
 }
 
 QStackedWidget#createAGemRHS{
-    background-color: #333333;
+    background-color: #171513;
     text-align:left;
 }
 
@@ -116,21 +116,21 @@ QStackedWidget#createAGemRHS{
 }
 
 QTabWidget::pane {
-    background-color: #333333;
+    background-color: #171513;
     border:0 none;
 }
 QTabBar::tab:selected {
     background-color: transparent;
-    border-bottom: 3px solid #1e70eb;
-    color: #1e70eb;
+    border-bottom: 3px solid #e8743b;
+    color: #e8743b;
     font-weight: 500;
 }
 QTabBar::tab:hover {
-    color: #1e70eb;
+    color: #e8743b;
     font-weight: 500;
 }
 QTabBar::tab:pressed {
-    color: #0e60eb;
+    color: #e55a14;
 }
 QTabBar::focus {
     outline: 0px;
@@ -138,8 +138,8 @@ QTabBar::focus {
     outline-style: none;
 }
 QTabBar::tab:focus {
-    background-color: #525252;
-    color: #4082eb;
+    background-color: #282521;
+    color: #e77a44;
 }
 
 #createGemTab #formFrame {
@@ -181,7 +181,7 @@ QTabBar::tab:focus {
 #ToastNotification {
     background-color: black;
     border-radius: 20px;
-    border:1px solid #dddddd;
+    border:1px solid #dbd4cb;
     qproperty-minimumSize: 100px 50px;
 }
 
@@ -207,8 +207,8 @@ QTabBar::tab:focus {
 
 #formFrame {
     max-width: 840px;
-    background-color: #444444;
-    border:1px solid #dddddd;
+    background-color: #211E1B;
+    border:1px solid #dbd4cb;
     border-radius: 4px;
     padding: 0px 10px 2px 6px;
     margin-top:10px;
@@ -224,19 +224,19 @@ QTabBar::tab:focus {
 
 #formTagField {
     max-width: 840px;
-    background-color: #333333;
+    background-color: #171513;
     padding: 0px 10px 2px 6px;
     margin-left:50px;
 }
 
 #formTagField QCheckBox{
-    background-color: #555555;
+    background-color: #2A2622;
     padding-left:7px;
     padding-top:2px;
     padding-bottom:2px;
     padding-right:5px;
     spacing:0px;
-    color:#94D2FF;
+    color:#FFCFB4;
 }
 
 #formTagField QCheckBox::indicator{
@@ -251,7 +251,7 @@ QTabBar::tab:focus {
 }
 
 #formFrame[Focus="true"] {
-    border:1px solid #1e70eb;
+    border:1px solid #e8743b;
 }
 
 #formFrame[Valid="false"] {
@@ -259,17 +259,17 @@ QTabBar::tab:focus {
 }
 
 #formFrame:disabled {
-    border:1px solid #959595;
+    border:1px solid #867E74;
 }
 
 #formOptionsFrame QLabel,
 #formFrame QLabel {
     font-size: 13px;
-    color: #cccccc;
+    color: #d2cbc2;
 }
 
 #formFrame QLabel:disabled {
-    color: #888888;
+    color: #6E675E;
 }
 
 #formFrame QPushButton {
@@ -299,7 +299,7 @@ QTabBar::tab:focus {
 #formFrame QLineEdit {
     background-color: rgba(0,0,0,0);
     font-size: 18px;
-    color: #ffffff;
+    color: #ece6de;
     border:0;
     line-height: 30px;
     height: 1em;
@@ -307,7 +307,7 @@ QTabBar::tab:focus {
 }
 
 #formFrame QLineEdit:disabled {
-    color: #AAAAAA;
+    color: #A29A90;
 }
 
 #formFrame QComboBox {
@@ -357,7 +357,7 @@ QTabBar::tab:focus {
 
 #formTitleLabel {
     font-size:21px;
-    color:#ffffff;
+    color:#ece6de;
     margin: 24px 0 10px 50px;
 }
 
@@ -400,7 +400,7 @@ QTabBar::tab:focus {
 /************** General (Modal windows) **************/
 
 #header {
-    background-color:#111111;
+    background-color:#0D0C0B;
     min-height:80px;
     max-height:80px;
 }
@@ -445,11 +445,11 @@ QTabBar::tab:focus {
 }
 
 #body {
-    background-color:#333333;
+    background-color:#171513;
 }
 
 #createAGemBody {
-    background-color:#444444;
+    background-color:#211E1B;
 }
 
 #footer {
@@ -479,15 +479,15 @@ QTabBar::tab:focus {
 }
 
 #horizontalSeparatingLine {
-    color: #666666;
+    color: #35302B;
 }
 
 #verticalSeparatingLine {
-    color: #888888;
+    color: #6E675E;
 }
 
 #ExternalLinkDialog #externalLink {
-    color: #94D2FF;
+    color: #FFCFB4;
     margin:5px 0 30px 0;
     font-size:12px;
 }
@@ -512,7 +512,7 @@ QTabBar::tab:focus {
 }
 
 #projectTemplateDetails {
-    background-color:#444444;
+    background-color:#211E1B;
     max-width:20%;
     min-width:240px;
     margin-left:30px;
@@ -535,7 +535,7 @@ QTabBar::tab:focus {
 
 #projectTemplateDetails #summary {
     padding-bottom:0px;
-    border-bottom:2px solid #555555;
+    border-bottom:2px solid #2A2622;
 	min-height:80px;
     qproperty-alignment: AlignTop;
 }
@@ -559,13 +559,13 @@ QTabBar::tab:focus {
     border-radius: 4px;
 }
 #projectTemplate QPushButton[Checked="true"] #templateImage {
-    border:3px solid #1e70eb;
+    border:3px solid #e8743b;
 }
 #projectTemplate QPushButton[Checked="true"] #templateLabel {
     font-weight:bold;
 }
 #projectTemplate QPushButton:hover {
-    background-color: #444444;
+    background-color: #211E1B;
 }
 #projectTemplate QPushButton:focus {
     outline: none;
@@ -628,21 +628,21 @@ QTabBar::tab:focus {
     qproperty-flat: true;
     background-origin:content;
     font-size:14px;
-    border: 1px solid #ffffff;
+    border: 1px solid #ece6de;
 }
 
 #firstTimeContent > QPushButton:hover {
-    border: 1px solid #1e70eb;
-    color: #1e70eb;
+    border: 1px solid #e8743b;
+    color: #e8743b;
 }
 
 #firstTimeContent > QPushButton:focus {
-    border: 1px solid #1e70eb;
+    border: 1px solid #e8743b;
 }
 
 #firstTimeContent > QPushButton:pressed {
-    border: 1px solid #0e60eb;
-    color: #0e60eb;
+    border: 1px solid #e55a14;
+    color: #e55a14;
 }
 
 #createProjectButton {
@@ -690,7 +690,7 @@ QTabBar::tab:focus {
 #projectButton > #labelButton:hover,
 #projectButton > #labelButton:pressed,
 #projectButton > #labelButton:focus {
-    border:1px solid #1e70eb;
+    border:1px solid #e8743b;
 }
 
 #projectButton  {
@@ -715,11 +715,11 @@ QTabBar::tab:focus {
 #projectButton QLabel#otherEngineLabel {
     font-weight:normal;
     font-size:12px;
-    color: #eee;
+    color: #e3ddd5;
 }
 
 #projectButton QLabel#otherEngineLabel {
-    color: #ddd;
+    color: #dbd4cb;
 }
 
 #labelButton QPushButton {
@@ -776,7 +776,7 @@ QProgressBar {
 }
 
 QProgressBar::chunk {
-    background-color: #1E70EB;
+    background-color: #E8743B;
 }
 
 /************** Remote Projects **************/
@@ -794,13 +794,13 @@ QProgressBar::chunk {
 }
 
 #addRemoteProjectDialog > QLabel:disabled {
-    color: #AAAAAA;
+    color: #A29A90;
 }
 
 /************** Gem Catalog **************/
 
 #GemCatalogScreen {
-    background-color: #333333;
+    background-color: #171513;
 }
 
 #GemCatalogTitle {
@@ -808,12 +808,12 @@ QProgressBar::chunk {
 }
 
 #GemCatalogCart {
-    background-color: #555555;
+    background-color: #2A2622;
 }
 
 #GemCatalogCartCountLabel {
     font-size: 12px;
-    background-color: #4285F4;
+    background-color: #F07F46;
     border-radius: 3px;
 }
 
@@ -849,7 +849,7 @@ QProgressBar::chunk {
    padding-left:34px;
    min-height: 34px;
    font-size:10px;
-   color:#ddd;
+   color:#dbd4cb;
    background:transparent url(:/Info.svg) no-repeat left center;
 }
 
@@ -860,13 +860,13 @@ QProgressBar::chunk {
 #GemCatalogCartOverlayGemDownloadHeader {
     margin:0;
     padding: 0px;
-    background-color: #333333;
+    background-color: #171513;
 }
 
 #GemCatalogCartOverlayGemDownloadBG {
     margin:0;
     padding: 0px;
-    background-color: #444444;
+    background-color: #211E1B;
 }
 
 #adjustableHeaderWidget QHeaderView::section { 
@@ -876,11 +876,11 @@ QProgressBar::chunk {
 #GemCatalogHeaderShowCountLabel {
     font-size: 12px;
     font: italic;
-    color: #FFFFFF;
+    color: #ECE6DE;
 }
 
 #GemCatalogListView {
-    background-color: #333333;
+    background-color: #171513;
 }
 
 #GemDependenciesDialog QLabel {
@@ -888,7 +888,7 @@ QProgressBar::chunk {
 }
 
 #GemDependenciesDialog QCheckBox {
-    background-color: #333333;
+    background-color: #171513;
     border-radius: 3px;
     spacing:3px;
     margin-right:5px;
@@ -912,12 +912,12 @@ QProgressBar::chunk {
 /************** Filter Tag widget **************/
 
 #FilterTagWidgetTextLabel {
-    color: #94D2FF;
+    color: #FFCFB4;
     font-size: 10px;
 }
 
 #TagWidget {
-    background-color: #333333;
+    background-color: #171513;
     padding:3px;
     font-size:12px;
     text-align:center;
@@ -927,19 +927,19 @@ QProgressBar::chunk {
 /************** Gems SubWidget **************/
 
 #gemSubWidgetTitleLabel {
-    color: #FFFFFF;
+    color: #ECE6DE;
     font-size: 16px;
 }
 
 #gemSubWidgetTextLabel {
-    color: #DDDDDD;
+    color: #DBD4CB;
     font-size: 10px;
 }
 
 /************** Gem Catalog (Inspector) **************/
 
 #GemCatalogInspector {
-    background-color: #444444;
+    background-color: #211E1B;
 }
 
 /* IMPORTANT DO NOT REMOVE min/max-width 
@@ -974,7 +974,7 @@ QProgressBar::chunk {
 /************** Gem Catalog (Filter/left pane) **************/
 
 #GemCatalogFilterWidget {
-    background-color: #444444;
+    background-color: #211E1B;
 }
 
 #GemCatalogHeaderWidget {
@@ -984,25 +984,25 @@ QProgressBar::chunk {
 #GemCatalogFilterCategoryTitle {
     font-size: 12px;
     font-weight: 600;
-    color: #ffffff;
+    color: #ece6de;
 }
 
 #GemCatalogFilterWidget #FilterByLabel {
-    color: #ffffff;
+    color: #ece6de;
 }
 #GemCatalogFilterWidget QLabel {
-    color: #ffffff;
+    color: #ece6de;
 }
 
 #GemCatalogFilterWidget #CountLabel {
     font-size: 12px; 
-    background-color: #333333; 
+    background-color: #171513; 
     border-radius: 3px; 
-    color: #94D2FF;
+    color: #FFCFB4;
 }
 
 #GemCatalogFilterWidget QCheckbox {
-    color: #ffffff;
+    color: #ece6de;
     font-size: 12px;
 }
 
@@ -1021,16 +1021,16 @@ QProgressBar::chunk {
 }
 
 #engineTabBar::tab:selected {
-    border-bottom: 3px solid #94D2FF;
-    color: #94D2FF;
+    border-bottom: 3px solid #FFCFB4;
+    color: #FFCFB4;
     font-weight: 600;
 }
 #engineTabBar::tab:hover {
-    color: #94D2FF;
+    color: #FFCFB4;
     font-weight: 600;
 }
 #engineTabBar::tab:pressed {
-    color: #66bcfa;
+    color: #f6996a;
 }
 
 #engineTopFrame {
@@ -1081,7 +1081,7 @@ QProgressBar::chunk {
 /************** Gem Repo Inspector **************/
 
 #gemRepoInspector {
-    background: #444444;
+    background: #211E1B;
 }
 
 #gemRepoInspector QLabel {
@@ -1102,17 +1102,17 @@ QProgressBar::chunk {
 
 #gemRepoInspectorNameLabel {
     font-size: 18px;
-    color: #FFFFFF;
+    color: #ECE6DE;
 }
 
 #gemRepoInspectorBodyLabel {
     font-size: 12px;
-    color: #DDDDDD;
+    color: #DBD4CB;
 }
 
 #gemRepoInspectorAddInfoTitleLabel {
     font-size: 16px;
-    color: #FFFFFF;
+    color: #ECE6DE;
 }
 
 #gemRepoInspector QPushButton {

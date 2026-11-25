@@ -16,7 +16,7 @@ QRadioButton
 
 QRadioButton:disabled
 {
-    color: #999999;
+    color: #8D857B;
 }
 
 QRadioButton::indicator:!focus

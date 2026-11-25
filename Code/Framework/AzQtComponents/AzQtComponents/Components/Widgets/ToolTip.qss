@@ -9,12 +9,12 @@
 
 QToolTip
 {
-    color: #ffffff;
+    color: #ece6de;
     background-color: black;
     border: 1px transparent black;
     margin-left: 2px;
     font-size: 12px;
     margin-top: 4px;
     margin-bottom: 4px;
-    font-family: "Open Sans";
+    font-family: "Geist";
 }

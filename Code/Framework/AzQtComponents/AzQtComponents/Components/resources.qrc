@@ -203,6 +203,7 @@
     <file>Widgets/ToolBarConfig.ini</file>
     <file>Widgets/ToolTip.qss</file>
     <file>Widgets/WindowDecorationWrapper.qss</file>
+    <file>Widgets/Hearth.qss</file>
     <file>Widgets/AssetFolderListView.qss</file>
     <file>Widgets/AssetFolderThumbnailViewConfig.ini</file>
     <file>Widgets/BrowseEdit.qss</file>
@@ -277,6 +278,15 @@
     <file alias="ColorGrid/toggle-normal-on.svg">img/UI20/colorpicker/colorgrid-toggle-normal-on.svg</file>
 </qresource>
 <qresource prefix="/AzQtFonts">
+    <file>Fonts/Geist/Geist-Regular.ttf</file>
+    <file>Fonts/Geist/Geist-Italic.ttf</file>
+    <file>Fonts/Geist/Geist-Medium.ttf</file>
+    <file>Fonts/Geist/Geist-SemiBold.ttf</file>
+    <file>Fonts/Geist/Geist-Bold.ttf</file>
+    <file>Fonts/Geist/Geist-Light.ttf</file>
+    <file>Fonts/Geist/GeistMono-Regular.ttf</file>
+    <file>Fonts/Geist/GeistMono-Medium.ttf</file>
+    <file>Fonts/Geist/GeistMono-SemiBold.ttf</file>
     <file>Fonts/Open_Sans/OpenSans-BoldItalic.ttf</file>
     <file>Fonts/Open_Sans/OpenSans-ExtraBold.ttf</file>
     <file>Fonts/Open_Sans/OpenSans-ExtraBoldItalic.ttf</file>

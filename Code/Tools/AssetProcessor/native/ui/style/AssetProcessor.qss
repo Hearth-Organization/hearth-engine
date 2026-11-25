@@ -14,11 +14,11 @@
     font-size: 18px;
     margin-top: 0px;
     margin-bottom: 0px;
-    font-family: "Open Sans Light";
+    font-family: "Geist Light";
 }
 
 .TimerLine {
-    color: #888888;
+    color: #6E675E;
 }
 
 QLabel#APStatusValueLabel {
@@ -62,7 +62,7 @@ QTreeView#OutgoingProductDependenciesTreeView::branch,
 QTreeView#IncomingProductDependenciesTreeView,
 QTreeView#IncomingProductDependenciesTreeView::item,
 QTreeView#IncomingProductDependenciesTreeView::branch {
-    background-color: rgb(45,45,45);
+    background-color: rgb(22, 20, 18);
 }
 
 QTreeView#SourceAssetsTreeView::item:hover,
@@ -75,7 +75,7 @@ QTreeView#OutgoingProductDependenciesTreeView::item:hover,
 QTreeView#OutgoingProductDependenciesTreeView::branch:hover,
 QTreeView#IncomingProductDependenciesTreeView::item:hover,
 QTreeView#IncomingProductDependenciesTreeView::branch:hover {
-    background-color: rgb(60,60,60);
+    background-color: rgb(29, 26, 24);
 }
 
 QTreeView#SourceAssetsTreeView::item:selected,
@@ -93,7 +93,7 @@ QTreeView#OutgoingProductDependenciesTreeView::item:selected:active,
 QTreeView#IncomingProductDependenciesTreeView::item:selected,
 QTreeView#IncomingProductDependenciesTreeView::branch:selected,
 QTreeView#IncomingProductDependenciesTreeView::item:selected:active {
-    background-color: rgb(73,73,73);
+    background-color: rgb(36, 32, 29);
 }
 
 QTreeView#SourceAssetsTreeView::item:selected:!active,
@@ -107,8 +107,8 @@ QTableWidget#incomingProductDependenciesTable:item:selected:!active,
 QTableWidget#productTable:item:selected:!active,
 QTableWidget#outgoingSourceDependenciesTable:item:selected:!active,
 QTableWidget#incomingSourceDependenciesTable:item:selected:!active {
-    background-color: rgb(60,60,60);
-    selection-color: rgb(192, 192, 192);
+    background-color: rgb(29, 26, 24);
+    selection-color: rgb(192, 184, 174);
 }
 
 QPushButton#sharedCacheSupport,
@@ -131,39 +131,39 @@ ConnectionEditDialog QLabel {
 }
 
 QTableWidget {
-    background-color: rgb(45,45,45);            /* Odd row */
-    alternate-background-color: rgb(34,34,34);  /* Even row */
-    selection-background-color: rgb(73,73,73);
+    background-color: rgb(22, 20, 18);            /* Odd row */
+    alternate-background-color: rgb(20, 18, 16);  /* Even row */
+    selection-background-color: rgb(36, 32, 29);
 }
 
 QTableWidget::item:selected {
-    background: rgb(73,73,73);
+    background: rgb(36, 32, 29);
 }
 
 QTableWidget::item:hover {
-    background: rgb(60,60,60);
+    background: rgb(29, 26, 24);
 }
 
 QTableWidget QHeaderView::section {
-    background-color: rgb(34,34,34);
+    background-color: rgb(20, 18, 16);
 }
 
 QListWidget {
-    background-color: rgb(45,45,45);            /* Odd row */
-    alternate-background-color: rgb(34,34,34);  /* Even row */
-    selection-background-color: rgb(73,73,73);
+    background-color: rgb(22, 20, 18);            /* Odd row */
+    alternate-background-color: rgb(20, 18, 16);  /* Even row */
+    selection-background-color: rgb(36, 32, 29);
 }
 
 QListWidget::item:selected {
-    background: rgb(73,73,73);
+    background: rgb(36, 32, 29);
 }
 
 QListWidget::item:hover {
-    background: rgb(60,60,60);
+    background: rgb(29, 26, 24);
 }
 
 QListWidget QHeaderView::section {
-    background-color: rgb(34,34,34);
+    background-color: rgb(20, 18, 16);
 }
 
 QLabel#sharedCacheStatus {
@@ -174,8 +174,8 @@ QLabel#sharedCacheStatus {
 QLabel#sharedCacheStatus[highlight = "blue"] {
     color : white;
     font-weight: normal; 
-    background-color: rgba(88, 140, 188, 0.1);
-    border: 1px solid #4285F4;
+    background-color: rgba(186, 122, 91, 0.1);
+    border: 1px solid #F07F46;
 }
 
 QLabel#sharedCacheStatus[highlight = "green"] {
@@ -209,11 +209,11 @@ QPushButton#removeButton {
 }
 
 QWidget#SharedCachePage {
-    background-color: rgba(34, 34, 34, 0.5);
+    background-color: rgba(20, 18, 16, 0.5);
     border: none;
 }
 
 QWidget#AssetRelocationPage {
-    background-color: rgba(34, 34, 34, 0.5);
+    background-color: rgba(20, 18, 16, 0.5);
     border: none;
 }

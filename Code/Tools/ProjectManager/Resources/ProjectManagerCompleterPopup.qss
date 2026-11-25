@@ -1,6 +1,6 @@
 QListView{
-    background: #333333;
-    color: #ffffff;
-    selection-background-color:#444444;
-    selection-color: #ffffff;
+    background: #171513;
+    color: #ece6de;
+    selection-background-color:#211E1B;
+    selection-color: #ece6de;
 }

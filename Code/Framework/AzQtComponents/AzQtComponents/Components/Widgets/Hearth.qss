@@ -1,0 +1,314 @@
+/*
+ * Hearth Engine look. Imported last by BaseStyleSheet.qss, so these rules win over the stock O3DE ones.
+ * Colours from the approved mockups:
+ *   background #0D0C0B, panels #141210, cards #171513, inputs #1C1917, lines rgba(255,255,255,15-26)
+ *   text #ECE6DE, dim text #8D857B, ember #E8743B (ink on ember #1A0F08), light ember #FFCFB4
+ * Fonts: Geist (UI), Geist Mono (numbers, paths, logs).
+ */
+
+/* ---------- Windows and panels ---------- */
+
+QMainWindow,
+QDialog,
+QMessageBox
+{
+    background-color: #0D0C0B;
+}
+
+QDockWidget,
+AzQtComponents--StyledDockWidget
+{
+    background-color: #141210;
+}
+
+QMainWindow::separator
+{
+    background-color: #0D0C0B;
+    width: 6px;
+    height: 6px;
+}
+
+QMainWindow::separator:hover
+{
+    background-color: #E8743B;
+}
+
+/* ---------- Text entry: dark, rounded, ember when focused ---------- */
+
+QTextEdit,
+QPlainText,
+QPlainTextEdit,
+QLineEdit,
+QSpinBox,
+QDoubleSpinBox,
+QComboBox
+{
+    background-color: #1C1917;
+    color: #ECE6DE;
+    border-radius: 8px;
+    selection-background-color: rgba(232, 116, 59, 115);
+    selection-color: #FFFFFF;
+}
+
+QLineEdit:focus,
+QSpinBox:focus,
+QDoubleSpinBox:focus,
+QComboBox:focus,
+QComboBox[HasPopupOpen=true],
+QTextEdit:focus,
+QPlainTextEdit:focus
+{
+    background-color: #1C1917;
+    color: #ECE6DE;
+    border-color: #E8743B;
+}
+
+QSpinBox:hover,
+QDoubleSpinBox:hover,
+QComboBox:hover
+{
+    background-color: #24201C;
+    border-color: #4A443D;
+}
+
+QLineEdit:disabled,
+QSpinBox:disabled,
+QDoubleSpinBox:disabled,
+QComboBox:disabled
+{
+    background-color: #141210;
+    color: #6E675E;
+}
+
+AzQtComponents--BrowseEdit QLineEdit:focus,
+AzQtComponents--BreadCrumbs QLineEdit
+{
+    background-color: #1C1917;
+    color: #ECE6DE;
+    border-color: #E8743B;
+}
+
+QComboBox QAbstractItemView
+{
+    background-color: #1D1A17;
+    border: 1px solid rgba(255, 255, 255, 26);
+    border-radius: 12px;
+    padding: 6px;
+}
+
+QComboBox QAbstractItemView::item:selected
+{
+    background-color: rgba(232, 116, 59, 41);
+    color: #FFCFB4;
+}
+
+/* ---------- Menus: rounded popups, ember highlight ---------- */
+
+QMenuBar
+{
+    background-color: #0D0C0B;
+}
+
+QMenuBar::item
+{
+    padding: 0px 12px;
+    border-radius: 8px;
+}
+
+QMenuBar::item:selected,
+QMenuBar::item:pressed
+{
+    background-color: rgba(232, 116, 59, 41);
+    color: #FFCFB4;
+}
+
+QMenu
+{
+    background-color: #1D1A17;
+    border: 1px solid rgba(255, 255, 255, 26);
+    border-radius: 12px;
+    padding: 6px;
+}
+
+QMenu::item
+{
+    padding: 7px 24px 7px 12px;
+    border-radius: 8px;
+    color: #ECE6DE;
+}
+
+QMenu::item:selected
+{
+    background-color: rgba(232, 116, 59, 41);
+    color: #FFCFB4;
+}
+
+QMenu::item:disabled
+{
+    color: #6E675E;
+}
+
+QMenu::separator
+{
+    height: 1px;
+    margin: 4px 6px;
+    background-color: rgba(255, 255, 255, 15);
+}
+
+/* ---------- Tabs: ember underline ---------- */
+
+QTabBar::tab:selected
+{
+    color: #FFCFB4;
+    border-bottom: 2px solid #E8743B;
+}
+
+QTabBar::tab:hover:!selected
+{
+    color: #ECE6DE;
+}
+
+/* ---------- Lists, trees, tables ---------- */
+
+QTreeView::item:selected,
+QListView::item:selected,
+QTableView::item:selected
+{
+    background-color: rgba(232, 116, 59, 41);
+    color: #FFCFB4;
+}
+
+QTreeView::item:hover:!selected,
+QListView::item:hover:!selected,
+QTableView::item:hover:!selected
+{
+    background-color: rgba(255, 255, 255, 10);
+}
+
+QHeaderView::section
+{
+    background-color: #141210;
+    color: #8D857B;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 15);
+    padding: 4px 8px;
+}
+
+/* ---------- Scroll bars: thin and rounded ---------- */
+
+QScrollBar:vertical
+{
+    background: transparent;
+    width: 10px;
+    margin: 2px;
+}
+
+QScrollBar:horizontal
+{
+    background: transparent;
+    height: 10px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical,
+QScrollBar::handle:horizontal
+{
+    background: rgba(255, 255, 255, 36);
+    border-radius: 3px;
+    min-height: 24px;
+    min-width: 24px;
+}
+
+QScrollBar::handle:vertical:hover,
+QScrollBar::handle:horizontal:hover
+{
+    background: #E8743B;
+}
+
+/* ---------- Tool bars and tool buttons ---------- */
+
+QToolBar
+{
+    background-color: #0D0C0B;
+    border: none;
+    spacing: 4px;
+    padding: 4px;
+}
+
+QToolButton
+{
+    border-radius: 8px;
+}
+
+QToolButton:hover
+{
+    background-color: rgba(255, 255, 255, 15);
+}
+
+QToolButton:checked,
+QToolButton:pressed
+{
+    background-color: #E8743B;
+    color: #1A0F08;
+}
+
+/* ---------- Tool tips, progress, check boxes ---------- */
+
+QToolTip
+{
+    background-color: #1D1A17;
+    color: #ECE6DE;
+    border: 1px solid rgba(255, 255, 255, 26);
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+
+QProgressBar
+{
+    background-color: rgba(255, 255, 255, 20);
+    border: none;
+    border-radius: 3px;
+    color: transparent;
+    max-height: 6px;
+}
+
+QProgressBar::chunk
+{
+    background-color: #E8743B;
+    border-radius: 3px;
+}
+
+QGroupBox
+{
+    background-color: #171513;
+    border: 1px solid rgba(255, 255, 255, 15);
+    border-radius: 14px;
+    margin-top: 18px;
+    padding: 10px;
+}
+
+QGroupBox::title
+{
+    subcontrol-origin: margin;
+    left: 12px;
+    color: #ECE6DE;
+    font-weight: 600;
+}
+
+/* ---------- Mono text for logs, paths and numbers ---------- */
+
+QPlainTextEdit[HearthMono=true],
+QTextEdit[HearthMono=true],
+QLabel[HearthMono=true],
+.HearthMono
+{
+    font-family: "Geist Mono";
+}
+
+/* ---------- Status bar ---------- */
+
+QStatusBar
+{
+    background-color: #0D0C0B;
+    color: #8D857B;
+}

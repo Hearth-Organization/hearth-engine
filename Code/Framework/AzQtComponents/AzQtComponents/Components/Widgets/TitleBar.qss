@@ -8,7 +8,7 @@
 
 AzQtComponents--TitleBar
 {
-    background-color: #111111;
+    background-color: #0D0C0B;
     border: 1px solid #000000;
 }
 
@@ -19,8 +19,8 @@ AzQtComponents--TitleBar[drawAsTabBar="true"]
 
 AzQtComponents--TitleBar[drawSimple="true"]
 {
-    background-color: #222222;
-    border-bottom: 3px solid #111111;
+    background-color: #141210;
+    border-bottom: 3px solid #0D0C0B;
 }
 
 AzQtComponents--TitleBar *
@@ -30,7 +30,7 @@ AzQtComponents--TitleBar *
 
 AzQtComponents--TitleBar #title
 {
-    font-family: "Open Sans";
+    font-family: "Geist";
     font-size: 14px;
     margin-left: 10px;
     margin-right: 16px;
@@ -97,7 +97,7 @@ QToolButton#closeButton
 QToolButton#minimizeButton:hover,
 QToolButton#maximizeButton:hover 
 {
-    background: rgba(255,255,255,0.1);
+    background: rgba(236, 230, 222,0.1);
 }
 
 QToolButton#closeButton:hover {

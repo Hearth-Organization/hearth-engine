@@ -14,7 +14,7 @@
 
 AzQtComponents--BreadCrumbs #breadcrumbs-separator
 {
-    background-color: #373737;
+    background-color: #1A1715;
 }
 
 AzQtComponents--BreadCrumbs #MenuButton
@@ -32,6 +32,6 @@ AzQtComponents--BreadCrumbs QLineEdit
 
 AzQtComponents--BreadCrumbs[editable="true"]
 {
-    border: 1px solid #2f2f2f;
-    border-radius: 2px;
+    border: 1px solid #161412;
+    border-radius: 8px;
 }

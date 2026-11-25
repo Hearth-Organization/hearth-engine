@@ -475,44 +475,44 @@ QLabel#AboutPixmap
 
 Amazon--LoginDialog
 {
-    background-color: #F8F8F8;
+    background-color: #E8E2DA;
 }
 
 Amazon--LoginWelcomeTitle
 {
-    color: #444444;
-    background-color: #F8F8F8;
+    color: #211E1B;
+    background-color: #E8E2DA;
     font-size: 21px;
     qproperty-alignment: AlignCenter;
-    font-family: "Open Sans Semibold";
+    font-family: "Geist Semibold";
 }
 
 Amazon--LoginWelcomeText
 {
-    color: #444444;
-    background-color: #F8F8F8;
+    color: #211E1B;
+    background-color: #E8E2DA;
     font-size: 13px;
     qproperty-alignment: AlignLeft;
-    font-family: "Open Sans";
+    font-family: "Geist";
 }
 
 Amazon--LoginFooterText
 {
-    color: #999999;
-    background-color: #F8F8F8;
+    color: #8D857B;
+    background-color: #E8E2DA;
     font-size: 13px;
     qproperty-alignment: AlignCenter;
-    font-family: "Open Sans";
+    font-family: "Geist";
 }
 
 Amazon--LoginWebViewFrame
 {
-    border: 2px solid #EEEEEE;
+    border: 2px solid #E3DDD5;
 }
 
 Amazon--LoginWebView
 {
-    background-color: #F8F8F8;
+    background-color: #E8E2DA;
 }
 
 QLabel[class='Paragraph'] {font-size: 14px}

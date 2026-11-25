@@ -16,7 +16,7 @@
 {
     background-color: transparent;
     color: white;
-    font-family: "Open Sans";
+    font-family: "Geist";
     font-weight: 400;
 }
 
@@ -26,7 +26,7 @@ QTreeView
 {
     /* give a background color to views without parent (completer popups)
        it is reset to transparent in the next setting for views with a parent */
-    background-color: #444444;
+    background-color: #211E1B;
 }
 
 QWidget > QTableView,
@@ -44,25 +44,25 @@ QWidget > QTreeView
 .QFrame[frameShape="5"],
 .QFrame[frameShape="6"]
 {
-    background-color: #444444;
+    background-color: #211E1B;
 }
 
 QMainWindow:separator
 {
-    background-color: #111111;
+    background-color: #0D0C0B;
 }
 
 QMainWindow::separator:hover
 {
-    background-color: #1E70EB;
+    background-color: #E8743B;
 }
 
 QMainWindow,
 QDialog,
 QDockWidget
 {
-    color: #cccccc;
-    background-color: #444444;
+    color: #d2cbc2;
+    background-color: #211E1B;
 }
 
 QTextEdit,
@@ -73,12 +73,12 @@ QSpinBox,
 QDoubleSpinBox,
 QComboBox
 {
-    background-color: #CCCCCC;
+    background-color: #D2CBC2;
     color: black;
-    font-family: "Open Sans";
-    border-radius: 2px;
+    font-family: "Geist";
+    border-radius: 8px;
     border-width: 0px;
-    border-color: #e9e9e9;
+    border-color: #e1dad2;
     font-size: 12px;
     line-height: 16px;
 }
@@ -87,8 +87,8 @@ QTextEdit,
 QPlainText,
 QPlainTextEdit
 {
-    background-color: #E9E9E9;
-    color: #545454;
+    background-color: #E1DAD2;
+    color: #292622;
     margin: 2px;
     border-width: 0px;
     border-style: solid;
@@ -101,7 +101,7 @@ QPlainTextEdit:hover
     margin: 1px;
     border-width: 1px;
     border-style: solid;
-    border-color: #222222;
+    border-color: #141210;
 }
 
 QTextEdit:focus,
@@ -110,8 +110,8 @@ QPlainTextEdit:focus
 {
     margin: 1px;
     border-width: 1px;
-    border-color: #94D2FF;
-    background-color: #E9E9E9;
+    border-color: #FFCFB4;
+    background-color: #E1DAD2;
 }
 
 @import "AssetFolderListView.qss";
@@ -147,3 +147,6 @@ QPlainTextEdit:focus
 @import "ToolTip.qss";
 @import "VectorInput.qss";
 @import "WindowDecorationWrapper.qss";
+
+/* Hearth Engine look: keep this last so it wins */
+@import "Hearth.qss";

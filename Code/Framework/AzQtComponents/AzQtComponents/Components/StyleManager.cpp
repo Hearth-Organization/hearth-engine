@@ -184,7 +184,7 @@ namespace AzQtComponents
         initializeSearchPaths(application, engineRootPath);
         initializeFonts();
 
-        QFont defaultFont("Open Sans");
+        QFont defaultFont("Geist");
         defaultFont.setPixelSize(12);
         QApplication::setFont(defaultFont);
 
@@ -249,6 +249,15 @@ namespace AzQtComponents
         QFontDatabase::addApplicationFont(openSansPathSpecifier.arg("OpenSans-Regular.ttf"));
         QFontDatabase::addApplicationFont(openSansPathSpecifier.arg("OpenSans-Semibold.ttf"));
         QFontDatabase::addApplicationFont(openSansPathSpecifier.arg("OpenSans-SemiboldItalic.ttf"));
+
+        // Hearth Engine: Geist and Geist Mono are the engine's fonts (Open Sans stays registered as a fallback).
+        const QString geistPathSpecifier = QStringLiteral(":/AzQtFonts/Fonts/Geist/%1");
+        for (const char* geistFile : { "Geist-Regular.ttf", "Geist-Italic.ttf", "Geist-Medium.ttf", "Geist-SemiBold.ttf",
+                                       "Geist-Bold.ttf", "Geist-Light.ttf", "GeistMono-Regular.ttf", "GeistMono-Medium.ttf",
+                                       "GeistMono-SemiBold.ttf" })
+        {
+            QFontDatabase::addApplicationFont(geistPathSpecifier.arg(QLatin1String(geistFile)));
+        }
     }
 
     void StyleManager::initializeSearchPaths([[maybe_unused]] QApplication* application, const AZ::IO::PathView& engineRootPath)
@@ -293,7 +302,7 @@ namespace AzQtComponents
         // QMessageBox uses "QMdiSubWindowTitleBar" class to query the titlebar font
         // through QApplication::font() and (buggily) calculate required width of itself
         // to fit the title. It bypassess stylesheets. See QMessageBoxPrivate::updateSize().
-        QFont titleBarFont("Open Sans");
+        QFont titleBarFont("Geist");
         titleBarFont.setPixelSize(18);
         QApplication::setFont(titleBarFont, "QMdiSubWindowTitleBar");
     }

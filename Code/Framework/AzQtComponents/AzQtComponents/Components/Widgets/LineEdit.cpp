@@ -468,17 +468,17 @@ namespace AzQtComponents
         Config config;
 
         // Keep radius in sync with css, it is not possible to get it back from the style option :/
-        config.borderRadius = 2;
+        config.borderRadius = 8; // Hearth Engine: rounder inputs (matches BaseStyleSheet.qss)
         // An invalid color will take current background color
         config.borderColor = QColor(Qt::transparent);
-        config.hoverBackgroundColor = QColor("#FFFFFF");
-        config.hoverBorderColor = QColor("#222222");
+        config.hoverBackgroundColor = QColor("#24201C"); // Hearth Engine: dark inputs
+        config.hoverBorderColor = QColor("#4A443D");
         config.hoverLineWidth = 1;
-        config.focusedBorderColor = QColor("#94D2FF");
+        config.focusedBorderColor = QColor("#E8743B");
         config.focusedLineWidth = 1;
         config.errorBorderColor = QColor("#E25243");
         config.errorLineWidth = 2;
-        config.placeHolderTextColor = QColor("#888888");
+        config.placeHolderTextColor = QColor("#8D857B");
         config.clearImage = QStringLiteral(":/stylesheet/img/UI20/lineedit-close.svg");
         config.clearImageDisabled = QStringLiteral(":/stylesheet/img/UI20/lineedit-close-disabled.svg");
         config.clearImageSize = {14, 14};

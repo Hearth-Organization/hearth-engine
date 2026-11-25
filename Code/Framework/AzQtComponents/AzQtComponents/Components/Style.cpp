@@ -82,7 +82,7 @@ namespace AzQtComponents
     static const char g_removeAllStylingProperty[] = {"RemoveAllStyling"};
 
     // Constant for the docking drop zone hotspot color when hovered over
-    static const QColor g_dropZoneColorOnHover(23, 163, 205);
+    static const QColor g_dropZoneColorOnHover(232, 116, 59); // Hearth ember
 
 
     // Private data structure
@@ -1382,6 +1382,23 @@ namespace AzQtComponents
 
         m_data->palette = application->palette();
         m_data->palette.setColor(QPalette::Link, m_data->textConfig.hyperlinkColor);
+
+        // Hearth Engine palette: warm near-black, warm off-white text, ember accent (from the approved mockups).
+        m_data->palette.setColor(QPalette::Window, QColor(0x0D, 0x0C, 0x0B));
+        m_data->palette.setColor(QPalette::WindowText, QColor(0xEC, 0xE6, 0xDE));
+        m_data->palette.setColor(QPalette::Base, QColor(0x1C, 0x19, 0x17));
+        m_data->palette.setColor(QPalette::AlternateBase, QColor(0x17, 0x15, 0x13));
+        m_data->palette.setColor(QPalette::Text, QColor(0xEC, 0xE6, 0xDE));
+        m_data->palette.setColor(QPalette::PlaceholderText, QColor(0x8D, 0x85, 0x7B));
+        m_data->palette.setColor(QPalette::Button, QColor(0x1C, 0x19, 0x17));
+        m_data->palette.setColor(QPalette::ButtonText, QColor(0xEC, 0xE6, 0xDE));
+        m_data->palette.setColor(QPalette::Highlight, QColor(0xE8, 0x74, 0x3B));
+        m_data->palette.setColor(QPalette::HighlightedText, QColor(0x1A, 0x0F, 0x08));
+        m_data->palette.setColor(QPalette::ToolTipBase, QColor(0x1D, 0x1A, 0x17));
+        m_data->palette.setColor(QPalette::ToolTipText, QColor(0xEC, 0xE6, 0xDE));
+        m_data->palette.setColor(QPalette::Disabled, QPalette::Text, QColor(0x6E, 0x67, 0x5E));
+        m_data->palette.setColor(QPalette::Disabled, QPalette::WindowText, QColor(0x6E, 0x67, 0x5E));
+        m_data->palette.setColor(QPalette::Disabled, QPalette::ButtonText, QColor(0x6E, 0x67, 0x5E));
 
         application->setPalette(m_data->palette);
 

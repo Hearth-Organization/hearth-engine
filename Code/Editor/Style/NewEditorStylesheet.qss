@@ -60,17 +60,17 @@ QListView[class="SingleRequiredSelection"]::item {
 
 NetPromoterScoreDialog QDialog
 {
-	background: #333333;
+	background: #171513;
 }
 
 NetPromoterScoreDialog QPushButton[RatingButton="true"], QPushButton[class="RatingButtonLeave"]
 {
-	background-color: #f6f6f6;
+	background-color: #e7e1d9;
 	color: black;
 	border-right: 1px solid black;
-	border-left: 1px #333333;	
-	border-top: 1px #333333;	
-	border-bottom: 1px #333333;		
+	border-left: 1px #171513;	
+	border-top: 1px #171513;	
+	border-bottom: 1px #171513;		
 }
 
 NetPromoterScoreDialog QPushButton[class="RatingButtonHover"]
@@ -78,9 +78,9 @@ NetPromoterScoreDialog QPushButton[class="RatingButtonHover"]
 	background-color: #FFC400;
 	color: black;
 	border-right: 1px solid black;
-	border-left: 1px #333333;	
-	border-top: 1px #333333;	
-	border-bottom: 1px #333333;	
+	border-left: 1px #171513;	
+	border-top: 1px #171513;	
+	border-bottom: 1px #171513;	
 }
 
 NetPromoterScoreDialog QPushButton[class="RatingButtonPress"]
@@ -88,14 +88,14 @@ NetPromoterScoreDialog QPushButton[class="RatingButtonPress"]
 	background-color: #FFA724;
 	color: black;
 	border-right: 1px solid black;
-	border-left: 1px #333333;	
-	border-top: 1px #333333;	
-	border-bottom: 1px #333333;	
+	border-left: 1px #171513;	
+	border-top: 1px #171513;	
+	border-bottom: 1px #171513;	
 }
 
 NetPromoterScoreDialog QTextEdit, QTextEdit[class="CommentBoxBefore"]
 {
-	background: #BBBBBB;
+	background: #B8B0A6;
 	color: black;
 }
 
@@ -108,13 +108,13 @@ NetPromoterScoreDialog QTextEdit[class="CommentBoxAfter"]
 
 NetPromoterScoreDialog QLabel[NPSLabel="true"]
 {
-	font-family: "Open Sans";
+	font-family: "Geist";
 	font-size: 12px;
 }
 
 NetPromoterScoreDialog QLabel[NPSMessage="true"]
 {
-	font-family: "Open Sans";
+	font-family: "Geist";
 	font-size: 13px;
 }
 
@@ -125,23 +125,23 @@ QTreeView[class="DuplicateAssetImporterTreeView"]::branch
 
 QLabel[class="AssetImporterLabel"]
 {
-	font-family: "Open Sans";
+	font-family: "Geist";
 	font-size: 14px;
-	color: #EEEEEE;
+	color: #E3DDD5;
 }
 
 QLabel[class="AssetImporterFilesMessage"]
 {
-	font-family: "Open Sans";
+	font-family: "Geist";
 	font: bold 14px;
-	color: #EEEEEE;
+	color: #E3DDD5;
 }
 
 QWidget[class="AssetImporterDialog"] QPushButton[class="AssetImporterButton"]
 {
-	font-family: "Open Sans Semibold";
+	font-family: "Geist Semibold";
 	font-size: 14px;
-	color: #999999;
+	color: #8D857B;
 	text-shadow: 0 0.5px 1px;
 	width: 76px;
 	height: 28px;
@@ -152,7 +152,7 @@ QWidget[class="AssetImporterDialog"] QPushButton[class="Primary"],
 QDialog[class="AssetImporterDialog"] QDialogButtonBox[class="AssetImporterDialog"] QPushButton[class="Primary"],
 QDialogButtonBox[class="AssetImporterDialog"] QPushButton[class="Primary"]
 {
-	font-family: "Open Sans Semibold";
+	font-family: "Geist Semibold";
 	font-size: 14px;
 	text-shadow: 0 0.5px 1px;
 	width: 96px;
@@ -165,20 +165,20 @@ QWidget[class="AssetImporterDialog"] QPushButton[class="Primary"]:disabled,
 QDialog[class="AssetImporterDialog"] QDialogButtonBox[class="AssetImporterDialog"] QPushButton[class="Primary"]:disabled,
 QDialogButtonBox[class="AssetImporterDialog"] QPushButton[class="Primary"]:disabled
 {
-	font-family: "Open Sans Semibold";
+	font-family: "Geist Semibold";
 	font-size: 14px;
 	text-shadow: 0 0.5px 1px;
 	width: 96px;
 	height: 28px;
 	padding: 1px;
-	color: #999999;
+	color: #8D857B;
 }
 
 QWidget[class="AssetImporterDialog"] QPushButton[class="AssetImporterLargerButton"]
 {
-	font-family: "Open Sans Semibold";
+	font-family: "Geist Semibold";
 	font-size: 14px;
-	color: #999999;
+	color: #8D857B;
 	text-shadow: 0 0.5px 1px;
 	
 	width: 85px;
@@ -188,17 +188,17 @@ QWidget[class="AssetImporterDialog"] QPushButton[class="AssetImporterLargerButto
 
 SelectFilesDialogPage QLabel[SelectFileMessage="true"]
 {
-	font-family: "Open Sans";
+	font-family: "Geist";
 	font-size: 14px;
-	color: #EEEEEE;
+	color: #E3DDD5;
 	letter-spacing: 0.47px;
 }
 
 SelectFilesDialogPage QLabel[DragAndDropMessage="true"]
 {
-	font-family: "Open Sans";
+	font-family: "Geist";
 	font-size: 14px;
-	color: #FFFFFF;
+	color: #ECE6DE;
 	letter-spacing: 0.41px;
 }
 
@@ -245,7 +245,7 @@ OutlinerWidget QWidget[PulseHighlight="true"]
 
 OutlinerWidget QLineEdit
 {
-    background: #FFFFFFFF;
+    background: #ECE6DEFF;
 }
 
 OutlinerWidget #m_display_options
@@ -271,7 +271,7 @@ AzToolsFramework--PropertyEntityIdCtrl AzToolsFramework--EntityIdQLabel[DropHigh
 AzToolsFramework--PropertyEntityIdCtrl[MismatchedServices="true"] AzToolsFramework--EntityIdQLabel,
 AzToolsFramework--PropertyEntityIdCtrl[MismatchedServices="true"] AzToolsFramework--EntityIdQLineEdit
 {
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
     color: red;
 }
@@ -307,7 +307,7 @@ AzToolsFramework--PropertyRowWidget QWidget
 /* Style for visualizing property values overridden from their prefab values */
 AzToolsFramework--PropertyRowWidget[IsOverridden="true"] AzQtComponents--ElidingLabel#Name
 {
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
     color: @MenuItemSelectedColor;
 }
@@ -315,35 +315,35 @@ AzToolsFramework--PropertyRowWidget[IsOverridden="true"] AzQtComponents--Eliding
 /* Style for visualizing the root of components in the prop grid */
 AzToolsFramework--ReflectedPropertyEditor[ComponentBlock="true"] AzToolsFramework--PropertyRowWidget[Root="true"] QLabel
 {
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
 }
 
 /* Style for transform properties */
 AzToolsFramework--ReflectedPropertyEditor QLabel#X
 {
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
     color: rgb(184,51,51);
 }
 AzToolsFramework--ReflectedPropertyEditor QLabel#Y
 {
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
     color: rgb(48,208,120);
 }
 AzToolsFramework--ReflectedPropertyEditor QLabel#Z
 {
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
-    color: rgb(66,133,244);
+    color: rgb(240, 127, 70);
 }
 
 /* Style for EntityPropertyEditor */
 AzToolsFramework--EntityPropertyEditor #LabelEntityDetails
 {
     qproperty-alignment: AlignCenter;
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
 }
 
@@ -351,7 +351,7 @@ AzToolsFramework--EntityPropertyEditor #LabelEntityDetails
 
 AzToolsFramework--SlicePushWidget QLabel[Title="true"]
 {
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
 }
 
@@ -368,9 +368,9 @@ AzToolsFramework--NoChangesOverlay
 AzToolsFramework--NoChangesOverlay QLabel
 {
     font-size: 14pt; 
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold; 
-    color: rgba(180,180,180,255);
+    color: rgba(175, 167, 157,255);
 }
 
 AzToolsFramework--SlicePushWidget QRadioButton
@@ -410,18 +410,18 @@ AzToolsFramework--ComponentPaletteWidget #SearchClearButton
 
 AzToolsFramework--ComponentPaletteWidget #Tree
 {
-    background-color: #222222;
+    background-color: #141210;
     color: white;
     font-size: 12px;
     outline: none;
     padding: 5 0 8 8;
-    selection-color: #4285F4;
-    selection-background-color: #222222;
+    selection-color: #F07F46;
+    selection-background-color: #141210;
 }
 
 AzToolsFramework--ComponentPaletteWidget #Tree::item::hover
 {
-	color: #4285F4;
+	color: #F07F46;
 }
 
 AzToolsFramework--ComponentEditor
@@ -472,7 +472,7 @@ AzToolsFramework--ComponentEditorHeader
     padding: 0px;
     border: none;
     border-radius: 2px;
-    background-color: #222222;
+    background-color: #141210;
 }
 
 AzToolsFramework--ComponentEditorHeader #Background
@@ -481,7 +481,7 @@ AzToolsFramework--ComponentEditorHeader #Background
     padding: 0px;
     border: none;
     border-radius: 2px;
-    background-color: #222222;
+    background-color: #141210;
     background-image: none;
 }
 
@@ -697,7 +697,7 @@ QPushButton[class='Link'] { color: @LinkColor; }
 
 #ResourceManagement #Title {
     font-size: 14px;
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
 }
 
@@ -709,13 +709,13 @@ QPushButton[class='Link'] { color: @LinkColor; }
     border: none;
     color: @LinkColor;
     margin-top: 6px;
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
 }
 
 #ResourceManagement QHeaderView::section {
     color: @LabelTextColor;
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
     border: none;
     padding-top: 0px;
@@ -830,7 +830,7 @@ QPushButton[class='Link'] { color: @LinkColor; }
 #ResourceManagement #Bottom #Title {
     background-color: @DarkPanelBackgroundColor;
     font-size: 12px;
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
 }
 
@@ -876,7 +876,7 @@ QPushButton[class='Link'] { color: @LinkColor; }
 #ResourceManagement #Stack #Status #Title
 {
     font-size: 12px;
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
     margin-top: 6px;
     margin-bottom: 6px;
@@ -990,7 +990,7 @@ QPushButton[class='Link'] { color: @LinkColor; }
 
 #ResourceManagement #ResourceImporter #RegionBox:disabled
 {
-    color: #555555;
+    color: #2A2622;
 }
 
 #ResourceManagement #ResourceImporter #ListTable
@@ -1104,44 +1104,44 @@ QPushButton[class='Link'] { color: @LinkColor; }
 
 #LoginDialog
 {
-    background-color: #F8F8F8;
+    background-color: #E8E2DA;
 }
 
 #LoginDialog Amazon--LoginWelcomeTitle
 {
-    color: #444444;
-    background-color: #F8F8F8;
+    color: #211E1B;
+    background-color: #E8E2DA;
     font-size: 21px;
     qproperty-alignment: AlignCenter;
-    font-family: "Open Sans Semibold";
+    font-family: "Geist Semibold";
 }
 
 #LoginDialog Amazon--LoginWelcomeText
 {
-    color: #444444;
-    background-color: #F8F8F8;
+    color: #211E1B;
+    background-color: #E8E2DA;
     font-size: 13px;
     qproperty-alignment: AlignLeft;
-    font-family: "Open Sans";
+    font-family: "Geist";
 }
 
 #LoginDialog Amazon--LoginFooterText
 {
-    color: #999999;
-    background-color: #F8F8F8;
+    color: #8D857B;
+    background-color: #E8E2DA;
     font-size: 13px;
     qproperty-alignment: AlignCenter;
-    font-family: "Open Sans";
+    font-family: "Geist";
 }
 
 #LoginDialog Amazon--LoginWebViewFrame
 {
-    border: 2px solid #EEEEEE;
+    border: 2px solid #E3DDD5;
 }
 
 #LoginDialog Amazon--LoginWebView
 {
-    background-color: #F8F8F8;
+    background-color: #E8E2DA;
 }
 
 QLineEdit[inputValid="false"]
@@ -1173,7 +1173,7 @@ QLineEdit#filteredSearchWidget
     background-repeat: no-repeat;
     background-position: left;
     padding: 2 2 2 24;
-    color: rgb(255, 255, 255);
+    color: rgb(236, 230, 222);
 }
 
 QPushButton#m_display_options:menu-indicator
@@ -1225,13 +1225,13 @@ QToolButton#assetTypeSelector:focus
 
 QWidget {
     background-color: rgb(56, 58, 59);
-    font-family: "Open Sans";
+    font-family: "Geist";
     font-weight: 400;
 }
 
 QMenuBar {
     background-color: rgb(47, 46, 46);
-    color: rgb(204, 204, 204);
+    color: rgb(210, 203, 194);
     min-height: 24px;
     font-size: 13px;
 }
@@ -1243,15 +1243,15 @@ QMenuBar::item {
 }
 
 QMenuBar::item:selected {
-    color: rgb(66, 133, 244);
+    color: rgb(240, 127, 70);
 }
 
 QMenuBar::item:pressed {
-    color: rgb(66, 133, 244);
+    color: rgb(240, 127, 70);
 }
 
 QLabel, QGroupBox::title, QTabBar::tab, QDockWidget::title, QDockWidget {
-    color: rgb(204, 204, 204);
+    color: rgb(210, 203, 194);
 }
 
 QPushButton::menu-indicator:enabled {
@@ -1277,19 +1277,19 @@ QPushButton[class="FixedMenu"]::menu-indicator:enabled, QPushButton[class="Fixed
 
 QPushButton {
     font-size: 14px;
-    color: #EEEEEE;
+    color: #E3DDD5;
 }
 
 QPushButton:hover {
-    color: rgb(204, 204, 204);
+    color: rgb(210, 203, 194);
 }
 
 QPushButton:pressed {
-    color: #cccccc;
+    color: #d2cbc2;
 }
 
 QPushButton:disabled {
-    color: #999999;
+    color: #8D857B;
 }
 
 
@@ -1298,7 +1298,7 @@ QPushButton[class="Primary"] {
 }
 
 QPushButton[class="Primary"]:disabled {
-    color: #999999;
+    color: #8D857B;
 }
 
 QPushButton[class="tiny"] {
@@ -1317,7 +1317,7 @@ QPushButton[class="tiny"]:checked {
 QRadioButton, QCheckBox {
     font-size: 12px;
     line-height: 18px;
-    color: rgb(204, 204, 204);
+    color: rgb(210, 203, 194);
 }
 
 QRadioButton:hover {
@@ -1382,7 +1382,7 @@ QCheckBox::indicator:unchecked:disabled {
 }
 
 QTextEdit {
-    color: rgb(204, 204, 204);
+    color: rgb(210, 203, 194);
     font-size: 12px;
     line-height: 20px;
 
@@ -1392,7 +1392,7 @@ QTextEdit {
 
 
 QScrollBar {
-    background-color: #333333;
+    background-color: #171513;
     border: 1px solid rgb(34, 35, 38);
 }
 
@@ -1407,7 +1407,7 @@ QScrollBar:vertical {
 }
 
 QScrollBar::handle {
-    background-color: #555555;
+    background-color: #2A2622;
     border: 0.5px solid rgb(51, 52, 56);
     border-radius: 2px;
 }
@@ -1435,7 +1435,7 @@ QProgressBar {
 }
 
 QProgressBar::chunk {
-    background-color: rgb(17, 102, 187);
+    background-color: rgb(183, 75, 21);
     border-radius: 2px;
 }
 
@@ -1470,7 +1470,7 @@ QSlider::add-page:horizontal, QSlider::add-page:vertical {
 
 /* left side of the slider */
 QSlider::sub-page:horizontal, QSlider::sub-page:vertical {
-    background-color: rgb(17, 102, 187);
+    background-color: rgb(183, 75, 21);
     border-radius: 2px;
 }
 
@@ -1484,7 +1484,7 @@ QSlider::sub-page:horizontal[invertedAppearance=true], QSlider::sub-page:vertica
      border-radius: 2px;
 }
 QSlider::add-page:horizontal[invertedAppearance=true], QSlider::add-page:vertical[invertedAppearance=true] {
-    background-color: rgb(17, 102, 187);
+    background-color: rgb(183, 75, 21);
     border-radius: 2px;
 }
 
@@ -1505,27 +1505,27 @@ QComboBox {
 }
 
 QComboBox:enabled:!focus {
-    background-color: #555555;
+    background-color: #2A2622;
 }
 
 QComboBox:enabled:!focus:on {
-    background-color: #555555;
-    border: 1px solid rgb(66, 133, 244);
+    background-color: #2A2622;
+    border: 1px solid rgb(240, 127, 70);
 }
 
 QComboBox:focus {
-    background-color: #555555;
-    border: 1px solid rgb(66, 133, 244);
+    background-color: #2A2622;
+    border: 1px solid rgb(240, 127, 70);
 }
 
 QComboBox QListView {
-    background-color: #222222;
+    background-color: #141210;
     color: white;
     font-size: 12px;
     outline: none;
     padding: 5 0 8 8;
-    selection-color: #4285F4;
-    selection-background-color: #222222;
+    selection-color: #F07F46;
+    selection-background-color: #141210;
 }
 
 QComboBox QListView::item {
@@ -1534,12 +1534,12 @@ QComboBox QListView::item {
 }
 
 QComboBox QListView::item:selected {
-    background-color: #222222;
-    color: #4285F4;
+    background-color: #141210;
+    color: #F07F46;
 }
 
 QComboBox QScrollBar {
-    background-color: #222222;
+    background-color: #141210;
     border: 0px;
 }
 
@@ -1575,7 +1575,7 @@ QComboBox::down-arrow:!editable:disabled {
 }
 
 QComboBox:disabled {
-    color: rgb(105, 105, 105);
+    color: rgb(57, 52, 46);
     background-color: rgb(78, 80, 81);
 }
 
@@ -1590,14 +1590,14 @@ QTabBar::close-button {
 }
 
 QTreeView::item:hover {
-    color: rgb(66, 133, 244);
+    color: rgb(240, 127, 70);
 }
 
 /*****************************************************************************
                                 Amazon widgets
 ******************************************************************************/
 QLineEdit {
-    font-family: "Open Sans";
+    font-family: "Geist";
     font-size: 12px;
     font-weight: 400;
     color: black;
@@ -1617,12 +1617,12 @@ VectorEdit QLineEdit {
 }
 
 VectorEdit QLineEdit:enabled:focus {
-    background-color: rgb(204, 204, 204);
+    background-color: rgb(210, 203, 194);
 }
 
 VectorEdit QLineEdit:enabled {
     background-color: rgb(110, 112, 113);
-    border: 1px solid rgb(66, 133, 244);
+    border: 1px solid rgb(240, 127, 70);
 }
 
 VectorEdit QLineEdit:disabled {
@@ -1632,7 +1632,7 @@ VectorEdit QLineEdit:disabled {
 
 QAbstractSpinBox:disabled {
     color: rgb(0, 0, 0);
-    background-color: rgb(90, 90, 90);
+    background-color: rgb(45, 41, 37);
 }
 
 VectorEdit[flavor="1"] QLineEdit { /* Information */
@@ -1640,7 +1640,7 @@ VectorEdit[flavor="1"] QLineEdit { /* Information */
 }
 
 VectorEdit[flavor="2"] QLineEdit { /* Question */
-    border-color: rgb(66, 133, 244);
+    border-color: rgb(240, 127, 70);
 }
 
 VectorEdit[flavor="3"] QLineEdit { /* Invalid */
@@ -1653,16 +1653,16 @@ VectorEdit[flavor="4"] QLineEdit { /* Valid */
 }
 
 QExpandingLineEdit {
-    background-color: rgb(255, 255, 255);
+    background-color: rgb(236, 230, 222);
 }
 
 QAbstractItemView {
     background-color: rgb(56, 58, 59);
     alternate-background-color: rgb(66, 68, 69);
-    color: rgb(153, 153, 153);
+    color: rgb(141, 133, 123);
     border: none;
-    selection-color: rgb(255, 255, 255);
-    selection-background-color: rgba(255, 255, 255, 41);
+    selection-color: rgb(236, 230, 222);
+    selection-background-color: rgba(236, 230, 222, 41);
 }
 
 QAbstractItemView::indicator:unchecked {
@@ -1685,12 +1685,12 @@ QAbstractItemView::indicator:disabled {
 
 QHeaderView::section {
 	background-color: transparent;
-	color: rgb(204, 204, 204);
+	color: rgb(210, 203, 194);
 	padding: 5px;
 }
 
 QHeaderView::section::horizontal {
-	border-right: 1px solid #999999;
+	border-right: 1px solid #8D857B;
 }
 
 QHeaderView::section::horizontal:last, QHeaderView::section:horizontal:only-one {
@@ -1718,7 +1718,7 @@ AzQtComponents--TitleBar * {
 }
 
 AzQtComponents--TitleBar[drawSimple="true"] {
-    background: rgb(221, 221, 221);
+    background: rgb(219, 212, 203);
     margin-bottom: 1px; /* Hardcoded in DockBar::drawSolidFrame */
     padding-bottom: -1px; /* Use negative padding to offset margin-bottom and keep things centered */
     padding-right: 1px; /* g_simpleBarButtonMarginsInPixels */
@@ -1734,7 +1734,7 @@ AzQtComponents--TitleBar[drawSimple="false"][tearEnabled="true"] QLabel#icon {
 }
 
 AzQtComponents--TitleBar AzQtComponents--ElidingLabel#title {
-    font-family: "Open Sans";
+    font-family: "Geist";
     font-size: 8pt;
 
     padding-left: 6px; /* TitleLeftMargin - 2px added by QLabel paint code */
@@ -1833,13 +1833,13 @@ AzQtComponents--SearchLineEdit[HasExternalError="true"] {
 }
 
 AzQtComponents--SearchLineEdit[HasExternalError="false"] {
-    color: rgb(192, 192, 192);
+    color: rgb(192, 184, 174);
 }
 
 AzQtComponents--StyledDetailsTableView {
-    color: rgb(255, 255, 255);
-    selection-color: rgb(255, 255, 255);
-    selection-background-color: rgba(255, 255, 255, 41);
+    color: rgb(236, 230, 222);
+    selection-color: rgb(236, 230, 222);
+    selection-background-color: rgba(236, 230, 222, 41);
 }
 
 AzQtComponents--StyledDetailsTableView QHeaderView::section {
@@ -1877,7 +1877,7 @@ QToolBar::separator:vertical {
 
 QToolButton {
     background: transparent;
-    color: rgb(204, 204, 204);
+    color: rgb(210, 203, 194);
 }
 
 StyledSliderPrivate::groove:horizontal
@@ -1944,7 +1944,7 @@ AzQtComponents--ToolButtonComboBox QComboBox, QLineEdit[class="ToolButtonLineEdi
     height: 23px;
     border-width: 2px;
     border-radius: 0px;
-    color: rgb(204, 204, 204);
+    color: rgb(210, 203, 194);
     font-size: 11px;
     padding: 0 0 0 0;
     margin-left: 0;
@@ -2090,9 +2090,9 @@ QComboBox[class="condition"]
     height: 21px;
     border-width: 2px;
     border-radius: 0px;
-    color: rgb(204, 204, 204);
+    color: rgb(210, 203, 194);
     font-size: 12px;
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
     padding: 0 0 0 4;
     margin-left: 0;
@@ -2120,18 +2120,18 @@ AzQtComponents--TagWidget
 
 QLabel[class="addDeployment"]
 {
-    color: rgb(62, 112, 200);
+    color: rgb(197, 109, 65);
     font-size: 13px;
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
 
 }
 
 QLabel[class="addDeployment"]:hover
 {
-    color: rgb(81, 124, 206);
+    color: rgb(203, 124, 84);
     font-size: 13px;
-    font-family: "Open Sans Extrabold";
+    font-family: "Geist Extrabold";
     font-weight: bold;
 }
 
@@ -2142,7 +2142,7 @@ QLabel[class="addDeployment"]:hover
 
 #m_clearFiltersButton:hover
 {
-    color: rgb(145, 189, 255);
+    color: rgb(252, 183, 148);
 }
 
 QPushButton[class="rounded"] {
@@ -2208,9 +2208,9 @@ QPushButton[class="smallRounded"]:hover:!pressed {
 WelcomeScreenDialog QLabel
 {
     font-size: 12px;
-    color: #FFFFFF;
+    color: #ECE6DE;
     line-height: 20px;
-    font-family: "Open Sans";
+    font-family: "Geist";
     background-color: transparent;
 }
 
@@ -2234,7 +2234,7 @@ WelcomeScreenDialog QLabel[fontStyle="sectionTitle"], QLabel#titleLabel[fontStyl
 
 WelcomeScreenDialog QLabel[class="link"]:hover
 {
-    color: #4990E2;
+    color: #DE7D4D;
 }
 
 WelcomeScreenDialog QPushButton
@@ -2245,7 +2245,7 @@ WelcomeScreenDialog QPushButton
 
 WelcomeScreenDialog QListView::item::hover
 {
-    color: #4990E2;
+    color: #DE7D4D;
 }
 
 WelcomeScreenDialog QFrame#viewContainer
@@ -2289,7 +2289,7 @@ AzQtComponents--FilteredSearchWidget QLineEdit#textSearch
     background-repeat: no-repeat;
     background-position: left;
     padding: 2 2 2 24;
-    color: rgb(255, 255, 255);
+    color: rgb(236, 230, 222);
 }
 
 AzQtComponents--FilteredSearchWidget #filteredParent
@@ -2314,20 +2314,20 @@ AzQtComponents--FilteredSearchWidget QLabel#label
 
 AzQtComponents--FilteredSearchWidget AzQtComponents--ExtendedLabel#clearLabel
 {
-    color: rgb(66, 133, 234);
+    color: rgb(230, 123, 70);
 }
 
 AzQtComponents--FilteredSearchWidget AzQtComponents--ExtendedLabel#clearLabel:hover
 {
-    color: rgb(145, 189, 255);
+    color: rgb(252, 183, 148);
 }
 
 AzQtComponents--FilterCriteriaButton
 {
     padding: 0px;
     border-radius: 2px;
-    border: 1px solid #808080;
-    background-color: #2E2E2E;
+    border: 1px solid #5D574E;
+    background-color: #161412;
 }
 
 AzQtComponents--FilterCriteriaButton QLabel,
@@ -2370,7 +2370,7 @@ AzQtComponents--BrowseEdit #attached-button
 .QLabel[tooltipLabel="Title"]
 {
   color: @CToolTipText;
-  font: "Open Sans";
+  font: "Geist";
   font-size: 12px;
   font-weight: 600; /*CSS semibold value*/
   background: transparent;
@@ -2379,7 +2379,7 @@ AzQtComponents--BrowseEdit #attached-button
 .QLabel[tooltipLabel="Shortcut"]
 {
   color: @CToolTipText;
-  font: "Open Sans";
+  font: "Geist";
   font-size: 12px;
   font-style: italic;
   background: transparent;
@@ -2387,7 +2387,7 @@ AzQtComponents--BrowseEdit #attached-button
 .QLabel[tooltipLabel="Content"]
 {
   color: @CToolTipText;
-  font: "Open Sans";
+  font: "Geist";
   font-size: 11px;
   background: transparent;
 }
@@ -2443,7 +2443,7 @@ OutlinerWidget QTreeView::branch:selected
 , OutlinerWidget QTreeView::branch:selected:active
 , OutlinerWidget QTreeView::item:selected:active
 {
-    background: rgba(255, 255, 255, 45);
+    background: rgba(236, 230, 222, 45);
 }
 
 /* ============================================================= */
@@ -2630,7 +2630,7 @@ AzQtComponents--CardHeader #Background
 
 .primaryCardHeader
 {
-    background-color: #222222;
+    background-color: #141210;
 }
 
 .secondaryCardHeader
@@ -2735,7 +2735,7 @@ AzQtComponents--CardHeader #Help:hover
 
 .separator
 {
-    color: #999999;
+    color: #8D857B;
 }
 
 AzQtComponents--Card #SeparatorContainer
@@ -2764,7 +2764,7 @@ AzToolsFramework--AssetBrowser--SearchWidget QLineEdit
     background-repeat: no-repeat;
     background-position: left;
     padding: 2 2 2 24;
-    color: rgb(255, 255, 255);
+    color: rgb(236, 230, 222);
 }
 
 AzToolsFramework--AssetBrowser--SearchWidget QPushButton#m_buttonClearFilter
@@ -2776,9 +2776,9 @@ AzToolsFramework--AssetBrowser--SearchWidget QPushButton#m_buttonClearFilter
 
 AzToolsFramework--AssetBrowser--AssetBrowserTreeView
 {
-    font-family: "Amazon Ember";
+    font-family: "Geist";
     font-size: 12px;
-    color: #FFFFFF;
+    color: #ECE6DE;
     show-decoration-selected:0;  /* this prevents the carets from being rendered with an extra square of highlight around them */
 }
 
@@ -2789,8 +2789,8 @@ AzToolsFramework--AssetBrowser--AssetBrowserTreeView::item
 
 AzToolsFramework--AssetBrowser--AssetBrowserTreeView:disabled
 {
-    color: #999999;
-    selection-color: #999999;
+    color: #8D857B;
+    selection-color: #8D857B;
 }
 
 AzToolsFramework--AssetBrowser--AssetBrowserTreeView::branch:has-children:!has-siblings:closed,
@@ -2807,7 +2807,7 @@ AzToolsFramework--AssetBrowser--AssetBrowserTreeView::branch:open:has-children:h
 
 AzQtComponents--SegmentBar QAbstractButton
 {
-    background-color: #333333;
+    background-color: #171513;
     border-color: #000000;
     border-style: solid;
     border-width: 1px;
@@ -2847,18 +2847,18 @@ AzQtComponents--SegmentBar[orientation="2"] QAbstractButton.TabLast
 
 AzQtComponents--SegmentBar QAbstractButton:checked
 {
-    background-color: #222222;
+    background-color: #141210;
 }
 
 AzQtComponents--SegmentBar QAbstractButton:hover:!checked,
 AzQtComponents--SegmentBar QAbstractButton:pressed:!checked
 {
-    background-color: #444444;
+    background-color: #211E1B;
 }
 
 AzToolsFramework--AssetCompleterListView
 {
-    color: #fff;
+    color: #ece6de;
     background: #000;
 }
 
@@ -2870,5 +2870,5 @@ QLineEdit#m_entitySearchBox
     background-repeat: no-repeat;
     background-position: left;
     padding: 2 2 2 24;
-    color: rgb(255, 255, 255);
+    color: rgb(236, 230, 222);
 }

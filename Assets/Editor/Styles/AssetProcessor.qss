@@ -2,7 +2,7 @@
 
 QWidget
 {
-  font: Open Sans Regular;
+  font: Geist Regular;
   font-size: 14px;
 }
 
@@ -16,7 +16,7 @@ QListWidget {
     margin-left: 18px;
     show-decoration-selected: 1;
 
-    font: Open Sans Regular;
+    font: Geist Regular;
     font-size: 16px;
 }
 
@@ -123,7 +123,7 @@ QListWidget:item:hover {
 
 #supportLabel
 {
-  font: Open Sans Regular;
+  font: Geist Regular;
   font-size: 14px;
 }
 

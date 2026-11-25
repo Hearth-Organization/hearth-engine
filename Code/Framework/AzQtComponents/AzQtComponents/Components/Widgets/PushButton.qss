@@ -29,20 +29,20 @@
 
 QPushButton
 {
-    color: #ffffff;
-    font-family: "Open Sans";
+    color: #ece6de;
+    font-family: "Geist";
     font-size: 12px;
 }
 
 QPushButton:hover,
 QPushButton:pressed
 {
-    color: #FFFFFF;
+    color: #ECE6DE;
 }
 
 QPushButton:disabled
 {
-    color: #999999;
+    color: #8D857B;
 }
 
 QPushButton:flat
@@ -54,13 +54,14 @@ QPushButton:flat
 QPushButton.Primary,
 QPushButton:default
 {
-    color: #FFFFFF;
+    color: #1A0F08;
+    font-weight: 600;
 }
 
 QPushButton.Primary:disabled,
 QPushButton:default:disabled
 {
-    color: #BBBBBB;
+    color: #8D857B;
 }
 
 QPushButton.SmallIcon

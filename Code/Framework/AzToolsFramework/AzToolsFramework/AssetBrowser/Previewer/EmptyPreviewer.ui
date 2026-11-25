@@ -54,7 +54,7 @@
        <widget class="QLabel" name="m_noPreviewText">
         <property name="font">
          <font>
-          <family>Open Sans</family>
+          <family>Geist</family>
           <pointsize>8</pointsize>
          </font>
         </property>

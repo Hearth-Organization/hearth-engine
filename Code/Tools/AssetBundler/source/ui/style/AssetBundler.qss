@@ -14,26 +14,26 @@ QTabWidget:pane {
 
 QLabel#activeProjectLabel {
     font-size: 18px;
-    font-family: "Amazon Ember Light";
+    font-family: "Geist Light";
     margin-bottom: 5px;
 }
 
 QTreeView#logTableView {
-    border: 1px solid #1B1B1B;
+    border: 1px solid #11100E;
     margin-left: 10px;
     margin-right: 10px;
     margin-bottom: 10px;
 }
 
 QTreeView#logTableView QHeaderView::section {
-    background-color: #1B1B1B;
+    background-color: #11100E;
 }
 
 /************** General (Tabs) **************/
 
 QFrame#fileTableFrame,
 QFrame#fileContentsFrame {
-    border: 1px solid #1B1B1B;
+    border: 1px solid #11100E;
 }
 
 QFrame#fileTableFrame {
@@ -44,17 +44,17 @@ QFrame#fileTableHeaderFrame,
 QFrame#fileContentsHeaderFrame,
 QFrame#fileTableHeaderFrame QLabel,
 QFrame#fileContentsHeaderFrame QLabel{
-    background-color: #1B1B1B;
+    background-color: #11100E;
 }
 
 QFrame#fileTableHeaderFrame QLabel,
 QFrame#fileContentsHeaderFrame QLabel{
-    background-color: #1B1B1B;
+    background-color: #11100E;
     margin-left: 5px;
 }
 
 QTabWidget QTreeView QHeaderView::section {
-    background-color: rgb(77, 77, 77);
+    background-color: rgb(38, 34, 31);
 }
 
 QWidget#PlatformSelectionWidget QLabel#platformSelectionLabel {
@@ -107,7 +107,7 @@ QDialog#EditSeedDialog QLabel,
 QDialog#EditSeedDialog QCheckBox,
 QDialog#NewFileDialog QLabel,
 QDialog#NewFileDialog QCheckBox {
-    background-color: #555555;
+    background-color: #2A2622;
 }
 
 /************** Asset List Tab **************/
@@ -144,7 +144,7 @@ QFrame#bundleSettingsFrame,
 QFrame#outputBundleLocationFrame,
 QFrame#bundleSettingsFileFrame,
 QFrame#bundleSettingsFrame QLabel {
-    background-color: #555555;
+    background-color: #2A2622;
 }
 
 QWidget#GenerateBundlesModal QPushButton {

@@ -16,7 +16,7 @@
 #include <QPixmapCache>
 
 // Constant for the dock bar text font family
-static const char* g_dockBarFontFamily = "Open Sans";
+static const char* g_dockBarFontFamily = "Geist";
 // Constant for the dock bar text point size
 static const int g_dockBarFontPointSize = 8;
 // Constant for application icon path

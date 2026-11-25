@@ -10,12 +10,12 @@ QMenuBar
 {
     min-height: 28px;
     height: 28px;
-    font-family: "Amazon Ember";
+    font-family: "Geist";
     font-size: 12px;
     margin: 0px;
     spacing: 0px;
     border-bottom-width: 2px;
-    border-bottom-color: #111111;
+    border-bottom-color: #0D0C0B;
     border-bottom-style: solid;
 }
 
@@ -27,10 +27,10 @@ QMenuBar::item
 
 QMenuBar::item:selected
 {
-    background-color: #555555;
+    background-color: #2A2622;
 }
 
 QMenuBar::item:pressed
 {
-    background-color: #222222;
+    background-color: #141210;
 }

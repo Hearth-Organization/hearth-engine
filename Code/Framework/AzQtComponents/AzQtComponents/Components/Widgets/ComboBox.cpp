@@ -300,7 +300,7 @@ namespace AzQtComponents
     {
         Config config;
 
-        config.placeHolderTextColor = QColor("#999999");
+        config.placeHolderTextColor = QColor("#8D857B");
         config.framelessTextColor = QColor(Qt::white);
         config.errorImage = QStringLiteral(":/stylesheet/img/UI20/lineedit-error.svg");
         config.errorImageSize = {16, 16};

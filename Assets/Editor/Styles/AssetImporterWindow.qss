@@ -7,13 +7,13 @@ QTreeView::indicator
 {
     width: 12px;
     height: 12px;
-    border: 1px solid rgb(204, 204, 204);
+    border: 1px solid rgb(210, 203, 194);
     border-radius: 2px;
 }
 
 QTreeView::indicator:checked
 {
-    background-color: rgb(66, 133, 244);
+    background-color: rgb(240, 127, 70);
     image: url(:Icons/CheckMark_Checked.png);
     border-radius: 2px;
     border: 0px;
@@ -36,5 +36,5 @@ QTreeView::indicator:!checked:hover
 
 QTreeView::indicator:!enabled
 {
-    border: 1px solid rgb(102, 102, 102);
+    border: 1px solid rgb(53, 48, 43);
 }

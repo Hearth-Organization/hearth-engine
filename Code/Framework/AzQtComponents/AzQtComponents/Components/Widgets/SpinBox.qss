@@ -27,13 +27,13 @@ QDoubleSpinBox:hover
     margin: 1px;
     border-width: 1px;
     border-style: solid;
-    border-radius: 3px;
+    border-radius: 8px;
 }
 
 QSpinBox:hover,
 QDoubleSpinBox:hover
 {
-    border-color: #222222;
+    border-color: #141210;
     background-image: url(:/SpinBox/hoverBackground.svg);
     background-repeat: no-repeat;
     background-position: right;
@@ -42,8 +42,8 @@ QDoubleSpinBox:hover
 QSpinBox:focus,
 QDoubleSpinBox:focus
 {
-    border-color: #94D2FF;
-    background-color: #FFFFFF;
+    border-color: #FFCFB4;
+    background-color: #ECE6DE;
 }
 
 QSpinBox:hover:focus,
@@ -62,15 +62,15 @@ QDoubleSpinBox:enabled[HasError=true]
     margin: 0px;
     border-width: 2px;
     border-style: solid;
-    border-radius: 4px;
+    border-radius: 8px;
     border-color: #E25243;
 }
 
 QSpinBox:disabled,
 QDoubleSpinBox:disabled
 {
-    background-color: #666666;
-    color: #999999;
+    background-color: #35302B;
+    color: #8D857B;
 }
 
 QSpinBox::up-button,

@@ -86,7 +86,7 @@ AzQtComponents--ColorPicker .HorizontalSeparator
     border-bottom: 1px solid #393a3c;
     border-left: none;
     border-right: none;
-    background: #222222;
+    background: #141210;
 }
 
 AzQtComponents--ColorPicker .HorizontalSeparatorContainer
@@ -105,7 +105,7 @@ AzQtComponents--Swatch,
 AzQtComponents--ColorPicker #addColorButton
 {
     /* Note: Swatches will ignore any 'background*' property set here */
-    border: 1px solid #333333;
+    border: 1px solid #171513;
     border-radius: 2px;
 }
 

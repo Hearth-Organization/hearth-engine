@@ -16,7 +16,7 @@ QComboBox
     padding-left: 4px;
     margin: 1px;
     font-size: 12px;
-    background-color: #CCCCCC;
+    background-color: #D2CBC2;
 }
 
 QComboBox:hover
@@ -24,7 +24,7 @@ QComboBox:hover
     margin: 0px;
     border-width: 1px;
     border-style: solid;
-    border-radius: 3px;
+    border-radius: 8px;
     border-color: rgba(0, 0, 0, 50);
 }
 
@@ -35,10 +35,10 @@ QComboBox[HasPopupOpen=true][HasPopupOpen=true]
     margin: 0px;
     border-width: 1px;
     border-style: solid;
-    border-radius: 3px;
-    border-color: #94D2FF;
+    border-radius: 8px;
+    border-color: #FFCFB4;
 
-    background-color: #FFFFFF;
+    background-color: #ECE6DE;
 }
 
 QComboBox[HasError=true]
@@ -46,14 +46,14 @@ QComboBox[HasError=true]
     margin: 0px;
     border-width: 2px;
     border-style: solid;
-    border-radius: 4px;
+    border-radius: 8px;
     border-color: #E25243;
 }
 
 QComboBox:disabled
 {
-    background-color: #666666;
-    color: #999999;
+    background-color: #35302B;
+    color: #8D857B;
 }
 
 QComboBox::drop-down
@@ -78,7 +78,7 @@ QComboBox::down-arrow:disabled
 
 QComboBox QAbstractItemView
 {
-    background-color: #222222;
+    background-color: #141210;
     padding: 0px;
     outline: none; /* Disable focus rect */
     show-decoration-selected: 1;
@@ -86,7 +86,7 @@ QComboBox QAbstractItemView
 
 QComboBox QAbstractItemView::item
 {
-    color: #FFFFFF;
+    color: #ECE6DE;
     padding-right: 24px;
     /* We draw the checkbox via a delegate, need to reserve space for it  */
     padding-left: 24px;
@@ -101,19 +101,19 @@ QComboBox QAbstractItemView::item
 */
 QComboBox QAbstractItemView::item:selected
 {
-    background-color: #444444;
-    color: #FFFFFF;
+    background-color: #211E1B;
+    color: #ECE6DE;
 }
 
 QComboBox QAbstractItemView::item:disabled
 {
-    color: #555555;
+    color: #2A2622;
 }
 
 QComboBox QAbstractItemView::separator
 {
     height: 1px;
-    background: #444444;
+    background: #211E1B;
 }
 
 QMenu QComboBox

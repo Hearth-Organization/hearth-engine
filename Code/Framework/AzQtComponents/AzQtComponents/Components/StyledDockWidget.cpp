@@ -222,7 +222,7 @@ namespace AzQtComponents
     void StyledDockWidget::drawFrame(QPainter& p, QRect rect, bool drawTop)
     {
         p.save();
-        p.setPen(QColor(33, 34, 35));
+        p.setPen(QColor(13, 12, 11));
 
         rect.adjust(0, p.pen().width(), 0, 0);
         if (drawTop)

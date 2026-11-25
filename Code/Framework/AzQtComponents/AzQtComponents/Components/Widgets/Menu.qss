@@ -9,7 +9,7 @@
 
 QMenu
 {
-    background-color: #222222;
+    background-color: #141210;
     padding: 4px 2px;
 }
 
@@ -17,18 +17,18 @@ QMenu
 QMenu::item:selected,
 QMenu::item .WidgetAction:hover
 {
-    background-color: #444444;
+    background-color: #211E1B;
 }
 
 QMenu::item:disabled
 {
-    color: #555555;
+    color: #2A2622;
 }
 
 QMenu::separator
 {
     height: 0px;
-    border-bottom: 1px solid #454545;
+    border-bottom: 1px solid #221E1B;
     margin-top: 2px;
     margin-bottom: 3px;
 }

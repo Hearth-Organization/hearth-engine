@@ -2,13 +2,13 @@
   {
     "selectors": [ "graph" ],
 
-    "background-color": "#222222",
+    "background-color": "#141210",
 
-    "grid-major-color": "#282828",
+    "grid-major-color": "#151311",
     "grid-major-width": 1,
     "grid-major-style": "solid",
 
-    "grid-minor-color": "#282828",
+    "grid-minor-color": "#151311",
     "grid-minor-width": 0.5,
     "grid-minor-style": "dotted"
   },
@@ -17,7 +17,7 @@
 
     "background-color": "#373A3B",
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "default",
     "font-style": "default",
     "font-variant": "default",
@@ -103,7 +103,7 @@
 
     "border-width": 2,
     "border-style": "dashed",
-    "border-color": "#888888D9",
+    "border-color": "#6E675ED9",
     "border-radius": 3
   },
   {
@@ -141,13 +141,13 @@
 
     "background-color": "transparent",
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "110%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Bold",
 
-    "color": "#ffffff",
+    "color": "#ece6de",
 
     "text-alignment": "left",
 
@@ -172,13 +172,13 @@
 
     "background-color": "transparent",
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "color": "#ffffff",
+    "color": "#ece6de",
 
     "border-width": 0,
     "border-style": "solid",
@@ -202,7 +202,7 @@
   {
     "selectors": [ "comment" ],
 
-    "background-color": "#FFFFFF",
+    "background-color": "#ECE6DE",
 
     "border-width": 1,
     "border-style": "solid",
@@ -218,35 +218,35 @@
   {
     "selectors": [ "comment:hovered" ],
 
-    "background-color": "#FFFFFF",
+    "background-color": "#ECE6DE",
     "border-color": "#17A3CD",
     "opacity": "100%"
   },
   {
     "selectors": [ "comment:inspection_transparent" ],
 
-    "background-color": "#FFFFFF",
+    "background-color": "#ECE6DE",
     "border-color": "#17A3CD",
     "opacity": "50%"
   },
   {
     "selectors": [ "comment:editing" ],
 
-    "background-color": "#FFFFFF",
+    "background-color": "#ECE6DE",
     "border-color": "#17A3CD",
     "opacity": "100%"
   },
   {
     "selectors": [ "comment:selected" ],
 
-    "background-color": "#FFFFFF",
+    "background-color": "#ECE6DE",
     "border-color": "#17A3CD",
     "opacity": "100%"
   },
   {
     "selectors": [ "comment:highlighted" ],
 
-    "background-color": "#FFFFFF",
+    "background-color": "#ECE6DE",
     "border-color": "#17A3CD",
     "opacity": "100%"
   },
@@ -254,7 +254,7 @@
     "selectors": [ "comment > .commentText" ],
     "color": "#000000",
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "120%",
     "font-style": "italic",
     "font-variant": "default",
@@ -280,7 +280,7 @@
   {
     "selectors": [ "blockComment" ],
 
-    "background-color": "#FFFFFF",
+    "background-color": "#ECE6DE",
 
     "border-width": 6,
     "border-style": "solid",
@@ -372,9 +372,9 @@
   {
     "selectors": [ "wrapperNode" ],
 
-    "background-color": "#222222F0",
+    "background-color": "#141210F0",
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "default",
     "font-style": "default",
     "font-variant": "default",
@@ -393,14 +393,14 @@
   {
     "selectors": [ "wrapperNode:hovered" ],
 
-    "background-color": "#222222",
+    "background-color": "#141210",
 
     "border-color": "#17A3CD"
   },
   {
     "selectors": [ "wrapperNode:inspection_transparent" ],
 
-    "background-color": "#222222",
+    "background-color": "#141210",
 
     "border-color": "#17A3CD",
     "opacity": "50%"
@@ -432,17 +432,17 @@
 
     "background-color": "transparent",
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "color": "#ffffff",
+    "color": "#ece6de",
 
     "border-width": 1,
     "border-style": "dashed",
-    "border-color": "#cccccc",
+    "border-color": "#d2cbc2",
     "border-radius": 1,
 
     "text-alignment": "center",
@@ -461,30 +461,30 @@
   {
     "selectors": [ "wrapperNode:hovered > actionLabelEmpty" ],
 
-    "background-color": "#333333"
+    "background-color": "#171513"
   },
   {
     "selectors": [ "wrapperNode:inspection_transparent > actionLabelEmpty" ],
 
-    "background-color": "#333333"
+    "background-color": "#171513"
   },
   {
     "selectors": [ "wrapperNode:selected > actionLabelEmpty" ],
 
-    "background-color": "#333333"
+    "background-color": "#171513"
   },
   {
     "selectors": [ "wrapperNode > actionLabel" ],
 
     "background-color": "transparent",
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "color": "#ffffff",
+    "color": "#ece6de",
 
     "text-alignment": "center",
     "text-vertical-alignment": "center"
@@ -506,33 +506,33 @@
     "border-color": "#D20921",
     "border-radius": 1,
 
-    "color": "#ffffff80"
+    "color": "#ece6de80"
   },
   {
     "selectors": [ "wrapperNode:hovered > actionLabel" ],
 
-    "background-color": "#333333",
+    "background-color": "#171513",
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#cccccc",
+    "border-color": "#d2cbc2",
     "border-radius": 1
   },
   {
     "selectors": [ "wrapperNode:inspection_transparent > actionLabel" ],
 
-    "background-color": "#333333",
+    "background-color": "#171513",
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#cccccc",
+    "border-color": "#d2cbc2",
     "border-radius": 1
   },
   {
     "selectors": [ "wrapperNode:selected > actionLabel" ],
 
-    "background-color": "#333333",
+    "background-color": "#171513",
     "border-width": 1,
     "border-style": "dashed",
-    "border-color": "#cccccc",
+    "border-color": "#d2cbc2",
     "border-radius": 1
   },
   {
@@ -554,13 +554,13 @@
 
     "background-color": "transparent",
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "110%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Bold",
 
-    "color": "#ffffff",
+    "color": "#ece6de",
 
     "text-alignment": "left",
 
@@ -573,13 +573,13 @@
 
     "background-color": "transparent",
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "color": "#ffffff",
+    "color": "#ece6de",
 
     "border-width": 0,
     "border-style": "solid",
@@ -611,7 +611,7 @@
   {
     "selectors": [ "executionSlot" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -633,7 +633,7 @@
   {
     "selectors": [ "executionSlot:hovered" ],
 
-    "border-color": "#FFFFFF"
+    "border-color": "#ECE6DE"
   },
   {
     "selectors": [ "executionSlot:highlighted" ],
@@ -647,7 +647,7 @@
 
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#FFFFFF",
+    "border-color": "#ECE6DE",
 
     "min-width": 16,
     "min-height": 16,
@@ -659,7 +659,7 @@
   {
     "selectors": [ "executionSlot > .slotName" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -676,7 +676,7 @@
   {
     "selectors": [ "executionSlot > .inputSlotName" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -696,7 +696,7 @@
   {
     "selectors": [ "executionSlot > .outputSlotName" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -716,7 +716,7 @@
   {
     "selectors": [ "extenderSlot" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -738,7 +738,7 @@
   {
     "selectors": [ "extenderSlot:hovered" ],
 
-    "border-color": "#FFFFFF"
+    "border-color": "#ECE6DE"
   },
   {
     "selectors": [ "extenderSlot:highlighted" ],
@@ -752,7 +752,7 @@
 
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#FFFFFF",
+    "border-color": "#ECE6DE",
 
     "min-width": 16,
     "min-height": 16,
@@ -764,7 +764,7 @@
   {
     "selectors": [ "extenderSlot > .slotName" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -781,7 +781,7 @@
   {
     "selectors": [ "extenderSlot > .inputSlotName" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -801,7 +801,7 @@
   {
     "selectors": [ "extenderSlot > .outputSlotName" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -831,7 +831,7 @@
   {
     "selectors": [ "dataSlot:hovered" ],
 
-    "border-color": "#CCCCCC"
+    "border-color": "#D2CBC2"
   },
   {
     "selectors": [ "dataSlot:highlighted" ],
@@ -845,7 +845,7 @@
 
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#CCCCCC",
+    "border-color": "#D2CBC2",
 
     "min-width": 16,
     "min-height": 16,
@@ -857,7 +857,7 @@
   {
     "selectors": [ "dataSlot > .slotName" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -874,7 +874,7 @@
   {
     "selectors": [ "dataSlot > .inputSlotName" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -894,7 +894,7 @@
   {
     "selectors": [ "dataSlot > .outputSlotName" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -914,7 +914,7 @@
   {
     "selectors": [ "dataSlot > .connected" ],
 
-    "background-color": "#CCCCCC"
+    "background-color": "#D2CBC2"
   },
   {
     "selectors": [ "dataSlot > dataConnectionPin.connectable" ],
@@ -940,20 +940,20 @@
   {
     "selectors": [ "booleanPropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "135%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-height": 25,
     "min-width": 88,
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222"
+    "border-color": "#141210"
   },
   {
     "selectors": [ "entityIdPropertyDisabledLabel" ],
@@ -964,14 +964,14 @@
   {
     "selectors": [ "entityIdPropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "105%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "default",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-height": 25,
     "max-height": 25,
     "min-width": 132,
@@ -979,21 +979,21 @@
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222",
+    "border-color": "#141210",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
   {
     "selectors": [ "entityIdPropertyDisplayLabel:validDrop" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "105%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "default",
 
     "background-color": "#E27718",
-    "color": "#222222",
+    "color": "#141210",
     "min-height": 25,
     "max-height": 25,
     "min-width": 132,
@@ -1001,21 +1001,21 @@
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#EEEEEE",
+    "border-color": "#E3DDD5",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
   {
     "selectors": [ "entityIdPropertyDisplayLabel:invalidDrop" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "105%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "default",
 
     "background-color": "#BE3333",
-    "color": "#222222",
+    "color": "#141210",
     "min-height": 25,
     "max-height": 25,
     "min-width": 132,
@@ -1023,7 +1023,7 @@
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#EEEEEE",
+    "border-color": "#E3DDD5",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
@@ -1036,21 +1036,21 @@
   {
     "selectors": [ "doublePropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "default",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-height": 25,
     "min-width": 88,
     "max-width": 88,
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222",
+    "border-color": "#141210",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
@@ -1064,21 +1064,21 @@
   {
     "selectors": [ "stringPropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "115%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "default",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-height": 25,
     "min-width": 132,
     "max-width": 132,
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222",
+    "border-color": "#141210",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
@@ -1092,21 +1092,21 @@
   {
     "selectors": [ "variablePropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "115%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "default",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-height": 25,
     "min-width": 132,
     "max-width": 132,
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222",
+    "border-color": "#141210",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
@@ -1120,21 +1120,21 @@
   {
     "selectors": [ "readOnlyPropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "115%",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "default",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-height": 25,
     "min-width": 132,
     "max-width": 132,
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222",
+    "border-color": "#141210",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
@@ -1154,14 +1154,14 @@
   {
     "selectors": [ "vector_0_valuePropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "default",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-width": 54,
     "max-width": 54,
     "min-height": 25,
@@ -1169,7 +1169,7 @@
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222",
+    "border-color": "#141210",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
@@ -1188,14 +1188,14 @@
   {
     "selectors": [ "vector_1_valuePropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "default",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-width": 54,
     "max-width": 54,
     "min-height": 25,
@@ -1203,7 +1203,7 @@
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222",
+    "border-color": "#141210",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
@@ -1222,14 +1222,14 @@
   {
     "selectors": [ "vector_2_valuePropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "default",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-width": 54,
     "max-width": 54,
     "min-height": 25,
@@ -1237,7 +1237,7 @@
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222",
+    "border-color": "#141210",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
@@ -1256,14 +1256,14 @@
   {
     "selectors": [ "vector_3_valuePropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "default",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-height": 25,
     "max-height": 25,
     "min-width": 54,
@@ -1271,7 +1271,7 @@
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222",
+    "border-color": "#141210",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
@@ -1298,14 +1298,14 @@
   {
     "selectors": [ "quat_0_valuePropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "default",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-width": 66,
     "max-width": 66,
     "min-height": 25,
@@ -1313,7 +1313,7 @@
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222",
+    "border-color": "#141210",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
@@ -1332,14 +1332,14 @@
   {
     "selectors": [ "quat_1_valuePropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "default",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-width": 66,
     "max-width": 66,
     "min-height": 25,
@@ -1347,7 +1347,7 @@
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222",
+    "border-color": "#141210",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
@@ -1366,14 +1366,14 @@
   {
     "selectors": [ "quat_2_valuePropertyDisplayLabel" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "default",
     "font-style": "default",
     "font-variant": "default",
     "font-weight": "Light",
 
-    "background-color": "#666666",
-    "color": "#EEEEEE",
+    "background-color": "#35302B",
+    "color": "#E3DDD5",
     "min-width": 66,
     "max-width": 66,
     "min-height": 25,
@@ -1381,14 +1381,14 @@
     "border-radius": 2,
     "border-width": 1,
     "border-style": "solid",
-    "border-color": "#222222",
+    "border-color": "#141210",
     "text-alignment": "left",
     "text-vertical-alignment": "center"
   },
   {
     "selectors": [ "propertySlot" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -1410,7 +1410,7 @@
   {
     "selectors": [ "propertySlot:hovered" ],
 
-    "border-color": "#FFFFFF"
+    "border-color": "#ECE6DE"
   },
   {
     "selectors": [ "propertySlot:highlighted" ],
@@ -1420,7 +1420,7 @@
   {
     "selectors": [ "propertySlot > .slotName" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -1437,7 +1437,7 @@
   {
     "selectors": [ "propertySlot > .inputSlotName" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -1457,7 +1457,7 @@
   {
     "selectors": [ "propertySlot > .outputSlotName" ],
 
-    "font-family": "Open Sans",
+    "font-family": "Geist",
     "font-size": "100%",
     "font-style": "default",
     "font-variant": "default",
@@ -1479,7 +1479,7 @@
 
     "line-width": 3,
     "line-style": "solid",
-    "line-color": "#777777",
+    "line-color": "#4A443D",
     "line-selection-padding": 20,
     "cap-style": "flat",
     "line-curve": "straight",
@@ -1538,7 +1538,7 @@
   {
     "selectors": [ "connection.logicFlow" ],
 
-    "line-color": "#ffffff",
+    "line-color": "#ece6de",
     "line-curve": "straight"
   },
   {
@@ -1587,11 +1587,11 @@
 
     "border-width": 2,
     "border-style": "solid",
-    "border-color": "#ffffff",
+    "border-color": "#ece6de",
     "border-radius": 2,
 
     "line-width": 2,
-    "line-color": "#ffffff",
+    "line-color": "#ece6de",
 
     "spacing": 0,
     "margin": 3,
@@ -1731,56 +1731,56 @@
     "palette-style": "solid",
     "line-color": "#5A69A1",
     "background-color": "#5A69A1",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "GradientNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#D04160",
     "background-color": "#D04160",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "GradientModifierNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#B48BFF",
     "background-color": "#B48BFF",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "VegetationAreaNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#8BDD16",
     "background-color": "#8BDD16",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "TerrainNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#8B572A",
     "background-color": "#8B572A",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "UtilityNodeTitlePalette" ],
     "palette-style": "solid",
-    "line-color": "#FFFFFF",
-    "background-color": "#FFFFFF",
-    "color": "#ffffff"
+    "line-color": "#ECE6DE",
+    "background-color": "#ECE6DE",
+    "color": "#ece6de"
   },
   {
     "selectors": [ "ComparisonNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#10A396",
     "background-color": "#10A396",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "CoreNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#7A54BE",
     "background-color": "#7A54BE",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": ["DisabledColorPalette"],
@@ -1794,96 +1794,96 @@
     "palette-style": "solid",
     "line-color": "#A44192",
     "background-color": "#A44192",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "HandlerNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#0E96F6",
     "background-color": "#0E96F6",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "HandlerWrapperNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#000000F0",
     "background-color": "#000000F0",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "LogicNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#7A54BE",
     "background-color": "#7A54BE",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "MathNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#10A396",
     "background-color": "#10A396",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "MethodNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#0D47A8",
     "background-color": "#0D47A8",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "ObjectNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#AF937B",
     "background-color": "#AF937B",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "OperatorsNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#7A54BE",
     "background-color": "#7A54BE",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "StringNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#2BF1F8",
     "background-color": "#2BF1F8",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "TimeNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#7A54BE",
     "background-color": "#7A54BE",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "GetVariableNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#0CDE17",
     "background-color": "#0CDE17",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "SetVariableNodeTitlePalette" ],
     "palette-style": "solid",
     "line-color": "#0CDE17",
     "background-color": "#0CDE17",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "ColorOverrideNodeTitlePalette" ],
     "palette-style": "solid",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },
   {
     "selectors": [ "TestingNodeTitlePalette" ],
     "palette-style": "candystripe",
-    "line-color": "#B9B9B9",
+    "line-color": "#B5ADA3",
     "background-color": "#A59D00",
-    "color": "#ffffff",
+    "color": "#ece6de",
 
     "max-stripe-size": 50,
     "min-stripes": 3,
@@ -1896,7 +1896,7 @@
     "palette-style": "candystripe",
     "line-color": "#D20921",
     "background-color": "#D20921",
-    "color": "#ffffff",
+    "color": "#ece6de",
 
     "max-stripe-size": 50,
     "min-stripes": 3,
@@ -1909,7 +1909,7 @@
     "palette-style": "solid",
     "line-color": "#FCF9A6",
     "background-color": "#FCF9A6",
-    "color": "#ffffff"
+    "color": "#ece6de"
   },  
   {
     "selectors": [ "BookmarkTypeIcon" ],
