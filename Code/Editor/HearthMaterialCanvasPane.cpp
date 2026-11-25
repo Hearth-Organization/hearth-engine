@@ -107,7 +107,7 @@ namespace
         if (value.isArray())
         {
             QJsonArray out;
-            for (const QJsonValue& item : value.toArray())
+            for (const QJsonValue item : value.toArray())
             {
                 out.append(CanvasResolveImports(item, from, depth + 1));
             }
@@ -656,7 +656,7 @@ QString HearthMaterialCanvasPane::Weight() const
 {
     // Rough cost per pixel: noise is the heavy part (8 hashes), the rest is a few instructions.
     int cost = 0;
-    for (const QJsonValue& value : m_canvas.value(QStringLiteral("blocks")).toArray())
+    for (const QJsonValue value : m_canvas.value(QStringLiteral("blocks")).toArray())
     {
         const QString kind = value.toObject().value(QStringLiteral("kind")).toString();
         cost += kind == QLatin1String("noise") || kind == QLatin1String("flicker") ? 3 : 1;

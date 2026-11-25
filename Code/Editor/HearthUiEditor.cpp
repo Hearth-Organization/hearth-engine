@@ -792,7 +792,7 @@ void HearthUiEditor::Load()
     m_elements.clear();
     if (m_canvas.value(QStringLiteral("hearth_ui")).toInt() >= 1)
     {
-        for (const QJsonValue& value : m_canvas.value(QStringLiteral("elements")).toArray())
+        for (const QJsonValue value : m_canvas.value(QStringLiteral("elements")).toArray())
         {
             m_elements << value.toObject();
         }

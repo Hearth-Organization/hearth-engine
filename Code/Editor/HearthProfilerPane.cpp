@@ -541,7 +541,7 @@ bool HearthProfilerPane::LoadCapture(const QString& path)
     }
     // The main thread is the one with the most depth-0 regions; each of its depth-0 regions is a frame.
     QHash<QString, int> topCounts;
-    for (const QJsonValue& value : entries)
+    for (const QJsonValue value : entries)
     {
         const QJsonObject e = value.toObject();
         if (e.value(QStringLiteral("stackDepth")).toInt() == 0)
@@ -561,7 +561,7 @@ bool HearthProfilerPane::LoadCapture(const QString& path)
     }
     QVector<Region> regions;
     double origin = -1.0;
-    for (const QJsonValue& value : entries)
+    for (const QJsonValue value : entries)
     {
         const QJsonObject e = value.toObject();
         if (e.value(QStringLiteral("threadId")).toVariant().toString() != mainThread)

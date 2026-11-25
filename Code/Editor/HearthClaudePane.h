@@ -2,7 +2,7 @@
  * Hearth Engine "Claude" panel (approved mockup "Editor", Nov 2026). Built on O3DE (Apache-2.0 OR MIT).
  *
  * Shows whether Claude is connected to the editor (through the project's Claude bridge), the conversation about
- * this project (<project>/user/ClaudeBridge/chat/*.json, written by the owner here and by Claude), what Claude did
+ * this project (JSON files in <project>/user/ClaudeBridge/chat, written by the owner here and by Claude), what Claude did
  * lately, and a box to describe a change. Sending also opens Claude with the message, so it reaches a session.
  */
 #pragma once

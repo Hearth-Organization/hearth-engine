@@ -446,7 +446,7 @@ void ApplicationManagerBase::HearthStatusTick()
             }
             FastScan();
         }
-        for (const QJsonValue& path : request.value(QStringLiteral("reprocess")).toArray())
+        for (const QJsonValue path : request.value(QStringLiteral("reprocess")).toArray())
         {
             const QString source = path.toString();
             QMetaObject::invokeMethod(m_assetProcessorManager, [manager = m_assetProcessorManager, source]() { manager->RequestReprocess(source); }, Qt::QueuedConnection);

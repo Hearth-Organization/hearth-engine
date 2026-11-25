@@ -133,7 +133,7 @@ protected:
         if (m_values.value(QStringLiteral("stains")).toDouble() > 0)
         {
             g.setBrush(QColor(120, 96, 50, 90));
-            for (const QJsonValue& value : m_area.value(QStringLiteral("decals")).toArray())
+            for (const QJsonValue value : m_area.value(QStringLiteral("decals")).toArray())
             {
                 const QJsonArray d = value.toArray();
                 const double r = qMax(2.0, d.at(2).toDouble() * k * 0.45);
@@ -144,7 +144,7 @@ protected:
         static const QColor colors[] = { QColor(0xFF, 0xF8, 0xCD), QColor(0xFF, 0xA0, 0x28), QColor(0x5F, 0x5A, 0x50), QColor(0xFF, 0x5F, 0x4B) };
         const bool flicker = m_values.value(QStringLiteral("flicker")).toBool(true);
         const bool dying = m_values.value(QStringLiteral("dying")).toBool(true);
-        for (const QJsonValue& value : m_area.value(QStringLiteral("lights")).toArray())
+        for (const QJsonValue value : m_area.value(QStringLiteral("lights")).toArray())
         {
             const QJsonArray l = value.toArray();
             int s = l.at(2).toInt();
@@ -173,7 +173,7 @@ protected:
         auto drawBoxes = [&](const QString& key, const QColor& color, bool minimum)
         {
             g.setBrush(color);
-            for (const QJsonValue& value : m_area.value(key).toArray())
+            for (const QJsonValue value : m_area.value(key).toArray())
             {
                 const QJsonArray w = value.toArray();
                 const double x = w.at(0).toDouble();

@@ -699,7 +699,7 @@ void HearthVoiceStudio::RenderVoices()
     static const QStringList colors = { QStringLiteral("#E8743B"), QStringLiteral("#8FB3E0"), QStringLiteral("#A6DD97"), QStringLiteral("#F0D17A"),
                                         QStringLiteral("#D9A0E8"), QStringLiteral("#ECE6DE") };
     int index = 0;
-    for (const QJsonValue& value : m_voices)
+    for (const QJsonValue value : m_voices)
     {
         const QJsonObject voice = value.toObject();
         auto* row = new QFrame();
@@ -785,9 +785,9 @@ void HearthVoiceStudio::RenderLines()
     const QJsonArray scenes = m_data.value(QStringLiteral("scenes")).toArray();
     int total = 0;
     int changed = 0;
-    for (const QJsonValue& scene : scenes)
+    for (const QJsonValue scene : scenes)
     {
-        for (const QJsonValue& line : scene.toObject().value(QStringLiteral("lines")).toArray())
+        for (const QJsonValue line : scene.toObject().value(QStringLiteral("lines")).toArray())
         {
             ++total;
             changed += LineState(line.toObject()) != tr("Made") ? 1 : 0;
@@ -1172,7 +1172,7 @@ void HearthVoiceStudio::AddLine()
     dialog.setWindowTitle(tr("Add a line"));
     auto* form = new QFormLayout(&dialog);
     auto* voice = new QComboBox(&dialog);
-    for (const QJsonValue& value : m_voices)
+    for (const QJsonValue value : m_voices)
     {
         voice->addItem(value.toObject().value(QStringLiteral("name")).toString(), value.toObject().value(QStringLiteral("id")).toString());
     }

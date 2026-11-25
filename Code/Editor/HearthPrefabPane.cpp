@@ -204,7 +204,7 @@ namespace
                 return PrefabColorName(QColor::fromRgbF(qBound(0.0, a[0].toDouble(), 1.0), qBound(0.0, a[1].toDouble(), 1.0), qBound(0.0, a[2].toDouble(), 1.0)));
             }
             QStringList parts;
-            for (const QJsonValue& v : a)
+            for (const QJsonValue v : a)
             {
                 parts << QString::number(v.toDouble(), 'g', 3);
             }

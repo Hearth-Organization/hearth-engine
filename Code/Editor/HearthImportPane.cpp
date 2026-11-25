@@ -271,9 +271,9 @@ namespace
         info.rig = !json.value(QStringLiteral("skins")).toArray().isEmpty();
         double low[3] = { 1e30, 1e30, 1e30 };
         double high[3] = { -1e30, -1e30, -1e30 };
-        for (const QJsonValue& mesh : meshes)
+        for (const QJsonValue mesh : meshes)
         {
-            for (const QJsonValue& primitive : mesh.toObject().value(QStringLiteral("primitives")).toArray())
+            for (const QJsonValue primitive : mesh.toObject().value(QStringLiteral("primitives")).toArray())
             {
                 const int index = primitive.toObject().value(QStringLiteral("attributes")).toObject().value(QStringLiteral("POSITION")).toInt(-1);
                 const QJsonObject accessor = accessors.at(index).toObject();

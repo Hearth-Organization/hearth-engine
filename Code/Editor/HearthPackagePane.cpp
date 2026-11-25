@@ -314,7 +314,7 @@ void HearthPackagePane::RunChecks()
                                                         QStringLiteral("dim"), this));
             return;
         }
-        for (const QJsonValue& value : answer.value(QStringLiteral("checks")).toArray())
+        for (const QJsonValue value : answer.value(QStringLiteral("checks")).toArray())
         {
             const QJsonObject check = value.toObject();
             const bool ok = check.value(QStringLiteral("ok")).toBool();
@@ -329,7 +329,7 @@ void HearthPackagePane::RunChecks()
             QLabel* text = Hearth::MakeLabel(check.value(QStringLiteral("text")).toString(), QStringLiteral("body"), row);
             text->setWordWrap(true);
             QStringList files;
-            for (const QJsonValue& f : check.value(QStringLiteral("files")).toArray())
+            for (const QJsonValue f : check.value(QStringLiteral("files")).toArray())
             {
                 files << f.toString();
             }
@@ -348,7 +348,7 @@ void HearthPackagePane::RunChecks()
         {
             const QString when = QLocale().toString(QDateTime::fromSecsSinceEpoch(qint64(last.value(QStringLiteral("when")).toDouble())), QLocale::ShortFormat);
             QStringList files;
-            for (const QJsonValue& f : last.value(QStringLiteral("files")).toArray())
+            for (const QJsonValue f : last.value(QStringLiteral("files")).toArray())
             {
                 files << QStringLiteral("<a style='color:#FFCFB4' href='%1'>%2</a>").arg(QUrl::fromLocalFile(QFileInfo(f.toString()).path()).toString(), QFileInfo(f.toString()).fileName());
             }

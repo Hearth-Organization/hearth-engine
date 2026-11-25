@@ -142,7 +142,7 @@ namespace
     //! The texture slots, in the order they're shown.
     const QVector<QPair<QString, QString>>& MaterialSlots()
     {
-        static const QVector<QPair<QString, QString>> slots = {
+        static const QVector<QPair<QString, QString>> materialSlots = {
             { QStringLiteral("baseColor.textureMap"), QObject::tr("Base color") },
             { QStringLiteral("normal.textureMap"), QObject::tr("Normal") },
             { QStringLiteral("roughness.textureMap"), QObject::tr("Roughness") },
@@ -152,7 +152,7 @@ namespace
             { QStringLiteral("parallax.textureMap"), QObject::tr("Height") },
             { QStringLiteral("opacity.textureMap"), QObject::tr("Opacity") },
         };
-        return slots;
+        return materialSlots;
     }
 
     AZ::Color MaterialColor(const QJsonValue& value, const AZ::Color& fallback)
@@ -268,7 +268,7 @@ namespace
             auto* meshes = m_scene->GetFeatureProcessor<AZ::Render::MeshFeatureProcessorInterface>();
             if (meshes && !m_mesh.IsValid())
             {
-                m_mesh = meshes->AcquireMesh(AZ::Render::MeshFeatureProcessorInterface::MeshHandleDescriptor(m_model, m_material));
+                m_mesh = meshes->AcquireMesh(AZ::Render::MeshHandleDescriptor(m_model, m_material));
             }
             const AZ::Vector3 scale = m_shape == 1 ? AZ::Vector3(1.6f, 0.12f, 1.6f) : AZ::Vector3::CreateOne();
             if (meshes)
@@ -1105,7 +1105,7 @@ void HearthMaterialPane::RequestPreview()
             return;
         }
         self->m_previewBusy = false;
-        if (self->m_preview->pixmap() == nullptr || self->m_preview->pixmap()->isNull())
+        if (self->m_preview->pixmap().isNull())
         {
             self->m_preview->setText(tr("The preview couldn't be drawn just now."));
         }

@@ -587,9 +587,9 @@ void HearthCinematicsPane::Save()
 double HearthCinematicsPane::Length() const
 {
     double end = 0.0;
-    for (const QJsonValue& track : m_data.value(QStringLiteral("tracks")).toArray())
+    for (const QJsonValue track : m_data.value(QStringLiteral("tracks")).toArray())
     {
-        for (const QJsonValue& clip : track.toArray())
+        for (const QJsonValue clip : track.toArray())
         {
             const QJsonObject c = clip.toObject();
             end = qMax(end, c.value(QStringLiteral("start")).toDouble() + c.value(QStringLiteral("length")).toDouble());
@@ -607,15 +607,13 @@ QJsonArray HearthCinematicsPane::VoiceLines() const
     {
         return lines;
     }
-    for (const QJsonValue& scene : QJsonDocument::fromJson(file.readAll()).object().value(QStringLiteral("scenes")).toArray())
+    for (const QJsonValue scene : QJsonDocument::fromJson(file.readAll()).object().value(QStringLiteral("scenes")).toArray())
     {
         const QString sceneName = scene.toObject().value(QStringLiteral("name")).toString();
-        int n = 0;
         QHash<QString, int> perWho;
-        for (const QJsonValue& value : scene.toObject().value(QStringLiteral("lines")).toArray())
+        for (const QJsonValue value : scene.toObject().value(QStringLiteral("lines")).toArray())
         {
             QJsonObject line = value.toObject();
-            ++n;
             const QString who = line.value(QStringLiteral("who")).toString();
             line.insert(QStringLiteral("scene"), sceneName);
             line.insert(QStringLiteral("label"), QStringLiteral("%1 %2").arg(who).arg(++perWho[who]));
@@ -635,14 +633,14 @@ void HearthCinematicsPane::FollowVoiceLines()
     const auto project = AZ::Utils::GetProjectPath();
     const QDir voiceFolder(QDir(QString::fromUtf8(project.c_str())).filePath(QStringLiteral("Voice")));
     QHash<QString, QJsonObject> byId;
-    for (const QJsonValue& value : VoiceLines())
+    for (const QJsonValue value : VoiceLines())
     {
         byId.insert(value.toObject().value(QStringLiteral("id")).toString(), value.toObject());
     }
     QJsonArray tracks = m_data.value(QStringLiteral("tracks")).toArray();
     QJsonArray shots = tracks.at(0).toArray();
     QJsonArray voices;
-    for (const QJsonValue& value : tracks.at(1).toArray())
+    for (const QJsonValue value : tracks.at(1).toArray())
     {
         if (!value.toObject().contains(QStringLiteral("shot")))
         {
@@ -734,7 +732,7 @@ void HearthCinematicsPane::SyncTrackView()
     const QJsonArray tracks = m_data.value(QStringLiteral("tracks")).toArray();
     CTrackViewTrack* cameras = trackFor(AnimParamType::Camera);
     clear(cameras);
-    for (const QJsonValue& value : tracks.at(0).toArray())
+    for (const QJsonValue value : tracks.at(0).toArray())
     {
         const QJsonObject shot = value.toObject();
         AZ::Entity* camera = CineFindEntity(shot.value(QStringLiteral("camera")).toString(), shot.value(QStringLiteral("cameraId")).toString());
@@ -833,7 +831,7 @@ void HearthCinematicsPane::SyncTrackView()
     clear(console);
     for (int t = 1; t < 4; ++t)
     {
-        for (const QJsonValue& value : changed.at(t).toArray())
+        for (const QJsonValue value : changed.at(t).toArray())
         {
             const QJsonObject clip = value.toObject();
             QString command;
@@ -936,7 +934,7 @@ void HearthCinematicsPane::AddClip(int track, double seconds)
     if (track == 1)
     {
         // A line on its own (not tied to a shot).
-        for (const QJsonValue& value : VoiceLines())
+        for (const QJsonValue value : VoiceLines())
         {
             const QJsonObject line = value.toObject();
             QAction* action = menu.addAction(QStringLiteral("%1 · %2").arg(line.value(QStringLiteral("label")).toString(), line.value(QStringLiteral("text")).toString().left(50)));
@@ -1075,7 +1073,7 @@ void HearthCinematicsPane::ShowPicked()
     m_length->setValue(clip.value(QStringLiteral("length")).toDouble(4.0));
     m_line->clear();
     m_line->addItem(tr("No line"), QString());
-    for (const QJsonValue& value : VoiceLines())
+    for (const QJsonValue value : VoiceLines())
     {
         const QJsonObject line = value.toObject();
         m_line->addItem(tr("%1 (Voice Studio)").arg(line.value(QStringLiteral("label")).toString()), line.value(QStringLiteral("id")).toString());
@@ -1132,7 +1130,7 @@ void HearthCinematicsPane::SetTime(double seconds, bool fromPlayback)
     m_preview->m_caption.clear();
     const auto project = AZ::Utils::GetProjectPath();
     const QDir voiceFolder(QDir(QString::fromUtf8(project.c_str())).filePath(QStringLiteral("Voice")));
-    for (const QJsonValue& value : tracks.at(1).toArray())
+    for (const QJsonValue value : tracks.at(1).toArray())
     {
         const QJsonObject voice = value.toObject();
         const double start = voice.value(QStringLiteral("start")).toDouble();
@@ -1147,7 +1145,7 @@ void HearthCinematicsPane::SetTime(double seconds, bool fromPlayback)
     }
     if (fromPlayback)
     {
-        for (const QJsonValue& value : tracks.at(2).toArray())
+        for (const QJsonValue value : tracks.at(2).toArray())
         {
             const QJsonObject sound = value.toObject();
             const double start = sound.value(QStringLiteral("start")).toDouble();

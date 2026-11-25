@@ -292,7 +292,7 @@ void HearthAudioPane::Refresh()
     const bool inGame = GetIEditor() && GetIEditor()->IsInGameMode();
     QJsonArray sounds;
     int playing = 0;
-    for (const QJsonValue& value : all)
+    for (const QJsonValue value : all)
     {
         const QJsonObject sound = value.toObject();
         if (sound.value(QStringLiteral("game")).toBool() == inGame)
@@ -311,7 +311,7 @@ void HearthAudioPane::Refresh()
 
     // Meters: the loudest playing sound on each bus.
     QMap<QString, double> loudest;
-    for (const QJsonValue& value : sounds)
+    for (const QJsonValue value : sounds)
     {
         const QJsonObject sound = value.toObject();
         if (sound.value(QStringLiteral("playing")).toBool())
@@ -334,7 +334,7 @@ void HearthAudioPane::FillSounds()
     // Numbered variants together: step_carpet_1..4 is one row.
     QMap<QString, Group> groups;
     QMap<QString, QList<int>> numbers;
-    for (const QJsonValue& value : m_sounds)
+    for (const QJsonValue value : m_sounds)
     {
         const QJsonObject sound = value.toObject();
         const QString stem = sound.value(QStringLiteral("sound")).toString();
@@ -368,7 +368,7 @@ void HearthAudioPane::FillSounds()
     for (const Group& group : list)
     {
         signature += group.name;
-        for (const QJsonValue& value : group.sounds)
+        for (const QJsonValue value : group.sounds)
         {
             const QJsonObject sound = value.toObject();
             signature += QStringLiteral("|%1%2%3%4%5").arg(sound.value(QStringLiteral("bus")).toString()).arg(sound.value(QStringLiteral("playing")).toBool())
@@ -394,7 +394,7 @@ void HearthAudioPane::FillSounds()
         bool playing = false;
         bool silent = false;
         double volume = 0.0;
-        for (const QJsonValue& value : group.sounds)
+        for (const QJsonValue value : group.sounds)
         {
             const QJsonObject sound = value.toObject();
             entities << sound.value(QStringLiteral("entity")).toString();
@@ -499,7 +499,7 @@ void HearthAudioPane::ShowSound(int index)
     int requests = 0;
     int heard = 0;
     bool loaded = true;
-    for (const QJsonValue& value : group.sounds)
+    for (const QJsonValue value : group.sounds)
     {
         const QJsonObject sound = value.toObject();
         requests += sound.value(QStringLiteral("requests")).toInt();

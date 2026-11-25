@@ -628,7 +628,7 @@ namespace O3DE::ProjectManager
                 m_crashSafe->show();
             }
             QStringList lines;
-            for (const QJsonValue& value : crash.value(QStringLiteral("lines")).toArray())
+            for (const QJsonValue value : crash.value(QStringLiteral("lines")).toArray())
             {
                 lines << value.toString();
             }
@@ -658,7 +658,7 @@ namespace O3DE::ProjectManager
                 const QString first = errors.isEmpty() ? tr("See the build log for details.") : errors.first().toString().trimmed();
                 const QString logPath = last.value(QStringLiteral("log")).toString();
                 QStringList all;
-                for (const QJsonValue& error : errors)
+                for (const QJsonValue error : errors)
                 {
                     all << error.toString();
                 }
@@ -696,7 +696,7 @@ namespace O3DE::ProjectManager
             }
             delete item;
         }
-        for (const QJsonValue& value : parts)
+        for (const QJsonValue value : parts)
         {
             const QJsonObject part = value.toObject();
             const QString name = part.value(QStringLiteral("name")).toString();

@@ -463,7 +463,7 @@ void HearthProjectPane::FillParts(const QJsonObject& answer)
         }));
         m_partsGrid->addWidget(tile, i / 3, i % 3);
     }
-    for (const QJsonValue& value : answer.value(QStringLiteral("all")).toArray())
+    for (const QJsonValue value : answer.value(QStringLiteral("all")).toArray())
     {
         const QJsonObject gem = value.toObject();
         auto* row = new QFrame(m_allBody);
@@ -515,7 +515,7 @@ void HearthProjectPane::Rebuild(bool commit)
         if (answer.value(QStringLiteral("needs_commit")).toBool())
         {
             QStringList files;
-            for (const QJsonValue& f : answer.value(QStringLiteral("files")).toArray())
+            for (const QJsonValue f : answer.value(QStringLiteral("files")).toArray())
             {
                 files << f.toString().trimmed();
             }

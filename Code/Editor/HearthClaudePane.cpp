@@ -205,7 +205,7 @@ void HearthClaudePane::Refresh()
         {
             auto* chipRow = new QHBoxLayout();
             chipRow->setSpacing(6);
-            for (const QJsonValue& chip : chips)
+            for (const QJsonValue chip : chips)
             {
                 chipRow->addWidget(Hearth::MakeChip(chip.toString(), QStringLiteral("plain"), row));
             }

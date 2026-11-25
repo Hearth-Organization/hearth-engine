@@ -179,7 +179,7 @@ namespace
         QStringList textures;
         for (auto it = values.begin(); it != values.end(); ++it)
         {
-            if (it.value().type() == QVariant::String && BrowserKindFor(QFileInfo(it.value().toString()).suffix()) == QLatin1String("TEXTURE"))
+            if (it.value().typeId() == QMetaType::QString && BrowserKindFor(QFileInfo(it.value().toString()).suffix()) == QLatin1String("TEXTURE"))
             {
                 textures << it.value().toString();
             }

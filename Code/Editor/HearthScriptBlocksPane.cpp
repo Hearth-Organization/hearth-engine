@@ -437,7 +437,7 @@ void HearthScriptBlocksPane::NewScript()
 
 QJsonObject HearthScriptBlocksPane::Block(int id) const
 {
-    for (const QJsonValue& value : m_graph.value(QStringLiteral("blocks")).toArray())
+    for (const QJsonValue value : m_graph.value(QStringLiteral("blocks")).toArray())
     {
         if (value.toObject().value(QStringLiteral("id")).toInt() == id)
         {
@@ -466,7 +466,7 @@ void HearthScriptBlocksPane::SetBlock(const QJsonObject& block)
 int HearthScriptBlocksPane::NextId() const
 {
     int most = 0;
-    for (const QJsonValue& value : m_graph.value(QStringLiteral("blocks")).toArray())
+    for (const QJsonValue value : m_graph.value(QStringLiteral("blocks")).toArray())
     {
         most = qMax(most, value.toObject().value(QStringLiteral("id")).toInt());
     }
@@ -526,7 +526,7 @@ void HearthScriptBlocksPane::RemoveBlock(int id)
 {
     QJsonArray blocks = m_graph.value(QStringLiteral("blocks")).toArray();
     QJsonArray kept;
-    for (const QJsonValue& value : blocks)
+    for (const QJsonValue value : blocks)
     {
         QJsonObject block = value.toObject();
         if (block.value(QStringLiteral("id")).toInt() == id)
@@ -537,7 +537,7 @@ void HearthScriptBlocksPane::RemoveBlock(int id)
         {
             QJsonArray ids = BlocksIds(block, key);
             QJsonArray left;
-            for (const QJsonValue& n : ids)
+            for (const QJsonValue n : ids)
             {
                 if (n.toInt() != id)
                 {
@@ -547,7 +547,7 @@ void HearthScriptBlocksPane::RemoveBlock(int id)
             // What came after the removed block now follows its parent.
             if (left.size() != ids.size())
             {
-                for (const QJsonValue& n : BlocksIds(Block(id), "next"))
+                for (const QJsonValue n : BlocksIds(Block(id), "next"))
                 {
                     left.append(n);
                 }
@@ -679,9 +679,9 @@ void HearthScriptBlocksPane::EditBlock(int id)
         QFile file(QDir(QString::fromUtf8(project.c_str())).filePath(QStringLiteral("Voice/voice_lines.json")));
         if (file.open(QIODevice::ReadOnly))
         {
-            for (const QJsonValue& scene : QJsonDocument::fromJson(file.readAll()).object().value(QStringLiteral("scenes")).toArray())
+            for (const QJsonValue scene : QJsonDocument::fromJson(file.readAll()).object().value(QStringLiteral("scenes")).toArray())
             {
-                for (const QJsonValue& value : scene.toObject().value(QStringLiteral("lines")).toArray())
+                for (const QJsonValue value : scene.toObject().value(QStringLiteral("lines")).toArray())
                 {
                     const QJsonObject l = value.toObject();
                     if (!l.value(QStringLiteral("id")).toString().isEmpty())
@@ -771,7 +771,7 @@ void HearthScriptBlocksPane::EditBlock(int id)
     }
     if (line && !line->currentData().toString().isEmpty())
     {
-        for (const QJsonValue& value : voiceLines)
+        for (const QJsonValue value : voiceLines)
         {
             if (value.toObject().value(QStringLiteral("id")).toString() == line->currentData().toString())
             {
@@ -925,7 +925,7 @@ QWidget* HearthScriptBlocksPane::BuildBranch(const QJsonArray& ids, QWidget* par
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     layout->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
-    for (const QJsonValue& value : ids)
+    for (const QJsonValue value : ids)
     {
         const QJsonObject block = Block(value.toInt());
         if (block.isEmpty() || depth > 24)
@@ -976,14 +976,14 @@ void HearthScriptBlocksPane::Rebuild()
     layout->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
     // Each When starts its own chain.
     QJsonArray roots;
-    for (const QJsonValue& value : m_graph.value(QStringLiteral("blocks")).toArray())
+    for (const QJsonValue value : m_graph.value(QStringLiteral("blocks")).toArray())
     {
         if (value.toObject().value(QStringLiteral("kind")).toString().startsWith(QLatin1String("when")))
         {
             roots.append(value.toObject().value(QStringLiteral("id")));
         }
     }
-    for (const QJsonValue& root : roots)
+    for (const QJsonValue root : roots)
     {
         layout->addWidget(BuildBranch(QJsonArray{ root }, page, 0), 0, Qt::AlignTop);
     }

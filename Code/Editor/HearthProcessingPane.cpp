@@ -299,7 +299,7 @@ void HearthProcessingPane::Send(const QJsonObject& request)
         if (it.key() == QLatin1String("reprocess"))
         {
             QJsonArray list = merged.value(QStringLiteral("reprocess")).toArray();
-            for (const QJsonValue& value : it.value().toArray())
+            for (const QJsonValue value : it.value().toArray())
             {
                 list.append(value);
             }
@@ -470,14 +470,14 @@ void HearthProcessingPane::FillQueue()
     m_queue->clear();
     // Working first, then the order the Asset Processor will take them in.
     QJsonArray sorted;
-    for (const QJsonValue& job : jobs)
+    for (const QJsonValue job : jobs)
     {
         if (job.toObject().value(QStringLiteral("state")).toString() == QLatin1String("working"))
         {
             sorted.append(job);
         }
     }
-    for (const QJsonValue& job : jobs)
+    for (const QJsonValue job : jobs)
     {
         if (job.toObject().value(QStringLiteral("state")).toString() != QLatin1String("working"))
         {
@@ -485,7 +485,7 @@ void HearthProcessingPane::FillQueue()
         }
     }
     int shown = 0;
-    for (const QJsonValue& value : sorted)
+    for (const QJsonValue value : sorted)
     {
         const QJsonObject job = value.toObject();
         const QString state = job.value(QStringLiteral("state")).toString();

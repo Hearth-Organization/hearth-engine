@@ -122,7 +122,7 @@ protected:
         p.setBrush(QColor(0xE6, 0xD4, 0x8C));
         for (const char* kind : { "walls", "pillars" })
         {
-            for (const QJsonValue& value : m_pane->m_area.value(QLatin1String(kind)).toArray())
+            for (const QJsonValue value : m_pane->m_area.value(QLatin1String(kind)).toArray())
             {
                 const QJsonArray b = value.toArray();
                 const QPointF topLeft = ToView(QPointF(b[0].toDouble() - b[2].toDouble() / 2.0, b[1].toDouble() + b[3].toDouble() / 2.0));
@@ -556,7 +556,7 @@ void HearthPathingPane::Rebuild()
                             QPoint((maxA[0].toInt() + 1) * chunkCells - 1, (maxA[1].toInt() + 1) * chunkCells - 1));
             // Walls as blocked edges between cells (same rule as the layout tests).
             m_blocked.clear();
-            for (const QJsonValue& value : m_area.value(QStringLiteral("walls")).toArray())
+            for (const QJsonValue value : m_area.value(QStringLiteral("walls")).toArray())
             {
                 const QJsonArray w = value.toArray();
                 const double cx = w[0].toDouble(), cy = w[1].toDouble(), sx = w[2].toDouble(), sy = w[3].toDouble();
@@ -589,7 +589,7 @@ void HearthPathingPane::LoadMonsters()
     QFile file(QDir(QString::fromUtf8(AZ::Utils::GetProjectPath().c_str())).filePath(QStringLiteral("Monsters/monsters.json")));
     if (file.open(QIODevice::ReadOnly))
     {
-        for (const QJsonValue& value : QJsonDocument::fromJson(file.readAll()).object().value(QStringLiteral("monsters")).toArray())
+        for (const QJsonValue value : QJsonDocument::fromJson(file.readAll()).object().value(QStringLiteral("monsters")).toArray())
         {
             const QJsonObject m = value.toObject();
             Monster monster;

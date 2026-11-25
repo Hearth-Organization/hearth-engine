@@ -216,7 +216,7 @@ void HearthCoopPane::Refresh()
         const QJsonArray players = answer.value(QStringLiteral("players")).toArray();
         const QStringList colors = { QStringLiteral("#E8743B"), QStringLiteral("#8FB3E0"), QStringLiteral("#A6DD97"), QStringLiteral("#F0D17A") };
         int index = 0;
-        for (const QJsonValue& value : players)
+        for (const QJsonValue value : players)
         {
             const QJsonObject player = value.toObject();
             const QString state = player.value(QStringLiteral("state")).toString();
@@ -236,7 +236,7 @@ void HearthCoopPane::Refresh()
                                        QStringLiteral("plain"), QStringLiteral("#3A352F"), this));
         m_playerCount->setText(tr("%1 of 4").arg(players.size()));
         QStringList log;
-        for (const QJsonValue& line : answer.value(QStringLiteral("log")).toArray())
+        for (const QJsonValue line : answer.value(QStringLiteral("log")).toArray())
         {
             log << line.toString().toHtmlEscaped();
         }

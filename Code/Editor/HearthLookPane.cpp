@@ -192,7 +192,7 @@ private:
     QSize size_() const { return size(); }
     void Drag(QMouseEvent* event)
     {
-        m_split = qBound(0.05, event->pos().x() / qMax(1, width()), 0.95);
+        m_split = qBound(0.05, event->pos().x() / static_cast<double>(qMax(1, width())), 0.95);
         update();
     }
     QImage m_before;
@@ -682,7 +682,7 @@ void HearthLookPane::UpdateLights()
         m_agent->Post(QStringLiteral("levelgen_area"), QJsonObject{ { QStringLiteral("values"), values } }, [this](const QJsonObject& answer, bool)
         {
             int counts[4] = { 0, 0, 0, 0 };
-            for (const QJsonValue& light : answer.value(QStringLiteral("data")).toObject().value(QStringLiteral("lights")).toArray())
+            for (const QJsonValue light : answer.value(QStringLiteral("data")).toObject().value(QStringLiteral("lights")).toArray())
             {
                 counts[qBound(0, light.toArray().at(2).toInt(), 3)]++;
             }

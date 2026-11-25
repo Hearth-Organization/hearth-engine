@@ -315,7 +315,7 @@ HearthNewLevelDialog::HearthNewLevelDialog(QWidget* parent)
     QFile list(QDir(LevelProject()).filePath(QStringLiteral("Templates/Levels/templates.json")));
     if (list.open(QIODevice::ReadOnly))
     {
-        for (const QJsonValue& value : QJsonDocument::fromJson(list.readAll()).object().value(QStringLiteral("templates")).toArray())
+        for (const QJsonValue value : QJsonDocument::fromJson(list.readAll()).object().value(QStringLiteral("templates")).toArray())
         {
             const QJsonObject entry = value.toObject();
             const QString file = QDir(LevelProject()).filePath(QStringLiteral("Templates/Levels/") + entry.value(QStringLiteral("file")).toString());

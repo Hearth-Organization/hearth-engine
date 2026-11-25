@@ -660,7 +660,7 @@ void HearthAnimationPane::PlayClip(int index)
         m_legs->setChecked(parts.contains(QStringLiteral("legs")));
     }
     m_scrubber->m_events.clear();
-    for (const QJsonValue& t : data.value(QStringLiteral("footsteps")).toArray())
+    for (const QJsonValue t : data.value(QStringLiteral("footsteps")).toArray())
     {
         m_scrubber->m_events.push_back(t.toDouble());
     }
