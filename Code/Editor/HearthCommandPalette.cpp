@@ -144,7 +144,9 @@ void HearthCommandPalette::CollectCommands()
     }
     for (const auto& pane : QVector<QPair<QString, QString>>{ { QStringLiteral("Level Generator"), QStringLiteral("Ctrl+Shift+L") },
                                                                { QStringLiteral("Console and logs"), QString() },
-                                                               { QStringLiteral("Claude"), QString() } })
+                                                               { QStringLiteral("Claude"), QString() },
+                                                               { QStringLiteral("Lighting and look"), QString() },
+                                                               { QStringLiteral("Co-op test"), QString() } })
     {
         const QString name = pane.first;
         m_commands.push_back({ QStringLiteral("◫"), tr("Open %1").arg(name), tr("Tools"), pane.second,

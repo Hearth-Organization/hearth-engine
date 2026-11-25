@@ -258,6 +258,8 @@ set(FILES
     HearthCoopPane.h
     HearthPlaytestOverlay.cpp
     HearthPlaytestOverlay.h
+    HearthLookPane.cpp
+    HearthLookPane.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h
