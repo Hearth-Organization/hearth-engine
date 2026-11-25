@@ -157,6 +157,15 @@ namespace AzToolsFramework::ViewportUi::Internal
         QPushButton* m_hearthGrid = nullptr;
         QPushButton* m_hearthIcons = nullptr;
         QLabel* m_hearthStatus = nullptr;
+        QWidget* m_hearthTools = nullptr;      //!< left: select, move, rotate, scale, paint
+        QWidget* m_hearthLayouts = nullptr;    //!< top right: Split 2, Split 4, shortcuts
+        QWidget* m_hearthCompass = nullptr;    //!< bottom right: which way the camera looks, and its speed
+        QLabel* m_hearthCameraSpeed = nullptr;
+        QWidget* m_hearthPanel = nullptr;      //!< right: shortcuts, gizmo size, grid, light icons
+        QPushButton* m_hearthView = nullptr;   //!< Perspective / Top / Front / Side
+        AZ::EntityId m_hearthDragEntity;
+        AZ::Vector3 m_hearthDragStart = AZ::Vector3::CreateZero();
+        qint64 m_hearthDragSeen = 0;
         QWidget* m_hearthActions = nullptr;
         QElapsedTimer m_hearthFrameClock;
         int m_hearthFrames = 0;

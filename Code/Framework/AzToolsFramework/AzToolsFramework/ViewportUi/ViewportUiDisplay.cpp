@@ -19,7 +19,17 @@
 #include <AzToolsFramework/API/ToolsApplicationAPI.h>
 #include <AzToolsFramework/Viewport/ViewportMessages.h>
 #include <QHBoxLayout>
+#include <QDateTime>
+#include <QMenu>
+#include <QPainter>
+#include <QSlider>
+#include <QVBoxLayout>
+#include <QWheelEvent>
 #include <cstdio>
+#include <cmath>
+#include <functional>
+#include <AzToolsFramework/API/SettingsRegistryUtils.h>
+#include <AzToolsFramework/Viewport/ViewportSettings.h>
 #include <AzToolsFramework/ViewportUi/ViewportUiDisplayLayout.h>
 #include <AzToolsFramework/ViewportUi/ViewportUiSwitcher.h>
 #include <AzToolsFramework/ViewportUi/ViewportUiTextField.h>
@@ -488,6 +498,61 @@ namespace AzToolsFramework::ViewportUi::Internal
             }
         }
 
+        constexpr AZStd::string_view HearthCameraSpeedSetting = "/Amazon/Preferences/Editor/Camera/TranslateSpeed";
+
+        //! Bottom right: which way the camera looks (N up) and how fast it flies; scroll on it to change the speed.
+        class HearthCompass : public QWidget
+        {
+        public:
+            explicit HearthCompass(QWidget* parent, AzFramework::ViewportId viewportId)
+                : QWidget(parent)
+                , m_viewportId(viewportId)
+            {
+                setFixedSize(46, 46);
+                setToolTip(QObject::tr("Which way the camera looks. Scroll here to change the camera speed."));
+            }
+            float m_yaw = 0.0f;
+            std::function<void()> m_speedChanged;
+
+        protected:
+            void paintEvent(QPaintEvent*) override
+            {
+                QPainter p(this);
+                p.setRenderHint(QPainter::Antialiasing);
+                const QRectF r = QRectF(rect()).adjusted(2, 2, -2, -2);
+                p.setPen(QPen(QColor(255, 255, 255, 30), 1));
+                p.setBrush(QColor(13, 12, 11, 220));
+                p.drawEllipse(r);
+                p.translate(r.center());
+                p.rotate(-m_yaw * 180.0 / 3.14159265);
+                QPolygonF needle({ QPointF(0, -r.height() * 0.38), QPointF(5, 0), QPointF(-5, 0) });
+                p.setPen(Qt::NoPen);
+                p.setBrush(QColor(0xE8, 0x74, 0x3B));
+                p.drawPolygon(needle);
+                p.setBrush(QColor(0xEC, 0xE6, 0xDE, 120));
+                p.drawPolygon(QPolygonF({ QPointF(0, r.height() * 0.38), QPointF(5, 0), QPointF(-5, 0) }));
+                p.resetTransform();
+                p.setPen(QColor(0xEC, 0xE6, 0xDE));
+                QFont font = p.font();
+                font.setPixelSize(9);
+                p.setFont(font);
+                p.drawText(QRectF(r.left(), r.top() + 1, r.width(), 10), Qt::AlignHCenter, QStringLiteral("N"));
+            }
+            void wheelEvent(QWheelEvent* event) override
+            {
+                const double speed = AzToolsFramework::GetRegistry(HearthCameraSpeedSetting, 10.0);
+                const double next = qBound(0.5, speed * (event->angleDelta().y() > 0 ? 1.25 : 0.8), 200.0);
+                AzToolsFramework::SetRegistry(HearthCameraSpeedSetting, next);
+                if (m_speedChanged)
+                {
+                    m_speedChanged();
+                }
+            }
+
+        private:
+            AzFramework::ViewportId m_viewportId;
+        };
+
         QPushButton* PillButton(QWidget* parent, const QString& text, bool checkable)
         {
             auto* button = new QPushButton(text, parent);
@@ -548,6 +613,138 @@ namespace AzToolsFramework::ViewportUi::Internal
         actions->addWidget(play);
         m_uiOverlayLayout.AddAnchoredWidget(m_hearthActions, Qt::AlignBottom | Qt::AlignRight);
 
+        // Top: the view (Perspective / Top / Front / Side) and how it's drawn (Lit / Wireframe).
+        m_hearthView = PillButton(m_hearthTopBar, QObject::tr("Perspective  ▾"), false);
+        auto* viewMenu = new QMenu(m_hearthView);
+        viewMenu->addAction(QObject::tr("Perspective"), [this] { m_hearthView->setText(QObject::tr("Perspective  ▾")); });
+        viewMenu->addAction(QObject::tr("Top"), [this] { m_hearthView->setText(QObject::tr("Top  ▾")); TriggerEditorAction("o3de.action.hearth.view.top"); });
+        viewMenu->addAction(QObject::tr("Front"), [this] { m_hearthView->setText(QObject::tr("Front  ▾")); TriggerEditorAction("o3de.action.hearth.view.front"); });
+        viewMenu->addAction(QObject::tr("Side"), [this] { m_hearthView->setText(QObject::tr("Side  ▾")); TriggerEditorAction("o3de.action.hearth.view.side"); });
+        m_hearthView->setMenu(viewMenu);
+        top->addWidget(m_hearthView);
+        QPushButton* lit = PillButton(m_hearthTopBar, QObject::tr("Lit"), true);
+        lit->setChecked(true);
+        QPushButton* wire = PillButton(m_hearthTopBar, QObject::tr("Wireframe"), true);
+        QObject::connect(lit, &QPushButton::clicked, [lit] { lit->setChecked(true); });
+        // The renderer has no wireframe view yet; shown so the row matches, but it can't be picked.
+        wire->setEnabled(false);
+        wire->setToolTip(QObject::tr("Wireframe isn't available in this renderer yet"));
+        top->addWidget(lit);
+        top->addWidget(wire);
+
+        // Left: the tools (select, move, rotate, scale, paint).
+        m_hearthTools = new QWidget(&m_uiOverlay);
+        m_hearthTools->setObjectName(QStringLiteral("HearthPill"));
+        m_hearthTools->setAttribute(Qt::WA_StyledBackground);
+        m_hearthTools->setStyleSheet(QLatin1String(HearthPillStyle) + QStringLiteral("QPushButton { padding: 4px 8px; font-size: 14px; min-width: 22px; }"));
+        auto* tools = new QVBoxLayout(m_hearthTools);
+        tools->setContentsMargins(4, 4, 4, 4);
+        tools->setSpacing(4);
+        const struct
+        {
+            const char* glyph;
+            const char* tip;
+            const char* action;
+        } toolList[] = { { "↖", "Select  Q", "o3de.action.componentMode.end" }, { "✥", "Move  W", "o3de.action.edit.transform.move" },
+                         { "⟳", "Rotate  E", "o3de.action.edit.transform.rotate" }, { "⤢", "Scale  R", "o3de.action.edit.transform.scale" },
+                         { "✎", "Paint and edit", "o3de.action.hearth.edit.paint" } };
+        for (const auto& tool : toolList)
+        {
+            QPushButton* button = PillButton(m_hearthTools, QString::fromUtf8(tool.glyph), false);
+            button->setToolTip(QObject::tr(tool.tip));
+            const char* action = tool.action;
+            QObject::connect(button, &QPushButton::clicked, [action] { TriggerEditorAction(action); });
+            tools->addWidget(button);
+        }
+        m_uiOverlayLayout.AddAnchoredWidget(m_hearthTools, Qt::AlignLeft | Qt::AlignVCenter);
+
+        // Top right: Split 2, Split 4 and the shortcuts panel.
+        m_hearthLayouts = new QWidget(&m_uiOverlay);
+        m_hearthLayouts->setObjectName(QStringLiteral("HearthPill"));
+        m_hearthLayouts->setAttribute(Qt::WA_StyledBackground);
+        m_hearthLayouts->setStyleSheet(QLatin1String(HearthPillStyle));
+        auto* layouts = new QHBoxLayout(m_hearthLayouts);
+        layouts->setContentsMargins(4, 4, 4, 4);
+        layouts->setSpacing(4);
+        QPushButton* split2 = PillButton(m_hearthLayouts, QObject::tr("Split 2"), true);
+        QPushButton* split4 = PillButton(m_hearthLayouts, QObject::tr("Split 4"), true);
+        QObject::connect(split2, &QPushButton::clicked, [split2, split4] { split4->setChecked(false); TriggerEditorAction(split2->isChecked() ? "o3de.action.hearth.view.split2" : "o3de.action.hearth.view.split1"); });
+        QObject::connect(split4, &QPushButton::clicked, [split2, split4] { split2->setChecked(false); TriggerEditorAction(split4->isChecked() ? "o3de.action.hearth.view.split4" : "o3de.action.hearth.view.split1"); });
+        QPushButton* shortcuts = PillButton(m_hearthLayouts, QObject::tr("?"), true);
+        shortcuts->setToolTip(QObject::tr("Shortcuts and gizmo"));
+        layouts->addWidget(split2);
+        layouts->addWidget(split4);
+        layouts->addWidget(shortcuts);
+        m_uiOverlayLayout.AddAnchoredWidget(m_hearthLayouts, Qt::AlignTop | Qt::AlignRight);
+
+        // Right: shortcuts, gizmo size, grid and light icons.
+        m_hearthPanel = new QWidget(&m_uiOverlay);
+        m_hearthPanel->setObjectName(QStringLiteral("HearthPanel"));
+        m_hearthPanel->setAttribute(Qt::WA_StyledBackground);
+        m_hearthPanel->setStyleSheet(QStringLiteral("QWidget#HearthPanel { background-color: rgba(13, 12, 11, 235); border: 1px solid rgba(255, 255, 255, 20); border-radius: 14px; }"
+                                                    "QLabel { color: #ECE6DE; font-size: 12px; background: transparent; } QLabel[dim=\"true\"] { color: #8D857B; }")
+                                     + QLatin1String(HearthPillStyle));
+        auto* panel = new QVBoxLayout(m_hearthPanel);
+        panel->setContentsMargins(12, 10, 12, 10);
+        panel->setSpacing(4);
+        auto* shortcutsTitle = new QLabel(QObject::tr("Shortcuts"), m_hearthPanel);
+        shortcutsTitle->setStyleSheet(QStringLiteral("font-weight: 600;"));
+        panel->addWidget(shortcutsTitle);
+        const char* keys[][2] = { { "Select", "Q" }, { "Move", "W" }, { "Rotate", "E" }, { "Scale", "R" }, { "World / local", "X" },
+                                  { "Snap on / off", "Ctrl" }, { "Fly camera", "Right mouse + WASD" }, { "Focus selection", "F" }, { "Play from camera", "Ctrl+G" } };
+        for (const auto& key : keys)
+        {
+            auto* row = new QHBoxLayout();
+            row->addWidget(new QLabel(QObject::tr(key[0]), m_hearthPanel));
+            row->addStretch(1);
+            auto* value = new QLabel(QString::fromLatin1(key[1]), m_hearthPanel);
+            value->setProperty("dim", true);
+            value->setStyleSheet(QStringLiteral("color: #8D857B; font-family: \"Geist Mono\";"));
+            row->addWidget(value);
+            panel->addLayout(row);
+        }
+        auto* gizmoTitle = new QLabel(QObject::tr("Gizmo"), m_hearthPanel);
+        gizmoTitle->setStyleSheet(QStringLiteral("font-weight: 600; padding-top: 6px;"));
+        panel->addWidget(gizmoTitle);
+        auto* sizeRow = new QHBoxLayout();
+        sizeRow->addWidget(new QLabel(QObject::tr("Size"), m_hearthPanel));
+        auto* gizmoSize = new QSlider(Qt::Horizontal, m_hearthPanel);
+        gizmoSize->setRange(int(AzToolsFramework::MinManipulatorViewBaseScale * 100), int(AzToolsFramework::MaxManipulatorViewBaseScale * 100));
+        gizmoSize->setValue(qRound(AzToolsFramework::ManipulatorViewBaseScale() * 100));
+        auto* sizeText = new QLabel(QStringLiteral("%1×").arg(AzToolsFramework::ManipulatorViewBaseScale(), 0, 'f', 1), m_hearthPanel);
+        QObject::connect(gizmoSize, &QSlider::valueChanged, [sizeText](int value)
+        {
+            AzToolsFramework::SetManipulatorViewBaseScale(value / 100.0f);
+            sizeText->setText(QStringLiteral("%1×").arg(value / 100.0, 0, 'f', 1));
+        });
+        sizeRow->addWidget(gizmoSize, 1);
+        sizeRow->addWidget(sizeText);
+        panel->addLayout(sizeRow);
+        QPushButton* showGrid = PillButton(m_hearthPanel, QObject::tr("Show grid"), false);
+        QObject::connect(showGrid, &QPushButton::clicked, [] { TriggerEditorAction("o3de.action.edit.snap.toggleShowingGrid"); });
+        QPushButton* lightIcons = PillButton(m_hearthPanel, QObject::tr("Show light icons"), false);
+        QObject::connect(lightIcons, &QPushButton::clicked, [] { TriggerEditorAction("o3de.action.view.toggleIcons"); });
+        panel->addWidget(showGrid);
+        panel->addWidget(lightIcons);
+        m_hearthPanel->setVisible(false);
+        QObject::connect(shortcuts, &QPushButton::toggled, m_hearthPanel, &QWidget::setVisible);
+        m_uiOverlayLayout.AddAnchoredWidget(m_hearthPanel, Qt::AlignRight | Qt::AlignVCenter);
+
+        // Bottom right, above Focus / Play here: compass and camera speed.
+        m_hearthCompass = new QWidget(&m_uiOverlay);
+        auto* compassRow = new QHBoxLayout(m_hearthCompass);
+        compassRow->setContentsMargins(0, 0, 0, 0);
+        compassRow->setSpacing(6);
+        m_hearthCameraSpeed = new QLabel(m_hearthCompass);
+        m_hearthCameraSpeed->setStyleSheet(QStringLiteral(
+            "background-color: rgba(13, 12, 11, 220); color: #ECE6DE; border: 1px solid rgba(255, 255, 255, 20); border-radius: 13px;"
+            " padding: 5px 12px; font-family: \"Geist Mono\"; font-size: 12px;"));
+        auto* compass = new HearthCompass(m_hearthCompass, m_viewportId);
+        compass->m_speedChanged = [this] { UpdateHearthOverlay(); };
+        compassRow->addWidget(m_hearthCameraSpeed);
+        compassRow->addWidget(compass);
+        m_uiOverlayLayout.AddAnchoredWidget(m_hearthCompass, Qt::AlignBottom | Qt::AlignRight);
+
         m_hearthFrameClock.start();
     }
 
@@ -590,6 +787,22 @@ namespace AzToolsFramework::ViewportUi::Internal
         m_hearthAngleSnap->setText(QStringLiteral("%1°").arg(QString::number(angle, 'g', 3)));
         m_hearthGrid->setChecked(showGrid);
 
+        // Camera: speed (Editor preference) and which way it looks.
+        if (m_hearthCameraSpeed)
+        {
+            const double speed = AzToolsFramework::GetRegistry(HearthCameraSpeedSetting, 10.0);
+            m_hearthCameraSpeed->setText(QObject::tr("Camera %1 m/s").arg(QString::number(speed, 'g', 3)));
+            m_hearthCameraSpeed->adjustSize();
+            AzFramework::CameraState camera;
+            AzToolsFramework::ViewportInteraction::ViewportInteractionRequestBus::EventResult(
+                camera, m_viewportId, &AzToolsFramework::ViewportInteraction::ViewportInteractionRequestBus::Events::GetCameraState);
+            if (auto* compass = m_hearthCompass ? m_hearthCompass->findChild<HearthCompass*>() : nullptr)
+            {
+                compass->m_yaw = std::atan2(camera.m_forward.GetX(), camera.m_forward.GetY());
+                compass->update();
+            }
+        }
+
         // What's selected and where.
         AzToolsFramework::EntityIdList selected;
         AzToolsFramework::ToolsApplicationRequestBus::BroadcastResult(
@@ -601,7 +814,26 @@ namespace AzToolsFramework::ViewportUi::Internal
             AZ::ComponentApplicationBus::BroadcastResult(name, &AZ::ComponentApplicationRequests::GetEntityName, selected.front());
             AZ::Vector3 position = AZ::Vector3::CreateZero();
             AZ::TransformBus::EventResult(position, selected.front(), &AZ::TransformBus::Events::GetWorldTranslation);
-            text = QStringLiteral("%1  ·  x %2 y %3 z %4  ·  ")
+            // While it's being moved: how far, on the axis it moved most ("x +2.50 m").
+            QString moved;
+            const qint64 now = QDateTime::currentMSecsSinceEpoch();
+            if (m_hearthDragEntity != selected.front() || now - m_hearthDragSeen > 1500)
+            {
+                m_hearthDragEntity = selected.front();
+                m_hearthDragStart = position;
+            }
+            const AZ::Vector3 delta = position - m_hearthDragStart;
+            if (!delta.IsClose(AZ::Vector3::CreateZero(), 0.001f))
+            {
+                m_hearthDragSeen = now;
+                const float ax = std::fabs(delta.GetX());
+                const float ay = std::fabs(delta.GetY());
+                const float az = std::fabs(delta.GetZ());
+                const char* axis = ax >= ay && ax >= az ? "x" : (ay >= az ? "y" : "z");
+                const float amount = ax >= ay && ax >= az ? delta.GetX() : (ay >= az ? delta.GetY() : delta.GetZ());
+                moved = QStringLiteral("%1 %2%3 m  ·  ").arg(QLatin1String(axis), amount >= 0 ? QStringLiteral("+") : QString()).arg(amount, 0, 'f', 2);
+            }
+            text = moved + QStringLiteral("%1  ·  x %2 y %3 z %4  ·  ")
                        .arg(QString::fromUtf8(name.c_str()))
                        .arg(position.GetX(), 0, 'f', 1)
                        .arg(position.GetY(), 0, 'f', 1)

@@ -57,6 +57,8 @@
 #include <QUrl>
 #include <QUrlQuery>
 #include <QWidget>
+#include <LayoutWnd.h>
+#include <AzToolsFramework/ComponentMode/EditorComponentModeBus.h>
 #include <QPushButton>
 #include <AzCore/Component/ComponentApplicationBus.h>
 #include <AzCore/Component/Entity.h>
@@ -250,6 +252,13 @@ namespace
         QtViewPaneManager::instance()->OpenPane(QString::fromLatin1(name));
     }
 
+    //! Viewport views (Top / Front / Side): turn the camera, keeping where it is.
+    void HearthLookFrom(float pitch, float yaw)
+    {
+        const AZ::Transform camera = SandboxEditor::GetDefaultViewportCameraTransform();
+        SandboxEditor::InterpolateDefaultViewportCameraToTransform(camera.GetTranslation(), pitch, yaw, 0.35f);
+    }
+
     //! Create menu: a new entity (in front of the camera, as Create entity does) with one component on it.
     void HearthCreateWith(const char* entityName, const char* componentName)
     {
@@ -300,6 +309,30 @@ void EditorActionsHandler::OnActionRegistrationHook()
             { "o3de.action.hearth.levelProperties", "Level properties", "The level's own settings", [] { HearthOpenPane(LyViewPane::LevelInspector); } },
             { "o3de.action.hearth.physics", "Physics", "Collisions, gravity and the player's body", [] { HearthOpenPane("Physics"); } },
             { "o3de.action.hearth.audio", "Audio", "Every sound in the level and how loud it plays", [] { HearthOpenPane("Audio"); } },
+            { "o3de.action.hearth.view.split1", "One viewport", "One big viewport", [this] { m_mainWindow->GetLayout()->CreateLayout(ET_Layout0); } },
+            { "o3de.action.hearth.view.split2", "Split 2", "Two viewports side by side", [this] { m_mainWindow->GetLayout()->CreateLayout(ET_Layout1); } },
+            { "o3de.action.hearth.view.split4", "Split 4", "Four viewports", [this] { m_mainWindow->GetLayout()->CreateLayout(ET_Layout7); } },
+            { "o3de.action.hearth.view.top", "Top", "Look straight down", [] { HearthLookFrom(-AZ::Constants::HalfPi, 0.0f); } },
+            { "o3de.action.hearth.view.front", "Front", "Look along +Y", [] { HearthLookFrom(0.0f, 0.0f); } },
+            { "o3de.action.hearth.view.side", "Side", "Look along -X", [] { HearthLookFrom(0.0f, AZ::Constants::HalfPi); } },
+            { "o3de.action.hearth.edit.paint", "Paint and edit", "Paint or edit the shape of what's selected (components with a brush or handles)", [] {
+                AzToolsFramework::EntityIdList selected;
+                AzToolsFramework::ToolsApplicationRequestBus::BroadcastResult(selected, &AzToolsFramework::ToolsApplicationRequests::GetSelectedEntities);
+                for (const AZ::EntityId& id : selected)
+                {
+                    AZ::Entity* entity = nullptr;
+                    AZ::ComponentApplicationBus::BroadcastResult(entity, &AZ::ComponentApplicationRequests::FindEntity, id);
+                    if (!entity)
+                    {
+                        continue;
+                    }
+                    for (const AZ::Component* component : entity->GetComponents())
+                    {
+                        AzToolsFramework::ComponentModeFramework::ComponentModeSystemRequestBus::Broadcast(
+                            &AzToolsFramework::ComponentModeFramework::ComponentModeSystemRequests::AddSelectedComponentModesOfType, component->GetUnderlyingComponentType());
+                    }
+                }
+            } },
             { "o3de.action.hearth.create.entity", "Empty entity", "A new entity with nothing on it", [] { HearthCreateWith("Entity", nullptr); } },
             { "o3de.action.hearth.create.light", "Light", "A light that shines in every direction", [] { HearthCreateWith("Light", "Light"); } },
             { "o3de.action.hearth.create.sound", "Sound emitter", "Plays a sound here, with distance falloff", [] { HearthCreateWith("Sound", "MiniAudio Playback"); } },
