@@ -27,6 +27,8 @@
 
 AZ_PUSH_DISABLE_WARNING(4251, "-Wunknown-warning-option")
 #include <QGridLayout>
+#include <QElapsedTimer>
+#include <QPushButton>
 AZ_POP_DISABLE_WARNING
 
 class QPoint;
@@ -144,6 +146,21 @@ namespace AzToolsFramework::ViewportUi::Internal
         int m_viewportId = 0;
 
         bool m_imGuiActive = false;
+
+        // Hearth Engine overlay (approved mockup "Viewport"): snapping pill at the top, what's selected and the
+        // frame rate at the bottom left, Focus and Play here at the bottom right.
+        void InitializeHearthOverlay();
+        void UpdateHearthOverlay();
+        QWidget* m_hearthTopBar = nullptr;
+        QPushButton* m_hearthGridSnap = nullptr;
+        QPushButton* m_hearthAngleSnap = nullptr;
+        QPushButton* m_hearthGrid = nullptr;
+        QPushButton* m_hearthIcons = nullptr;
+        QLabel* m_hearthStatus = nullptr;
+        QWidget* m_hearthActions = nullptr;
+        QElapsedTimer m_hearthFrameClock;
+        int m_hearthFrames = 0;
+        float m_hearthFps = 0.0f;
 
         ViewportUiElementIdInfoLookup m_viewportUiElements;
     };

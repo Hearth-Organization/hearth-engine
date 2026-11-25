@@ -12,6 +12,14 @@
 #include <AzToolsFramework/ViewportSelection/EditorSelectionUtil.h>
 #include <AzToolsFramework/ViewportUi/ViewportUiCluster.h>
 #include <AzToolsFramework/ViewportUi/ViewportUiDisplay.h>
+#include <AzCore/Component/ComponentApplicationBus.h>
+#include <AzCore/Component/TransformBus.h>
+#include <AzCore/Interface/Interface.h>
+#include <AzToolsFramework/ActionManager/Action/ActionManagerInterface.h>
+#include <AzToolsFramework/API/ToolsApplicationAPI.h>
+#include <AzToolsFramework/Viewport/ViewportMessages.h>
+#include <QHBoxLayout>
+#include <cstdio>
 #include <AzToolsFramework/ViewportUi/ViewportUiDisplayLayout.h>
 #include <AzToolsFramework/ViewportUi/ViewportUiSwitcher.h>
 #include <AzToolsFramework/ViewportUi/ViewportUiTextField.h>
@@ -229,6 +237,7 @@ namespace AzToolsFramework::ViewportUi::Internal
         }
 
         PositionUiOverlayOverRenderViewport();
+        UpdateHearthOverlay();
     }
 
     ViewportUiElementId ViewportUiDisplay::AddViewportUiElement(AZStd::shared_ptr<QWidget> widget)
@@ -458,6 +467,165 @@ namespace AzToolsFramework::ViewportUi::Internal
                 }
             });
         m_fullScreenLayout.addWidget(&m_viewportBorderBackButton, 0, 0, Qt::AlignTop | Qt::AlignRight);
+
+        InitializeHearthOverlay();
+    }
+
+    namespace
+    {
+        const char* HearthPillStyle =
+            "QWidget#HearthPill { background-color: rgba(13, 12, 11, 220); border: 1px solid rgba(255, 255, 255, 20); border-radius: 16px; }"
+            "QPushButton { background: transparent; color: #ECE6DE; border: 1px solid rgba(255, 255, 255, 20); border-radius: 13px;"
+            " padding: 3px 12px; font-size: 12px; }"
+            "QPushButton:hover { background-color: rgba(255, 255, 255, 15); }"
+            "QPushButton:checked { background-color: rgba(232, 116, 59, 41); color: #FFCFB4; border-color: rgba(232, 116, 59, 120); }";
+
+        void TriggerEditorAction(const char* identifier)
+        {
+            if (auto* actions = AZ::Interface<AzToolsFramework::ActionManagerInterface>::Get())
+            {
+                actions->TriggerAction(identifier);
+            }
+        }
+
+        QPushButton* PillButton(QWidget* parent, const QString& text, bool checkable)
+        {
+            auto* button = new QPushButton(text, parent);
+            button->setCheckable(checkable);
+            button->setCursor(Qt::PointingHandCursor);
+            button->setFocusPolicy(Qt::NoFocus);
+            return button;
+        }
+    } // namespace
+
+    void ViewportUiDisplay::InitializeHearthOverlay()
+    {
+        // Top centre: snapping and what the viewport shows.
+        m_hearthTopBar = new QWidget(&m_uiOverlay);
+        m_hearthTopBar->setObjectName(QStringLiteral("HearthPill"));
+        m_hearthTopBar->setAttribute(Qt::WA_StyledBackground);
+        m_hearthTopBar->setStyleSheet(QLatin1String(HearthPillStyle));
+        auto* top = new QHBoxLayout(m_hearthTopBar);
+        top->setContentsMargins(6, 4, 6, 4);
+        top->setSpacing(4);
+        m_hearthGridSnap = PillButton(m_hearthTopBar, QObject::tr("Snap"), true);
+        m_hearthAngleSnap = PillButton(m_hearthTopBar, QObject::tr("15°"), true);
+        m_hearthGrid = PillButton(m_hearthTopBar, QObject::tr("Grid"), true);
+        m_hearthIcons = PillButton(m_hearthTopBar, QObject::tr("Icons"), false);
+        QObject::connect(m_hearthGridSnap, &QPushButton::clicked, [] { TriggerEditorAction("o3de.action.edit.snap.toggleGridSnapping"); });
+        QObject::connect(m_hearthAngleSnap, &QPushButton::clicked, [] { TriggerEditorAction("o3de.action.edit.snap.toggleAngleSnapping"); });
+        QObject::connect(m_hearthGrid, &QPushButton::clicked, [] { TriggerEditorAction("o3de.action.edit.snap.toggleShowingGrid"); });
+        QObject::connect(m_hearthIcons, &QPushButton::clicked, [] { TriggerEditorAction("o3de.action.view.toggleIcons"); });
+        top->addWidget(m_hearthGridSnap);
+        top->addWidget(m_hearthAngleSnap);
+        top->addWidget(m_hearthGrid);
+        top->addWidget(m_hearthIcons);
+        m_uiOverlayLayout.AddAnchoredWidget(m_hearthTopBar, Qt::AlignTop);
+
+        // Bottom left: what's selected, where, and the frame rate.
+        m_hearthStatus = new QLabel(&m_uiOverlay);
+        m_hearthStatus->setStyleSheet(QStringLiteral(
+            "background-color: rgba(13, 12, 11, 220); color: #ECE6DE; border: 1px solid rgba(255, 255, 255, 20); border-radius: 13px;"
+            " padding: 5px 12px; font-family: \"Geist Mono\"; font-size: 12px;"));
+        m_uiOverlayLayout.AddAnchoredWidget(m_hearthStatus, Qt::AlignBottom | Qt::AlignLeft);
+
+        // Bottom right: Focus (F) and Play here.
+        m_hearthActions = new QWidget(&m_uiOverlay);
+        m_hearthActions->setObjectName(QStringLiteral("HearthPill"));
+        m_hearthActions->setAttribute(Qt::WA_StyledBackground);
+        m_hearthActions->setStyleSheet(QLatin1String(HearthPillStyle) + QStringLiteral(
+            "QPushButton#PlayHere { background-color: #E8743B; color: #1A0F08; font-weight: 600; border: none; }"
+            "QPushButton#PlayHere:hover { background-color: #F08A55; }"));
+        auto* actions = new QHBoxLayout(m_hearthActions);
+        actions->setContentsMargins(4, 4, 4, 4);
+        actions->setSpacing(4);
+        QPushButton* focus = PillButton(m_hearthActions, QObject::tr("Focus  F"), false);
+        QObject::connect(focus, &QPushButton::clicked, [] { TriggerEditorAction("o3de.action.view.centerOnSelection"); });
+        QPushButton* play = PillButton(m_hearthActions, QObject::tr("Play here"), false);
+        play->setObjectName(QStringLiteral("PlayHere"));
+        QObject::connect(play, &QPushButton::clicked, [] { TriggerEditorAction("o3de.action.game.play"); });
+        actions->addWidget(focus);
+        actions->addWidget(play);
+        m_uiOverlayLayout.AddAnchoredWidget(m_hearthActions, Qt::AlignBottom | Qt::AlignRight);
+
+        m_hearthFrameClock.start();
+    }
+
+    void ViewportUiDisplay::UpdateHearthOverlay()
+    {
+        if (!m_hearthStatus)
+        {
+            return;
+        }
+        // Frame rate from how often the viewport asks us to update.
+        ++m_hearthFrames;
+        const qint64 elapsed = m_hearthFrameClock.elapsed();
+        if (elapsed < 500)
+        {
+            return;
+        }
+        m_hearthFps = m_hearthFrames * 1000.0f / static_cast<float>(elapsed);
+        m_hearthFrames = 0;
+        m_hearthFrameClock.restart();
+
+        // Snapping state (the editor owns it; we only show it).
+        bool gridSnap = false;
+        bool angleSnap = false;
+        bool showGrid = false;
+        float gridSize = 0.0f;
+        float angle = 0.0f;
+        AzToolsFramework::ViewportInteraction::ViewportSettingsRequestBus::EventResult(
+            gridSnap, m_viewportId, &AzToolsFramework::ViewportInteraction::ViewportSettingsRequestBus::Events::GridSnappingEnabled);
+        AzToolsFramework::ViewportInteraction::ViewportSettingsRequestBus::EventResult(
+            angleSnap, m_viewportId, &AzToolsFramework::ViewportInteraction::ViewportSettingsRequestBus::Events::AngleSnappingEnabled);
+        AzToolsFramework::ViewportInteraction::ViewportSettingsRequestBus::EventResult(
+            showGrid, m_viewportId, &AzToolsFramework::ViewportInteraction::ViewportSettingsRequestBus::Events::ShowGrid);
+        AzToolsFramework::ViewportInteraction::ViewportSettingsRequestBus::EventResult(
+            gridSize, m_viewportId, &AzToolsFramework::ViewportInteraction::ViewportSettingsRequestBus::Events::GridSize);
+        AzToolsFramework::ViewportInteraction::ViewportSettingsRequestBus::EventResult(
+            angle, m_viewportId, &AzToolsFramework::ViewportInteraction::ViewportSettingsRequestBus::Events::AngleStep);
+        m_hearthGridSnap->setChecked(gridSnap);
+        m_hearthGridSnap->setText(QObject::tr("Snap %1 m").arg(QString::number(gridSize, 'g', 3)));
+        m_hearthAngleSnap->setChecked(angleSnap);
+        m_hearthAngleSnap->setText(QStringLiteral("%1°").arg(QString::number(angle, 'g', 3)));
+        m_hearthGrid->setChecked(showGrid);
+
+        // What's selected and where.
+        AzToolsFramework::EntityIdList selected;
+        AzToolsFramework::ToolsApplicationRequestBus::BroadcastResult(
+            selected, &AzToolsFramework::ToolsApplicationRequests::GetSelectedEntities);
+        QString text;
+        if (selected.size() == 1)
+        {
+            AZStd::string name;
+            AZ::ComponentApplicationBus::BroadcastResult(name, &AZ::ComponentApplicationRequests::GetEntityName, selected.front());
+            AZ::Vector3 position = AZ::Vector3::CreateZero();
+            AZ::TransformBus::EventResult(position, selected.front(), &AZ::TransformBus::Events::GetWorldTranslation);
+            text = QStringLiteral("%1  ·  x %2 y %3 z %4  ·  ")
+                       .arg(QString::fromUtf8(name.c_str()))
+                       .arg(position.GetX(), 0, 'f', 1)
+                       .arg(position.GetY(), 0, 'f', 1)
+                       .arg(position.GetZ(), 0, 'f', 1);
+        }
+        else if (selected.size() > 1)
+        {
+            text = QObject::tr("%1 selected  ·  ").arg(selected.size());
+        }
+        // Memory the editor uses (Linux: resident pages from /proc/self/statm).
+        QString memory;
+        if (FILE* statm = fopen("/proc/self/statm", "r"))
+        {
+            long pages = 0;
+            long resident = 0;
+            if (fscanf(statm, "%ld %ld", &pages, &resident) == 2)
+            {
+                memory = QStringLiteral("  ·  %1 MB").arg(resident * 4096 / (1024 * 1024));
+            }
+            fclose(statm);
+        }
+        const QString color = m_hearthFps >= 30.0f ? QStringLiteral("#A6DD97") : (m_hearthFps >= 20.0f ? QStringLiteral("#F0D17A") : QStringLiteral("#FF9F8F"));
+        m_hearthStatus->setText(QStringLiteral("%1<span style=\"color:%2\">%3 fps</span>%4").arg(text.toHtmlEscaped(), color).arg(qRound(m_hearthFps)).arg(memory));
+        m_hearthStatus->adjustSize();
     }
 
     void ViewportUiDisplay::PrepareWidgetForViewportUi(QPointer<QWidget> widget)

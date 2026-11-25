@@ -15,8 +15,13 @@ namespace AzToolsFramework::ViewportUi::Internal
         : QToolBar(nullptr)
         , m_buttonGroup(AZStd::move(buttonGroup))
     {
-        setOrientation(Qt::Orientation::Vertical);
-        setStyleSheet("background: black;");
+        // Hearth Engine look: a dark rounded bar of tools, the active one in ember (approved mockup "Viewport").
+        setOrientation(Qt::Orientation::Horizontal);
+        setStyleSheet(
+            "QToolBar { background-color: rgba(13, 12, 11, 220); border: 1px solid rgba(255, 255, 255, 20); border-radius: 14px; padding: 4px; spacing: 4px; }"
+            "QToolButton { background: transparent; border: none; border-radius: 10px; padding: 6px; }"
+            "QToolButton:hover { background-color: rgba(255, 255, 255, 15); }"
+            "QToolButton:checked { background-color: #E8743B; }");
 
         for (auto button : m_buttonGroup->GetButtons())
         {
