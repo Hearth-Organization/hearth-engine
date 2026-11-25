@@ -164,7 +164,8 @@ void HearthCommandPalette::CollectCommands()
                                                                { QStringLiteral("Tests"), QString() },
                                                                { QStringLiteral("Cinematics"), QString() },
                                                                { QStringLiteral("Script Canvas"), QString() },
-                                                               { QStringLiteral("Animation"), QString() } })
+                                                               { QStringLiteral("Animation"), QString() },
+                                                               { QStringLiteral("Material canvas"), QString() } })
     {
         const QString name = pane.first;
         m_commands.push_back({ QStringLiteral("◫"), tr("Open %1").arg(name), tr("Tools"), pane.second,
