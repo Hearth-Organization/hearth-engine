@@ -18,6 +18,7 @@
 #include <AzCore/Console/IConsole.h>
 #include <AzCore/Console/ILogger.h>
 #include <AzCore/Math/MathUtils.h>
+#include <AzCore/std/algorithm.h>
 
 namespace AzNetworking
 {
@@ -34,6 +35,11 @@ namespace AzNetworking
     AZ_CVAR(bool, net_UdpTimeoutConnections, true, nullptr, AZ::ConsoleFunctorFlags::DontReplicate, "Boolean value on whether we should timeout Udp connections");
     AZ_CVAR(AZ::TimeMs, net_UdpPacketTimeSliceMs, AZ::TimeMs{ 8 }, nullptr, AZ::ConsoleFunctorFlags::DontReplicate, "The number of milliseconds to allow for packet processing");
     AZ_CVAR(uint32_t, net_UdpUnackedHeartbeats, 5, nullptr, AZ::ConsoleFunctorFlags::Null, "The number of heartbeats to attempt to send to keep a connection alive before giving up");
+    // Hearth Engine co-op testing: pretend the network is slow or drops packets (profile builds; 0 = off).
+    AZ_CVAR(AZ::TimeMs, net_FakeLatencyMs, AZ::TimeMs{ 0 }, nullptr, AZ::ConsoleFunctorFlags::DontReplicate,
+        "Hearth co-op test: extra one-way delay in milliseconds added to every packet this side sends");
+    AZ_CVAR(int32_t, net_FakeLossPercent, 0, nullptr, AZ::ConsoleFunctorFlags::DontReplicate,
+        "Hearth co-op test: percent of packets this side drops on purpose");
     AZ_CVAR(AZ::TimeMs, net_UdpDefaultTimeoutMs, AZ::TimeMs{ 10 * 1000 }, nullptr, AZ::ConsoleFunctorFlags::Null, "Time in milliseconds before we timeout an idle Udp connection");
     AZ_CVAR(AZ::TimeMs, net_MinPacketTimeoutMs, AZ::TimeMs{ 200 }, nullptr, AZ::ConsoleFunctorFlags::DontReplicate, "Minimum time to wait before timing out an unacked packet");
     AZ_CVAR(int32_t, net_MaxTimeoutsPerFrame, 1000, nullptr, AZ::ConsoleFunctorFlags::DontReplicate, "Maximum number of packet timeouts to allow to process in a single frame");
@@ -625,6 +631,15 @@ namespace AzNetworking
         AZLOG(NET_DebugDtls, "Connection is sending packet type %d", aznumeric_cast<int32_t>(packet.GetPacketType()));
         // If we're not connected then we're still handshaking and require packets to be unencrypted
         const bool shouldEncrypt = !IsHandshakePacket(connection.GetDtlsEndpoint(), packet.GetPacketType());
+        const AZ::TimeMs fakeLatency = net_FakeLatencyMs;
+        const int32_t fakeLoss = net_FakeLossPercent;
+        if (fakeLatency > AZ::Time::ZeroTimeMs || fakeLoss > 0)
+        {
+            ConnectionQuality& quality = connection.GetConnectionQuality();
+            quality.m_lossPercentage = AZStd::clamp(fakeLoss, 0, 100);
+            quality.m_latencyMs = fakeLatency;
+            quality.m_varianceMs = AZ::TimeMs{ static_cast<int64_t>(fakeLatency) / 10 };
+        }
         if (m_socket->Send(address, packetData, packetSize, shouldEncrypt, connection.GetDtlsEndpoint(), connection.GetConnectionQuality()))
         {
             RegisterWithTimeoutQueue(connection.GetConnectionId(), localPacketId, reliabilityType, connection.GetMetrics());
