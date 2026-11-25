@@ -11,9 +11,11 @@
 #include "ProjectManagerBuses.h"
 #include "PythonBindingsInterface.h"
 #include "ScreensCtrl.h"
+#include "FirstRunDialog.h"
 
 #include <QCloseEvent>
 #include <QMessageBox>
+#include <QTimer>
 
 namespace O3DE::ProjectManager
 {
