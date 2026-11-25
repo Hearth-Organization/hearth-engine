@@ -1,0 +1,14 @@
+# Quick check that the paid 96-core runner (hearth-96) will start. Runs only when this file changes.
+name: Runner test (hearth-96)
+
+on:
+  push:
+    branches: [ "hearth/main" ]
+    paths: [ ".github/workflows/runner-test.yml" ]
+
+jobs:
+  test:
+    runs-on: hearth-96
+    timeout-minutes: 5
+    steps:
+      - run: echo "hearth-96 is working, $(nproc) cores, $(free -g | awk '/Mem/{print $2}') GB RAM"
