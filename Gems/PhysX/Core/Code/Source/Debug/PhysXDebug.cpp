@@ -15,11 +15,30 @@
 #include <PxPhysicsAPI.h>
 #include <AzCore/Utils/Utils.h>
 #include <AzCore/std/time.h>
+#include <AzCore/Console/IConsole.h>
+#include <AzCore/Interface/Interface.h>
 
 namespace PhysX
 {
     namespace Debug
     {
+        //! Hearth Engine: "Show colliders in the viewport" (Physics settings window): physx_showColliders 1 draws every
+        //! collider, 0 goes back to each collider's own setting.
+        static void physx_showColliders(const AZ::ConsoleCommandContainer& arguments)
+        {
+            auto* debug = AZ::Interface<PhysXDebugInterface>::Get();
+            if (!debug)
+            {
+                return;
+            }
+            DebugConfiguration config = debug->GetDebugConfiguration();
+            const bool on = arguments.empty() || arguments[0] == "1" || arguments[0] == "true";
+            config.m_debugDisplayData.m_globalCollisionDebugDraw =
+                on ? DebugDisplayData::GlobalCollisionDebugState::AlwaysOn : DebugDisplayData::GlobalCollisionDebugState::Manual;
+            debug->UpdateDebugConfiguration(config);
+        }
+        AZ_CONSOLEFREEFUNC(physx_showColliders, AZ::ConsoleFunctorFlags::Null, "Hearth Engine: 1 draws every collider in the viewport, 0 leaves it to each collider");
+
         physx::PxPvd* PhysXDebug::InitializePhysXPvd([[maybe_unused]] physx::PxFoundation* foundation)
         {
 #ifdef AZ_PHYSICS_DEBUG_ENABLED
