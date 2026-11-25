@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   sdk:
-    # The 96-core GitHub-hosted runner in Hearth-Organization (paid per minute, only while a build runs).
+    # The 96-core GitHub-hosted runner "hearth-96" in Hearth-Organization (paid per minute, only while a build runs).
     runs-on: hearth-96
     timeout-minutes: 90  # caps a stuck build at about $23 on 96 cores
     env:
