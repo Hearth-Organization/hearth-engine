@@ -7,6 +7,7 @@
 # - Profile configuration only (no debug build: saves tens of GB of disk and hours of compile time).
 # - Few parallel jobs and low CPU/IO priority, so the machine stays usable and never runs out of memory.
 # - ccache, if installed, makes later rebuilds much faster.
+# - C++20 module scanning is off: O3DE doesn't use modules, and it needs clang-scan-deps.
 set -euo pipefail
 ENGINE="$(cd "$(dirname "$0")/../.." && pwd)"
 PROJECT="${1:-$HOME/O3DE/Projects/NoclipProtocol}"
@@ -21,6 +22,7 @@ cmake -S "$ENGINE" -B "$BUILD" -G "Ninja Multi-Config" \
   -DLY_PROJECTS="$PROJECT" \
   -DLY_UNITY_BUILD=ON \
   -DLY_STRIP_DEBUG_SYMBOLS=ON \
+  -DCMAKE_CXX_SCAN_FOR_MODULES=OFF \
   "${LAUNCHER[@]}"
 
 PROJECT_NAME="$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['project_name'])" "$PROJECT/project.json")"
