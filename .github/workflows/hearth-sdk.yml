@@ -58,11 +58,13 @@ jobs:
           show-progress: false
 
       - name: Large files (Git LFS)
+        id: lfs
         run: |
           git lfs install
           git lfs pull
 
       - name: Build tools and libraries
+        id: apt
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ninja-build clang lld mold ccache pkg-config \
@@ -81,7 +83,9 @@ jobs:
           restore-keys: hearth-ccache-
 
       - name: Configure
+        id: configure
         run: |
+          set -o pipefail
           mkdir -p "$HOME/.o3de/3rdParty"
           cmake -S . -B "$HEARTH_BUILD_DIR" -G "Ninja Multi-Config" \
             -DLY_3RDPARTY_PATH="$HOME/.o3de/3rdParty" \
@@ -92,7 +96,7 @@ jobs:
             -DCMAKE_CXX_SCAN_FOR_MODULES=OFF \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_LINKER_TYPE=MOLD \
-            -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/install"
+            -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/install" 2>&1 | tee configure.log
 
       - name: Build and install the SDK
         id: build
@@ -122,6 +126,8 @@ jobs:
             echo "Run ${{ github.run_number }} (attempt ${{ github.run_attempt }}) on ${{ github.sha }}"
             echo "Outcome: ${outcome}  Last step: ${step}"
             df -h / /mnt 2>/dev/null || true
+            echo "Steps: lfs=${{ steps.lfs.outcome }} apt=${{ steps.apt.outcome }} configure=${{ steps.configure.outcome }} build=${{ steps.build.outcome }}"
+            if [ "${{ steps.configure.outcome }}" = "failure" ]; then echo "== configure (errors) =="; grep -n -B2 -A8 "CMake Error" configure.log | head -80; echo "== configure (end) =="; tail -40 configure.log; fi
             echo
             grep -E "error:|FAILED:" build.log | head -40 || true
             echo
