@@ -241,6 +241,10 @@ set(FILES
     Core/EditorMetricsPlainTextNameRegistration.h
     MainWindow.cpp
     MainWindow.h
+    HearthEditorShell.cpp
+    HearthEditorShell.h
+    HearthCommandPalette.cpp
+    HearthCommandPalette.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

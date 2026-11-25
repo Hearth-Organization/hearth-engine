@@ -8,6 +8,7 @@
 #include "EditorDefs.h"
 
 #include "MainWindow.h"
+#include "HearthEditorShell.h"
 
 #include <algorithm>
 
@@ -424,6 +425,9 @@ void MainWindow::Initialize()
     m_editorActionsHandler.Initialize(this);
 
     InitStatusBar();
+
+    // Hearth Engine: header (project, Ctrl+K search, build state, Play), command palette, laptop settings.
+    HearthEditorShell::Install(this);
 
     AzToolsFramework::SourceControlNotificationBus::Handler::BusConnect();
     m_sourceControlNotifHandler->Init();
