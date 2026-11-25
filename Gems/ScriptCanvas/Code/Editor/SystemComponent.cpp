@@ -335,7 +335,7 @@ namespace ScriptCanvasEditor
                     auto sourceHandle = CompleteDescription(SourceHandle(nullptr, sourceUUIDInCall));
                     if (sourceHandle)
                     {
-                        AzToolsFramework::EditorRequests::Bus::Broadcast(&AzToolsFramework::EditorRequests::OpenViewPane, "Script Canvas");
+                        AzToolsFramework::EditorRequests::Bus::Broadcast(&AzToolsFramework::EditorRequests::OpenViewPane, "Script Canvas graphs");
 
                         GeneralRequestBus::BroadcastResult(openOutcome
                             , &GeneralRequests::OpenScriptCanvasAsset

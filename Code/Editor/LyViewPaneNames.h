@@ -40,7 +40,7 @@ namespace LyViewPane
     static const char* const ConsoleMenuName = QT_TRANSLATE_NOOP("LyViewPane", "&Console");
     static const char* const ConsoleVariables = QT_TRANSLATE_NOOP("LyViewPane", "Console Variables");
     static const char* const TrackView = QT_TRANSLATE_NOOP("LyViewPane", "Track View");
-    static const char* const ScriptCanvas = QT_TRANSLATE_NOOP("LyViewPane", "Script Canvas");
+    static const char* const ScriptCanvas = QT_TRANSLATE_NOOP("LyViewPane", "Script Canvas graphs"); // Hearth Engine: "Script Canvas" is the plain-language blocks window
     static const char* const UiEditor = QT_TRANSLATE_NOOP("LyViewPane", "UI Editor");
 
     static const char* const EditorSettingsManager = QT_TRANSLATE_NOOP("LyViewPane", "Editor Settings Manager");

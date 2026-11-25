@@ -92,7 +92,7 @@ namespace ScriptCanvasEditor
     void UpgradeHelper::OpenGraph(const SourceHandle& asset)
     {
         // Open the graph in SC editor
-        AzToolsFramework::OpenViewPane(/*LyViewPane::ScriptCanvas*/"Script Canvas");
+        AzToolsFramework::OpenViewPane(/*LyViewPane::ScriptCanvas*/"Script Canvas graphs");
         AZ::Outcome<int, AZStd::string> openOutcome = AZ::Failure(AZStd::string());
 
         if (!asset.RelativePath().empty())

@@ -31,6 +31,7 @@
 #include "HearthUiEditor.h"
 #include "HearthTestsPane.h"
 #include "HearthCinematicsPane.h"
+#include "HearthScriptBlocksPane.h"
 
 #include <algorithm>
 
@@ -730,6 +731,7 @@ void MainWindow::RegisterStdViewClasses()
     HearthUiEditor::RegisterViewClass();
     HearthTestsPane::RegisterViewClass();
     HearthCinematicsPane::RegisterViewClass();
+    HearthScriptBlocksPane::RegisterViewClass();
     ConsoleVariableEditor::RegisterViewClass();
     CSettingsManagerDialog::RegisterViewClass();
     AzAssetBrowserWindow::RegisterViewClass();
