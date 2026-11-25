@@ -92,12 +92,21 @@ ly_append_configurations_options(
         -fstack-check
     COMPILATION_PROFILE
         -O2
-        -g                          # debug symbols
         -fstack-protector-all       # Enable stack protectors for all functions
         -fstack-check
     COMPILATION_RELEASE
         -O2
 )
+
+# Hearth Engine: debug info in profile builds is optional. Off by default: it roughly doubles compile time
+# and memory per compile job, which matters on a laptop. Turn it on to debug crashes with full symbols.
+option(HEARTH_PROFILE_DEBUG_INFO "Hearth Engine: build profile with debug info (-g)" OFF)
+if(HEARTH_PROFILE_DEBUG_INFO)
+    ly_append_configurations_options(
+        COMPILATION_PROFILE
+            -g                      # debug symbols
+    )
+endif()
 
 if(LY_BUILD_WITH_ADDRESS_SANITIZER)
     ly_append_configurations_options(
