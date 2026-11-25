@@ -296,6 +296,8 @@ set(FILES
     HearthCinematicsPane.h
     HearthScriptBlocksPane.cpp
     HearthScriptBlocksPane.h
+    HearthAnimationPane.cpp
+    HearthAnimationPane.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

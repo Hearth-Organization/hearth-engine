@@ -85,6 +85,8 @@ ly_add_target(
             ..
             AssetBrowser/AssetTypes/Character
             ${pal_tool_dirs}
+            # Hearth Engine Animation window: the EMotionFX request buses only (header-only EBus interfaces)
+            ${LY_ROOT_FOLDER}/Gems/EMotionFX/Code/Include
     COMPILE_DEFINITIONS
         PRIVATE
             SANDBOX_EXPORTS
