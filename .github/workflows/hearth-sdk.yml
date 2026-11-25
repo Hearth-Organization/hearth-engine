@@ -109,7 +109,7 @@ jobs:
         timeout-minutes: 105
         run: |
           set -o pipefail
-          cmake --build "$HEARTH_BUILD_DIR" --config profile --target install -j "$(nproc)" 2>&1 | tee build.log
+          cmake --build "$HEARTH_BUILD_DIR" --config profile --target install -j "$(nproc)" -- -k 0 2>&1 | tee build.log
         continue-on-error: true
 
       - name: Save compiler cache
@@ -134,7 +134,7 @@ jobs:
             echo "Steps: lfs=${{ steps.lfs.outcome }} apt=${{ steps.apt.outcome }} configure=${{ steps.configure.outcome }} build=${{ steps.build.outcome }}"
             if [ "${{ steps.configure.outcome }}" = "failure" ]; then echo "== configure (errors) =="; grep -n -B2 -A8 "CMake Error" configure.log | head -80; echo "== configure (end) =="; tail -40 configure.log; fi
             echo
-            grep -E "error:|FAILED:" build.log | head -40 || true
+            grep -E "error:|FAILED:" build.log | head -300 || true
             echo
             tail -60 build.log || true
           } > build-status.txt

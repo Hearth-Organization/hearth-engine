@@ -161,6 +161,7 @@ namespace AzToolsFramework::ViewportUi::Internal
         QWidget* m_hearthLayouts = nullptr;    //!< top right: Split 2, Split 4, shortcuts
         QWidget* m_hearthCompass = nullptr;    //!< bottom right: which way the camera looks, and its speed
         QLabel* m_hearthCameraSpeed = nullptr;
+        QWidget* m_hearthCompassDial = nullptr; //!< the compass itself (a HearthCompass)
         QWidget* m_hearthPanel = nullptr;      //!< right: shortcuts, gizmo size, grid, light icons
         QPushButton* m_hearthView = nullptr;   //!< Perspective / Top / Front / Side
         AZ::EntityId m_hearthDragEntity;

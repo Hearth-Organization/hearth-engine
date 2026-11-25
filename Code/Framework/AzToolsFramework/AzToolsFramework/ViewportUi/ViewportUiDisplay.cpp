@@ -768,6 +768,7 @@ namespace AzToolsFramework::ViewportUi::Internal
             "background-color: rgba(13, 12, 11, 220); color: #ECE6DE; border: 1px solid rgba(255, 255, 255, 20); border-radius: 13px;"
             " padding: 5px 12px; font-family: \"Geist Mono\"; font-size: 12px;"));
         auto* compass = new HearthCompass(m_hearthCompass, m_viewportId);
+        m_hearthCompassDial = compass;
         compass->m_speedChanged = [this] { UpdateHearthOverlay(); };
         compassRow->addWidget(m_hearthCameraSpeed);
         compassRow->addWidget(compass);
@@ -824,7 +825,7 @@ namespace AzToolsFramework::ViewportUi::Internal
             AzFramework::CameraState camera;
             AzToolsFramework::ViewportInteraction::ViewportInteractionRequestBus::EventResult(
                 camera, m_viewportId, &AzToolsFramework::ViewportInteraction::ViewportInteractionRequestBus::Events::GetCameraState);
-            if (auto* compass = m_hearthCompass ? m_hearthCompass->findChild<HearthCompass*>() : nullptr)
+            if (auto* compass = static_cast<HearthCompass*>(m_hearthCompassDial))
             {
                 compass->m_yaw = std::atan2(camera.m_forward.GetX(), camera.m_forward.GetY());
                 compass->update();
