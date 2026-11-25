@@ -251,6 +251,9 @@ set(FILES
     HearthClaudePane.h
     HearthAssetsSummary.cpp
     HearthAssetsSummary.h
+    HearthAgentClient.h
+    HearthLevelGenerator.cpp
+    HearthLevelGenerator.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h
