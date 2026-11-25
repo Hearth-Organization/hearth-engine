@@ -22,10 +22,16 @@
 #include <QDir>
 #include <QFile>
 #include <QHBoxLayout>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
 #include <QListWidget>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QProcess>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QScrollArea>
 #include <QSettings>
 #include <QSpinBox>
@@ -33,6 +39,7 @@
 #include <QThread>
 #include <QUrl>
 #include <QVBoxLayout>
+#include <QVersionNumber>
 
 namespace
 {
@@ -553,6 +560,28 @@ QWidget* HearthSettingsPane::EngineCard()
     row(tr("Version"), Hearth::Version());
     row(tr("Installed in"), QDir::toNativeSeparators(Hearth::EngineRoot()));
     row(tr("Built"), Hearth::Build().isEmpty() ? tr("on this computer") : tr("GitHub · build %1").arg(Hearth::Build()));
+    QLabel* status = Hearth::MakeChip(tr("Checking for updates…"), QStringLiteral("plain"), card);
+    engine->addWidget(status, 0, Qt::AlignLeft);
+    auto* network = new QNetworkAccessManager(card);
+    QNetworkRequest request(QUrl(QStringLiteral("https://api.github.com/repos/Hearth-Organization/hearth-engine/releases/latest")));
+    request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("HearthEngine"));
+    QNetworkReply* reply = network->get(request);
+    connect(reply, &QNetworkReply::finished, status, [reply, status]()
+    {
+        reply->deleteLater();
+        const QString tag = QJsonDocument::fromJson(reply->readAll()).object().value(QStringLiteral("tag_name")).toString();
+        QString latest = tag;
+        latest.remove(QRegularExpression(QStringLiteral("^[^0-9]*")));
+        if (reply->error() != QNetworkReply::NoError || latest.isEmpty())
+        {
+            status->setText(tr("Couldn't check for updates"));
+            return;
+        }
+        const bool upToDate = QVersionNumber::fromString(latest) <= QVersionNumber::fromString(Hearth::Version());
+        status->setText(upToDate ? tr("Up to date") : tr("%1 is out").arg(latest));
+        status->setStyleSheet(upToDate ? QStringLiteral("background-color: rgba(166, 221, 151, 31); color: #A6DD97; border-radius: 9px; padding: 2px 8px;")
+                                       : QStringLiteral("background-color: rgba(232, 116, 59, 41); color: #FFCFB4; border-radius: 9px; padding: 2px 8px;"));
+    });
     QPushButton* check = Hearth::MakeButton(tr("Check for updates"), false, card);
     connect(check, &QPushButton::clicked, check, []()
     {
