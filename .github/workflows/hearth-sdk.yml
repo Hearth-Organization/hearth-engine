@@ -1,0 +1,137 @@
+# Hearth Engine: build the Linux engine SDK on GitHub and publish it as a release.
+#
+# The laptop then downloads the SDK (the Hearth Engine agent does this) and only has to build each
+# game's own code, which takes minutes. The build keeps its compiler cache between runs, so if one run
+# hits GitHub's 6-hour limit, the next run continues from where it got to (push again, or run it by hand).
+
+name: Hearth Engine SDK (Linux)
+
+on:
+  push:
+    branches: [ "hearth/main" ]
+    paths-ignore: [ "HEARTH.md", "**/*.md" ]
+  workflow_dispatch:
+
+concurrency:
+  group: hearth-sdk
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sdk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_MAXSIZE: 8G
+      CCACHE_COMPRESS: "true"
+      CCACHE_NOHASHDIR: "true"
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CC: clang
+      CXX: clang++
+    steps:
+      - name: Make room on the build machine
+        uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # v10
+        with:
+          root-reserve-mb: 12000
+          swap-size-mb: 4096
+          remove-dotnet: true
+          remove-android: true
+          remove-haskell: true
+          remove-codeql: true
+          remove-docker-images: true
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          show-progress: false
+
+      - name: Large files (Git LFS)
+        run: |
+          git lfs install
+          git lfs pull
+
+      - name: Build tools and libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ninja-build clang lld mold ccache pkg-config \
+            libglu1-mesa-dev libxcb-xinerama0 libxcb-xinput0 libxcb-xinput-dev libxcb-xfixes0-dev libxcb-xkb-dev \
+            libxkbcommon-dev libxkbcommon-x11-dev libfontconfig1-dev libcurl4-openssl-dev zlib1g-dev \
+            mesa-common-dev libssl-dev libunwind-dev libzstd-dev libwayland-dev zstd
+          cmake --version
+          clang --version | head -1
+          df -h "$GITHUB_WORKSPACE"
+
+      - name: Restore compiler cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: .ccache
+          key: hearth-ccache-${{ github.sha }}
+          restore-keys: hearth-ccache-
+
+      - name: Configure
+        run: |
+          mkdir -p "$HOME/.o3de/3rdParty"
+          cmake -S . -B build/linux -G "Ninja Multi-Config" \
+            -DLY_3RDPARTY_PATH="$HOME/.o3de/3rdParty" \
+            -DLY_VERSION_ENGINE_NAME=hearth-engine \
+            -DLY_DISABLE_TEST_MODULES=ON \
+            -DLY_STRIP_DEBUG_SYMBOLS=ON \
+            -DLY_UNITY_BUILD=ON \
+            -DCMAKE_CXX_SCAN_FOR_MODULES=OFF \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_LINKER_TYPE=MOLD \
+            -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/install"
+
+      - name: Build and install the SDK
+        id: build
+        # Stop a little before GitHub's limit so the compiler cache still gets saved for the next run.
+        timeout-minutes: 300
+        run: |
+          set -o pipefail
+          cmake --build build/linux --config profile --target install -j "$(nproc)" 2>&1 | tee build.log
+        continue-on-error: true
+
+      - name: Save compiler cache
+        if: always()
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: .ccache
+          key: hearth-ccache-${{ github.sha }}-${{ github.run_attempt }}
+
+      - name: Report progress
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ccache --show-stats || true
+          step=$(grep -o '^\[[0-9]*/[0-9]*\]' build.log | tail -1 || true)
+          outcome="${{ steps.build.outcome }}"
+          {
+            echo "Run ${{ github.run_number }} (attempt ${{ github.run_attempt }}) on ${{ github.sha }}"
+            echo "Outcome: ${outcome}  Last step: ${step}"
+            echo
+            grep -E "error:|FAILED:" build.log | head -40 || true
+            echo
+            tail -60 build.log || true
+          } > build-status.txt
+          gh release delete hearth-sdk-status --yes --cleanup-tag 2>/dev/null || true
+          gh release create hearth-sdk-status build-status.txt --prerelease \
+            --title "SDK build status: ${outcome} ${step}" \
+            --notes "Latest Hearth Engine SDK build: ${outcome}, last step ${step}. See build-status.txt."
+
+      - name: Package and publish the SDK
+        if: steps.build.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="hearth-sdk-linux-${{ github.run_number }}"
+          tar -C install -cf - . | zstd -T0 -12 -o hearth-engine-sdk-linux.tar.zst
+          split -b 1900M -d hearth-engine-sdk-linux.tar.zst hearth-engine-sdk-linux.tar.zst.part
+          sha256sum hearth-engine-sdk-linux.tar.zst > hearth-engine-sdk-linux.sha256
+          ls -lh hearth-engine-sdk-linux.tar.zst*
+          gh release create "$tag" hearth-engine-sdk-linux.tar.zst.part* hearth-engine-sdk-linux.sha256 \
+            --title "Hearth Engine SDK (Linux) ${{ github.run_number }}" \
+            --notes "Built from ${{ github.sha }} on branch hearth/main. Download all parts, join them, check the sha256, unpack."
