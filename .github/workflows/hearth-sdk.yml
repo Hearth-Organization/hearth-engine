@@ -21,9 +21,10 @@ permissions:
 
 jobs:
   sdk:
-    # Free 4-core GitHub machine. For the paid 96-core one, use: runs-on: hearth-96 (and timeout-minutes 90 / 75).
-    runs-on: ubuntu-24.04
-    timeout-minutes: 355
+    # Paid 32-core GitHub machine "hearth-32" in Hearth-Organization ($0.082 a minute, only while it runs).
+    # The free 4-core one is "ubuntu-24.04" (use timeout-minutes 355 / 300 with it).
+    runs-on: hearth-32
+    timeout-minutes: 120  # caps a stuck build at about $10
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_MAXSIZE: 8G
@@ -105,7 +106,7 @@ jobs:
       - name: Build and install the SDK
         id: build
         # Stop a little before GitHub's limit so the compiler cache still gets saved for the next run.
-        timeout-minutes: 300
+        timeout-minutes: 105
         run: |
           set -o pipefail
           cmake --build "$HEARTH_BUILD_DIR" --config profile --target install -j "$(nproc)" 2>&1 | tee build.log
