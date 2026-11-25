@@ -75,6 +75,8 @@ set(FILES
     Source/ProjectsScreen.h
     Source/HubScreen.cpp
     Source/HubScreen.h
+    Source/FirstRunDialog.cpp
+    Source/FirstRunDialog.h
     Source/ProjectsScreen.cpp
     Source/ProjectSettingsScreen.h
     Source/ProjectSettingsScreen.cpp

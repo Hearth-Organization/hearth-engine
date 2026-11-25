@@ -62,6 +62,16 @@ namespace O3DE::ProjectManager
             screensCtrl->ForceChangeToScreen(startScreen);
         }
 
+        // Hearth Engine: first-run setup (once; Settings can run it again).
+        QTimer::singleShot(0, this, [this]()
+        {
+            if (FirstRunDialog::ShouldShow())
+            {
+                FirstRunDialog setup(this);
+                setup.exec();
+            }
+        });
+
         if (!projectPath.empty())
         {
             const QString path = QString::fromUtf8(projectPath.Native().data(), aznumeric_cast<int>(projectPath.Native().size()));
