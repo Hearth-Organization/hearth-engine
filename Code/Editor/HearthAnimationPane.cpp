@@ -43,6 +43,7 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 
