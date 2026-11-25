@@ -276,6 +276,8 @@ set(FILES
     HearthMaterialPane.h
     HearthProjectPane.cpp
     HearthProjectPane.h
+    HearthPackagePane.cpp
+    HearthPackagePane.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

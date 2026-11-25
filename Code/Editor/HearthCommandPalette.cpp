@@ -154,7 +154,8 @@ void HearthCommandPalette::CollectCommands()
                                                                { QStringLiteral("Import"), QString() },
                                                                { QStringLiteral("Asset processing"), QString() },
                                                                { QStringLiteral("Material editor"), QString() },
-                                                               { QStringLiteral("Project settings"), QString() } })
+                                                               { QStringLiteral("Project settings"), QString() },
+                                                               { QStringLiteral("Package the game"), QString() } })
     {
         const QString name = pane.first;
         m_commands.push_back({ QStringLiteral("◫"), tr("Open %1").arg(name), tr("Tools"), pane.second,
