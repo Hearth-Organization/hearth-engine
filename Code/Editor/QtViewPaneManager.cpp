@@ -1076,6 +1076,7 @@ void QtViewPaneManager::RestoreDefaultLayout(bool resetSettings)
         state.viewPanes.push_back(LyViewPane::AssetBrowser);
         state.viewPanes.push_back(QStringLiteral("Console and logs")); // Hearth Engine console
         state.viewPanes.push_back(QStringLiteral("Claude"));           // Hearth Engine Claude panel
+        state.viewPanes.push_back(QStringLiteral("Assets"));           // Hearth Engine assets summary
 
         state.mainWindowState = m_defaultMainWindowState;
 
@@ -1103,13 +1104,14 @@ void QtViewPaneManager::RestoreDefaultLayout(bool resetSettings)
     // under the Inspector on the right.
     const QtViewPane* consoleViewPane = OpenPane(QStringLiteral("Console and logs"), QtViewPane::OpenMode::UseDefaultState);
     const QtViewPane* claudeViewPane = OpenPane(QStringLiteral("Claude"), QtViewPane::OpenMode::UseDefaultState);
+    const QtViewPane* assetsSummaryPane = OpenPane(QStringLiteral("Assets"), QtViewPane::OpenMode::UseDefaultState);
 
     const QtViewPane* levelInspectorPane = nullptr;
 
     // This class does all kinds of behind the scenes magic to make docking / restore work, especially with groups
     // so instead of doing our special default layout attach / docking right now, we want to make it happen
     // after all of the other events have been processed.
-    QTimer::singleShot(0, [this, consoleViewPane, claudeViewPane, assetBrowserViewPane, InspectorViewPane, levelInspectorPane, entityOutlinerViewPane, resetSettings, selectedEntityIds]
+    QTimer::singleShot(0, [this, consoleViewPane, claudeViewPane, assetsSummaryPane, assetBrowserViewPane, InspectorViewPane, levelInspectorPane, entityOutlinerViewPane, resetSettings, selectedEntityIds]
     {
         // If we are using the new docking, set the right dock area to be absolute
         // so that the inspector will be to the right of the viewport and console
@@ -1203,6 +1205,15 @@ void QtViewPaneManager::RestoreDefaultLayout(bool resetSettings)
             static const float entityOutlinerWidthPercentage = 0.15f;
             int newWidth = static_cast<int>((float)screenWidth * entityOutlinerWidthPercentage);
             m_mainWindow->resizeDocks({ entityOutlinerViewPane->m_dockWidget }, { newWidth }, Qt::Horizontal);
+
+            if (assetsSummaryPane)
+            {
+                m_mainWindow->addDockWidget(Qt::LeftDockWidgetArea, assetsSummaryPane->m_dockWidget);
+                assetsSummaryPane->m_dockWidget->setFloating(false);
+                m_mainWindow->splitDockWidget(entityOutlinerViewPane->m_dockWidget, assetsSummaryPane->m_dockWidget, Qt::Vertical);
+                m_mainWindow->resizeDocks({ entityOutlinerViewPane->m_dockWidget, assetsSummaryPane->m_dockWidget },
+                                          { screenHeight / 2, screenHeight / 4 }, Qt::Vertical);
+            }
         }
 
         // Re-enable updates now that we've finished restoring the layout
