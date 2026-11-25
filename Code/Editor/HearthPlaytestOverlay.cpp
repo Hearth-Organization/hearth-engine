@@ -224,8 +224,12 @@ void HearthPlaytestOverlay::Tick()
             const QString level = GetIEditor()->GetLevelName();
             m_title->setText(tr("Testing · %1").arg(level.isEmpty() ? tr("the level") : level));
             Place();
-            show();
-            raise();
+            QScopedPointer<QSettings> settings(AzQtComponents::Hearth::NewSettings());
+            if (settings->value(QStringLiteral("play/overlay"), true).toBool())
+            {
+                show();
+                raise();
+            }
         }
         else
         {
@@ -360,15 +364,16 @@ void HearthPlaytestOverlay::Screenshot()
     QDir shots(QDir(BridgeFolder()).filePath(QStringLiteral("shots")));
     shots.mkpath(QStringLiteral("."));
     const QString path = shots.filePath(QStringLiteral("playtest_%1.png").arg(QDateTime::currentMSecsSinceEpoch()));
+    const bool wasVisible = isVisible();
     hide();
-    QTimer::singleShot(120, this, [this, path]()
+    QTimer::singleShot(120, this, [this, path, wasVisible]()
     {
         if (QScreen* screen = m_mainWindow->screen())
         {
             const QRect area = m_mainWindow->frameGeometry();
             screen->grabWindow(0, area.x(), area.y(), area.width(), area.height()).save(path);
         }
-        if (m_inGame)
+        if (m_inGame && wasVisible)
         {
             show();
         }

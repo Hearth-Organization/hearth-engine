@@ -148,7 +148,8 @@ void HearthCommandPalette::CollectCommands()
                                                                { QStringLiteral("Lighting and look"), QString() },
                                                                { QStringLiteral("Co-op test"), QString() },
                                                                { QStringLiteral("Profiler"), QString() },
-                                                               { QStringLiteral("Voice Studio"), QString() } })
+                                                               { QStringLiteral("Voice Studio"), QString() },
+                                                               { QStringLiteral("Hearth Settings"), QString() } })
     {
         const QString name = pane.first;
         m_commands.push_back({ QStringLiteral("◫"), tr("Open %1").arg(name), tr("Tools"), pane.second,
