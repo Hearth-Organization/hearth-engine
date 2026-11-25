@@ -22,6 +22,7 @@
 #include <QDir>
 #include <QFile>
 #include <QHBoxLayout>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
@@ -563,22 +564,40 @@ QWidget* HearthSettingsPane::EngineCard()
     QLabel* status = Hearth::MakeChip(tr("Checking for updates…"), QStringLiteral("plain"), card);
     engine->addWidget(status, 0, Qt::AlignLeft);
     auto* network = new QNetworkAccessManager(card);
-    QNetworkRequest request(QUrl(QStringLiteral("https://api.github.com/repos/Hearth-Organization/hearth-engine/releases/latest")));
+    // Every release, not /releases/latest: that one is 404 until a release is published, and the build-status
+    // releases (hearth-sdk-status) have no version number. The newest numbered, published release counts.
+    QNetworkRequest request(QUrl(QStringLiteral("https://api.github.com/repos/Hearth-Organization/hearth-engine/releases?per_page=30")));
     request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("HearthEngine"));
+    request.setRawHeader("Accept", "application/vnd.github+json");
     QNetworkReply* reply = network->get(request);
     connect(reply, &QNetworkReply::finished, status, [reply, status]()
     {
         reply->deleteLater();
-        const QString tag = QJsonDocument::fromJson(reply->readAll()).object().value(QStringLiteral("tag_name")).toString();
-        QString latest = tag;
-        latest.remove(QRegularExpression(QStringLiteral("^[^0-9]*")));
-        if (reply->error() != QNetworkReply::NoError || latest.isEmpty())
+        if (reply->error() != QNetworkReply::NoError)
         {
-            status->setText(tr("Couldn't check for updates"));
+            status->setText(tr("Couldn't check for updates (offline?)"));
             return;
         }
-        const bool upToDate = QVersionNumber::fromString(latest) <= QVersionNumber::fromString(Hearth::Version());
-        status->setText(upToDate ? tr("Up to date") : tr("%1 is out").arg(latest));
+        QVersionNumber newest;
+        for (const QJsonValue value : QJsonDocument::fromJson(reply->readAll()).array())
+        {
+            const QJsonObject release = value.toObject();
+            if (release.value(QStringLiteral("draft")).toBool() || release.value(QStringLiteral("prerelease")).toBool())
+            {
+                continue;
+            }
+            const QRegularExpressionMatch match = QRegularExpression(QStringLiteral("^v?(\\d+(\\.\\d+)*)$")).match(release.value(QStringLiteral("tag_name")).toString());
+            if (match.hasMatch())
+            {
+                const QVersionNumber version = QVersionNumber::fromString(match.captured(1));
+                if (version > newest)
+                {
+                    newest = version;
+                }
+            }
+        }
+        const bool upToDate = newest.isNull() || newest <= QVersionNumber::fromString(Hearth::Version());
+        status->setText(upToDate ? tr("Up to date") : tr("%1 is out").arg(newest.toString()));
         status->setStyleSheet(upToDate ? QStringLiteral("background-color: rgba(166, 221, 151, 31); color: #A6DD97; border-radius: 9px; padding: 2px 8px;")
                                        : QStringLiteral("background-color: rgba(232, 116, 59, 41); color: #FFCFB4; border-radius: 9px; padding: 2px 8px;"));
     });

@@ -1029,7 +1029,10 @@ def engine_gems():
             roots.append(root)
     found = {}
     for root in roots[:1] + [str(PROJECT)]:
-        for gem_json in glob.glob(str(Path(root) / "Gems" / "**" / "gem.json"), recursive=True) + \
+        # Gems sit one or two folders down (Gems/PhysX/PhysX5/gem.json): a full recursive search of the engine
+        # took many seconds, and Project settings showed no parts meanwhile.
+        for gem_json in glob.glob(str(Path(root) / "Gems" / "*" / "gem.json")) + \
+                        glob.glob(str(Path(root) / "Gems" / "*" / "*" / "gem.json")) + \
                         glob.glob(str(Path(root) / "Gem" / "gem.json")):
             try:
                 data = json.loads(Path(gem_json).read_text())

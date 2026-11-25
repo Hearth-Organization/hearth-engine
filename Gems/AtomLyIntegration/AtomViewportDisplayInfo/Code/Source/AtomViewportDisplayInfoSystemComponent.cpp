@@ -33,7 +33,8 @@
 
 namespace AZ::Render
 {
-    AZ_CVAR(int, r_displayInfo, 1, [](const int& newDisplayInfoVal)->void
+    AZ_CVAR(int, r_displayInfo, 0, // Hearth: off by default; the viewport status line shows FPS and memory
+    [](const int& newDisplayInfoVal)->void
         {
             // Forward this event to the system component so it can update accordingly.
             // This callback only gets triggered by console commands, so this will not recurse.

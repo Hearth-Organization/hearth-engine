@@ -33,8 +33,16 @@
 #include <QSaveFile>
 #include <QSet>
 #include <QSlider>
+#include <functional>
+#include <QLinearGradient>
+#include <QWheelEvent>
+#include <QMouseEvent>
+#include <QPainterPath>
+#include <QPainter>
 #include <QStandardPaths>
 #include <QTimer>
+#include <QDirIterator>
+#include <QtEndian>
 #include <QVBoxLayout>
 
 #include <algorithm>
@@ -96,6 +104,201 @@ void HearthAudioPane::RegisterViewClass()
     AzToolsFramework::RegisterViewPane<HearthAudioPane>("Audio", "Tools", options);
 }
 
+//! One bus in the mixer, as in the mockup: a tall dark bar that fills (ember to gold) with how loud the bus is
+//! playing, and a light handle across it that is the fader. Drag or scroll the handle; double-click resets to 0 dB.
+class HearthBusStrip : public QWidget
+{
+public:
+    explicit HearthBusStrip(QWidget* parent)
+        : QWidget(parent)
+    {
+        setFixedSize(54, 180);
+        setCursor(Qt::SizeVerCursor);
+        setToolTip(QObject::tr("Drag to change how loud this bus plays. Double-click for 0 dB."));
+    }
+    void SetDecibels(double decibels)
+    {
+        m_db = qBound(-60.0, decibels, 6.0);
+        update();
+    }
+    void SetLevel(double level)
+    {
+        if (!qFuzzyCompare(1.0 + level, 1.0 + m_level))
+        {
+            m_level = level;
+            update();
+        }
+    }
+    std::function<void(double)> m_changed;
+
+protected:
+    // The fader goes from -60 dB (off, at the bottom) to +6 dB (at the top).
+    double FaderFraction() const
+    {
+        return (m_db + 60.0) / 66.0;
+    }
+    void paintEvent(QPaintEvent*) override
+    {
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+        const QRectF bar(4, 0, 46, height());
+        QPainterPath clip;
+        clip.addRoundedRect(bar, 12, 12);
+        painter.fillPath(clip, QColor(0x12, 0x10, 0x0E));
+        painter.save();
+        painter.setClipPath(clip);
+        const double fill = bar.height() * qBound(0.0, m_level, 1.0);
+        QLinearGradient gradient(bar.bottomLeft(), bar.topLeft());
+        gradient.setColorAt(0.0, QColor(0xE8, 0x74, 0x3B));
+        gradient.setColorAt(1.0, QColor(0xF2, 0xCF, 0x86));
+        painter.fillRect(QRectF(bar.left(), bar.bottom() - fill, bar.width(), fill), gradient);
+        painter.restore();
+        const double y = bar.bottom() - bar.height() * FaderFraction();
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(0xEC, 0xE6, 0xDE));
+        painter.drawRoundedRect(QRectF(0, qBound(0.0, y - 4.0, bar.bottom() - 8.0), width(), 8), 4, 4);
+    }
+    void SetFromY(double y)
+    {
+        const double fraction = qBound(0.0, 1.0 - y / height(), 1.0);
+        m_db = qRound((fraction * 66.0 - 60.0) * 10.0) / 10.0;
+        update();
+        if (m_changed)
+        {
+            m_changed(m_db);
+        }
+    }
+    void mousePressEvent(QMouseEvent* event) override { SetFromY(event->position().y()); }
+    void mouseMoveEvent(QMouseEvent* event) override
+    {
+        if (event->buttons() & Qt::LeftButton)
+        {
+            SetFromY(event->position().y());
+        }
+    }
+    void mouseDoubleClickEvent(QMouseEvent*) override
+    {
+        m_db = 0.0;
+        update();
+        if (m_changed)
+        {
+            m_changed(m_db);
+        }
+    }
+    void wheelEvent(QWheelEvent* event) override
+    {
+        m_db = qBound(-60.0, m_db + (event->angleDelta().y() > 0 ? 1.0 : -1.0), 6.0);
+        update();
+        if (m_changed)
+        {
+            m_changed(m_db);
+        }
+    }
+
+private:
+    double m_db = 0.0;
+    double m_level = 0.0;
+};
+
+//! Where a sound's file is in the project, by its name: the first audio file under Assets or Sounds called that.
+static QString AudioFindSoundFile(const QString& stem)
+{
+    const QString project = QString::fromUtf8(AZ::Utils::GetProjectPath().c_str());
+    for (const QString& folder : { QStringLiteral("Assets"), QStringLiteral("Sounds") })
+    {
+        QDirIterator it(QDir(project).filePath(folder), { stem + QStringLiteral(".wav"), stem + QStringLiteral(".ogg"), stem + QStringLiteral(".mp3"), stem + QStringLiteral(".flac") },
+                        QDir::Files, QDirIterator::Subdirectories);
+        if (it.hasNext())
+        {
+            return it.next();
+        }
+    }
+    return {};
+}
+
+//! A sound's waveform: peaks of a 16-bit PCM .wav, drawn as thin bars. Other formats show an even stripe.
+class HearthWaveform : public QWidget
+{
+public:
+    explicit HearthWaveform(QWidget* parent)
+        : QWidget(parent)
+    {
+        setFixedHeight(70);
+    }
+    void Load(const QString& path)
+    {
+        m_peaks.clear();
+        QFile file(path);
+        if (path.endsWith(QLatin1String(".wav"), Qt::CaseInsensitive) && file.open(QIODevice::ReadOnly))
+        {
+            const QByteArray data = file.read(16 * 1024 * 1024);
+            // Find the "fmt " and "data" chunks.
+            int channels = 1;
+            int bits = 16;
+            int pos = 12;
+            while (pos + 8 <= data.size())
+            {
+                const QByteArray id = data.mid(pos, 4);
+                const quint32 size = qFromLittleEndian<quint32>(reinterpret_cast<const uchar*>(data.constData() + pos + 4));
+                if (id == "fmt " && pos + 24 <= data.size())
+                {
+                    channels = qMax(1, int(qFromLittleEndian<quint16>(reinterpret_cast<const uchar*>(data.constData() + pos + 10))));
+                    bits = qFromLittleEndian<quint16>(reinterpret_cast<const uchar*>(data.constData() + pos + 22));
+                }
+                else if (id == "data" && bits == 16)
+                {
+                    const int start = pos + 8;
+                    const int frames = int(qMin<qint64>(size, data.size() - start) / (2 * channels));
+                    const int buckets = 120;
+                    for (int b = 0; b < buckets && frames > 0; ++b)
+                    {
+                        int peak = 0;
+                        for (int f = frames * b / buckets; f < frames * (b + 1) / buckets; ++f)
+                        {
+                            const qint16 sample = qFromLittleEndian<qint16>(reinterpret_cast<const uchar*>(data.constData() + start + f * 2 * channels));
+                            peak = qMax(peak, qAbs(int(sample)));
+                        }
+                        m_peaks.push_back(peak / 32768.0);
+                    }
+                    break;
+                }
+                pos += 8 + int(size) + int(size & 1);
+            }
+        }
+        update();
+    }
+
+protected:
+    void paintEvent(QPaintEvent*) override
+    {
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+        QPainterPath clip;
+        clip.addRoundedRect(QRectF(rect()), 10, 10);
+        painter.fillPath(clip, QColor(0x24, 0x21, 0x1E));
+        painter.setClipPath(clip);
+        const QColor bar(0xB8, 0xAF, 0xA4, 205);
+        const double middle = height() / 2.0;
+        if (m_peaks.isEmpty())
+        {
+            for (int x = 3; x < width(); x += 4)
+            {
+                painter.fillRect(QRectF(x, 0, 1, height()), bar);
+            }
+            return;
+        }
+        const double step = double(width()) / m_peaks.size();
+        for (int i = 0; i < m_peaks.size(); ++i)
+        {
+            const double h = qMax(2.0, m_peaks[i] * (height() - 12));
+            painter.fillRect(QRectF(i * step + step * 0.25, middle - h / 2.0, qMax(1.0, step * 0.5), h), bar);
+        }
+    }
+
+private:
+    QVector<double> m_peaks;
+};
+
 HearthAudioPane::HearthAudioPane(QWidget* parent)
     : QWidget(parent)
 {
@@ -143,37 +346,26 @@ HearthAudioPane::HearthAudioPane(QWidget* parent)
         BusWidgets bus;
         bus.name = QString::fromLatin1(busName);
         auto* strip = new QVBoxLayout();
-        strip->setSpacing(6);
-        auto* bars = new QHBoxLayout();
-        bars->setSpacing(6);
-        bus.meter = new QProgressBar(mixerCard);
-        bus.meter->setOrientation(Qt::Vertical);
-        bus.meter->setRange(0, 100);
-        bus.meter->setTextVisible(false);
-        bus.meter->setFixedSize(8, 120);
-        bus.meter->setStyleSheet(QStringLiteral("QProgressBar { background-color: #24211E; border: none; border-radius: 4px; }"
-                                                "QProgressBar::chunk { background-color: #A6DD97; border-radius: 4px; }"));
-        bus.fader = new QSlider(Qt::Vertical, mixerCard);
-        bus.fader->setRange(-600, 60); // tenths of a dB; -60 dB is off
-        bus.fader->setFixedHeight(120);
-        bus.fader->setValue(qRound(AudioBusDecibels(bus.name) * 10.0));
-        bars->addWidget(bus.meter);
-        bars->addWidget(bus.fader);
-        strip->addLayout(bars);
+        strip->setSpacing(8);
+        bus.strip = new HearthBusStrip(mixerCard);
+        bus.strip->SetDecibels(AudioBusDecibels(bus.name));
+        strip->addWidget(bus.strip, 0, Qt::AlignHCenter);
+        strip->addWidget(Hearth::MakeLabel(tr(busName), QStringLiteral("body"), mixerCard), 0, Qt::AlignHCenter);
         bus.db = Hearth::MakeLabel(AudioDbText(AudioBusDecibels(bus.name)), QStringLiteral("mono"), mixerCard);
         strip->addWidget(bus.db, 0, Qt::AlignHCenter);
-        strip->addWidget(Hearth::MakeLabel(tr(busName), QStringLiteral("small"), mixerCard), 0, Qt::AlignHCenter);
-        strips->addLayout(strip);
+        auto* holder = new QWidget(mixerCard);
+        holder->setLayout(strip);
+        holder->setMinimumWidth(100);
+        strips->addWidget(holder, 1);
         const QString name = bus.name;
         QLabel* dbLabel = bus.db;
-        connect(bus.fader, &QSlider::valueChanged, this, [this, name, dbLabel](int tenths)
+        bus.strip->m_changed = [this, name, dbLabel](double decibels)
         {
-            dbLabel->setText(AudioDbText(tenths / 10.0));
-            SetBus(name, tenths / 10.0);
-        });
+            dbLabel->setText(AudioDbText(decibels));
+            SetBus(name, decibels);
+        };
         m_buses << bus;
     }
-    strips->addStretch(1);
     mixer->addLayout(strips);
     root->addWidget(mixerCard);
 
@@ -324,7 +516,7 @@ void HearthAudioPane::Refresh()
     }
     for (const BusWidgets& bus : m_buses)
     {
-        bus.meter->setValue(qRound(qBound(0.0, loudest.value(bus.name), 1.0) * 100));
+        bus.strip->SetLevel(qBound(0.0, loudest.value(bus.name), 1.0));
     }
     FillSounds();
 }
@@ -425,11 +617,28 @@ void HearthAudioPane::FillSounds()
         auto* layout = new QHBoxLayout(row);
         layout->setContentsMargins(8, 6, 8, 6);
         layout->setSpacing(12);
-        QLabel* name = Hearth::MakeLabel(group.name, QStringLiteral("mono"), row);
-        name->setFixedWidth(220);
-        layout->addWidget(name);
+        // Round play button, then the name with where it plays from under it (mockup).
+        auto* play = new QPushButton(QStringLiteral("\u25B6"), row);
+        play->setFixedSize(30, 30);
+        play->setToolTip(tr("Play %1").arg(group.name));
+        play->setStyleSheet(QStringLiteral("QPushButton { background-color: #24211E; color: #ECE6DE; border: none; border-radius: 15px; font-size: 10px; padding: 0; }"
+                                           "QPushButton:hover { background-color: #34302B; }"));
+        const QString firstStem = group.stems.first();
+        connect(play, &QPushButton::clicked, this, [firstStem]()
+        {
+            if (auto* console = AZ::Interface<AZ::IConsole>::Get())
+            {
+                console->PerformCommand(QStringLiteral("hearth_audioPlay %1").arg(firstStem).toUtf8().constData());
+            }
+        });
+        layout->addWidget(play);
+        auto* names = new QVBoxLayout();
+        names->setSpacing(0);
+        QLabel* name = Hearth::MakeLabel(group.name, QStringLiteral("body"), row);
+        names->addWidget(name);
         QLabel* whereLabel = Hearth::MakeLabel(where, QStringLiteral("small"), row);
-        layout->addWidget(whereLabel, 1);
+        names->addWidget(whereLabel);
+        layout->addLayout(names, 1);
         auto* bus = new QComboBox(row);
         for (const char* busName : AudioBuses)
         {
@@ -448,7 +657,7 @@ void HearthAudioPane::FillSounds()
         layout->addWidget(vol);
         layout->addWidget(Hearth::MakeChip(state, state == tr("Silent") ? QStringLiteral("bad") : (state == tr("Playing") ? QStringLiteral("good") : QStringLiteral("plain")), row));
         auto* item = new QListWidgetItem(m_list);
-        item->setSizeHint(QSize(10, 44));
+        item->setSizeHint(QSize(10, 50));
         if (state == tr("Silent"))
         {
             row->setStyleSheet(QStringLiteral("background-color: rgba(255, 122, 102, 20); border-radius: 8px;"));
@@ -508,6 +717,10 @@ void HearthAudioPane::ShowSound(int index)
     }
     QLabel* name = Hearth::MakeLabel(group.name, QStringLiteral("title"), m_detail);
     m_detailLayout->addWidget(name);
+    // The sound's shape, from its file (mockup: a waveform under the name).
+    auto* wave = new HearthWaveform(m_detail);
+    wave->Load(AudioFindSoundFile(group.stems.first()));
+    m_detailLayout->addWidget(wave);
     auto fact = [this](const QString& label, const QString& value)
     {
         auto* row = new QHBoxLayout();

@@ -77,6 +77,7 @@ private:
     QSet<QString> m_thumbsLoading;
     QSet<QString> m_failed;
     int m_problemCursor = 0;
+    bool m_problemBusy = false;
     QTimer* m_problemTimer = nullptr;
     bool m_scanning = false;
     QString m_showAfterScan;

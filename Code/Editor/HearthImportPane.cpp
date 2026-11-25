@@ -638,6 +638,7 @@ HearthImportPane::HearthImportPane(QWidget* parent)
     m_scale->setSuffix(QStringLiteral(" ×"));
     m_scale->setValue(1.0);
     m_scale->setStyleSheet(QStringLiteral("QDoubleSpinBox { color: #F0D17A; font-family: \"Geist Mono\"; }"));
+    m_scale->hide(); // only shown in its row, when a model looks the wrong size (it sat over the heading otherwise)
     m_makeMaterials = toggle(QStringLiteral("import/makeMaterials"), true);
     m_makePrefabs = toggle(QStringLiteral("import/makePrefabs"), true);
     m_compress = toggle(QStringLiteral("import/compressTextures"), true);

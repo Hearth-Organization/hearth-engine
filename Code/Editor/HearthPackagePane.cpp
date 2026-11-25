@@ -74,6 +74,8 @@ namespace
         row->addWidget(Hearth::MakeLabel(name, QStringLiteral("dim"), parent));
         row->addStretch(1);
         QLabel* value = Hearth::MakeLabel(QStringLiteral("…"), QStringLiteral("body"), parent);
+        value->setWordWrap(false); // a short value: wrapping squeezed it to one letter per line
+        value->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
         row->addWidget(value);
         into->addLayout(row);
         return value;

@@ -387,6 +387,10 @@ void HearthProjectPane::LoadGame()
 
 void HearthProjectPane::LoadParts()
 {
+    if (m_partsGrid->count() == 0)
+    {
+        m_partsSummary->setText(tr("Looking up the engine's parts…"));
+    }
     m_agent->Post(QStringLiteral("project_parts"), {}, [this](const QJsonObject& answer, bool reached)
     {
         if (!reached || !answer.contains(QStringLiteral("parts")))

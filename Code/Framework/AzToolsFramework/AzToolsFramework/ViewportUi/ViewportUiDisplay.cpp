@@ -486,12 +486,15 @@ namespace AzToolsFramework::ViewportUi::Internal
 
     namespace
     {
+        // Solid colours (no see-through): the overlay is its own window over the render, and see-through parts kept
+        // old pixels on some desktops (a second "Lit Wireframe" ghost next to the real buttons).
         const char* HearthPillStyle =
-            "QWidget#HearthPill { background-color: rgba(13, 12, 11, 220); border: 1px solid rgba(255, 255, 255, 20); border-radius: 16px; }"
-            "QPushButton { background: transparent; color: #ECE6DE; border: 1px solid rgba(255, 255, 255, 20); border-radius: 13px;"
+            "QWidget#HearthPill { background-color: #0D0C0B; border: 1px solid #262320; border-radius: 16px; }"
+            "QPushButton { background-color: #0D0C0B; color: #ECE6DE; border: 1px solid #262320; border-radius: 13px;"
             " padding: 3px 12px; font-size: 12px; }"
-            "QPushButton:hover { background-color: rgba(255, 255, 255, 15); }"
-            "QPushButton:checked { background-color: rgba(232, 116, 59, 41); color: #FFCFB4; border-color: rgba(232, 116, 59, 120); }";
+            "QPushButton:hover { background-color: #1C1A17; }"
+            "QPushButton:checked { background-color: #3A2216; color: #FFCFB4; border-color: #8A4A2A; }"
+            "QPushButton::menu-indicator { image: none; width: 0px; }";
 
         void TriggerEditorAction(const char* identifier)
         {
@@ -612,7 +615,7 @@ namespace AzToolsFramework::ViewportUi::Internal
         // Bottom left: what's selected, where, and the frame rate.
         m_hearthStatus = new QLabel(&m_uiOverlay);
         m_hearthStatus->setStyleSheet(QStringLiteral(
-            "background-color: rgba(13, 12, 11, 220); color: #ECE6DE; border: 1px solid rgba(255, 255, 255, 20); border-radius: 13px;"
+            "background-color: #0D0C0B; color: #ECE6DE; border: 1px solid #262320; border-radius: 13px;"
             " padding: 5px 12px; font-family: \"Geist Mono\"; font-size: 12px;"));
         m_uiOverlayLayout.AddAnchoredWidget(m_hearthStatus, Qt::AlignBottom | Qt::AlignLeft);
 
@@ -665,7 +668,7 @@ namespace AzToolsFramework::ViewportUi::Internal
         m_hearthTools->setObjectName(QStringLiteral("HearthPill"));
         m_hearthTools->setAttribute(Qt::WA_StyledBackground);
         m_hearthTools->setStyleSheet(QLatin1String(HearthPillStyle) + QStringLiteral("QPushButton { padding: 4px 8px; font-size: 14px; min-width: 22px; }"));
-        auto* tools = new QVBoxLayout(m_hearthTools);
+        auto* tools = new QHBoxLayout(m_hearthTools); // a row at the top left (mockup), not a column
         tools->setContentsMargins(4, 4, 4, 4);
         tools->setSpacing(4);
         const struct
@@ -684,7 +687,9 @@ namespace AzToolsFramework::ViewportUi::Internal
             QObject::connect(button, &QPushButton::clicked, [action] { TriggerEditorAction(action); });
             tools->addWidget(button);
         }
-        m_uiOverlayLayout.AddAnchoredWidget(m_hearthTools, Qt::AlignLeft | Qt::AlignVCenter);
+        // Top left: the overlay layout only has corners and edges (no left-centre), so AlignLeft | AlignVCenter left
+        // the pill unplaced as a tiny box.
+        m_uiOverlayLayout.AddAnchoredWidget(m_hearthTools, Qt::AlignTop | Qt::AlignLeft);
 
         // Top right: Split 2, Split 4 and the shortcuts panel.
         m_hearthLayouts = new QWidget(&m_uiOverlay);
@@ -709,7 +714,7 @@ namespace AzToolsFramework::ViewportUi::Internal
         m_hearthPanel = new QWidget(&m_uiOverlay);
         m_hearthPanel->setObjectName(QStringLiteral("HearthPanel"));
         m_hearthPanel->setAttribute(Qt::WA_StyledBackground);
-        m_hearthPanel->setStyleSheet(QStringLiteral("QWidget#HearthPanel { background-color: rgba(13, 12, 11, 235); border: 1px solid rgba(255, 255, 255, 20); border-radius: 14px; }"
+        m_hearthPanel->setStyleSheet(QStringLiteral("QWidget#HearthPanel { background-color: #0D0C0B; border: 1px solid #262320; border-radius: 14px; }"
                                                     "QLabel { color: #ECE6DE; font-size: 12px; background: transparent; } QLabel[dim=\"true\"] { color: #8D857B; }")
                                      + QLatin1String(HearthPillStyle));
         auto* panel = new QVBoxLayout(m_hearthPanel);
@@ -756,7 +761,7 @@ namespace AzToolsFramework::ViewportUi::Internal
         panel->addWidget(lightIcons);
         m_hearthPanel->setVisible(false);
         QObject::connect(shortcuts, &QPushButton::toggled, m_hearthPanel, &QWidget::setVisible);
-        m_uiOverlayLayout.AddAnchoredWidget(m_hearthPanel, Qt::AlignRight | Qt::AlignVCenter);
+        m_uiOverlayLayout.AddAnchoredWidget(m_hearthPanel, Qt::AlignTop | Qt::AlignRight); // under Split 2 / Split 4 / ?
 
         // Bottom right, above Focus / Play here: compass and camera speed.
         m_hearthCompass = new QWidget(&m_uiOverlay);
@@ -765,7 +770,7 @@ namespace AzToolsFramework::ViewportUi::Internal
         compassRow->setSpacing(6);
         m_hearthCameraSpeed = new QLabel(m_hearthCompass);
         m_hearthCameraSpeed->setStyleSheet(QStringLiteral(
-            "background-color: rgba(13, 12, 11, 220); color: #ECE6DE; border: 1px solid rgba(255, 255, 255, 20); border-radius: 13px;"
+            "background-color: #0D0C0B; color: #ECE6DE; border: 1px solid #262320; border-radius: 13px;"
             " padding: 5px 12px; font-family: \"Geist Mono\"; font-size: 12px;"));
         auto* compass = new HearthCompass(m_hearthCompass, m_viewportId);
         m_hearthCompassDial = compass;

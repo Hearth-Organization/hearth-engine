@@ -56,8 +56,7 @@ private:
     struct BusWidgets
     {
         QString name;
-        QProgressBar* meter = nullptr;
-        QSlider* fader = nullptr;
+        class HearthBusStrip* strip = nullptr; //!< level, and the fader to drag (mockup: one tall bar per bus)
         QLabel* db = nullptr;
     };
     QVector<BusWidgets> m_buses;

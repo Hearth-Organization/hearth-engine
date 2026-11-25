@@ -51,6 +51,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QPointer>
+#include <AzCore/std/parallel/thread.h>
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QStyledItemDelegate>
@@ -630,7 +631,7 @@ HearthAssetBrowser::HearthAssetBrowser(QWidget* parent)
     root->addLayout(body, 1);
 
     m_problemTimer = new QTimer(this);
-    m_problemTimer->setInterval(60);
+    m_problemTimer->setInterval(250);
     connect(m_problemTimer, &QTimer::timeout, this, &HearthAssetBrowser::CheckNextForProblems);
 
     ShowDetails(-1);
@@ -1135,30 +1136,22 @@ QString HearthAssetBrowser::StatusOf(const HearthAssetFile& file, bool* failed) 
 
 void HearthAssetBrowser::CheckNextForProblems()
 {
-    // A few files per tick, so the window never stalls while the Asset Processor answers.
-    int checked = 0;
-    bool changed = false;
-    while (m_problemCursor < m_files.size() && checked < 6)
+    // The Asset Processor is asked from a background thread, a batch at a time: asking it on the editor's own
+    // thread made the editor wait (and show "Processing critical assets…") whenever it was busy.
+    if (m_problemBusy)
+    {
+        return;
+    }
+    QStringList paths;
+    while (m_problemCursor < m_files.size() && paths.size() < 12)
     {
         const HearthAssetFile& file = m_files[m_problemCursor++];
-        if (file.engine)
+        if (!file.engine)
         {
-            continue;
-        }
-        ++checked;
-        bool failed = false;
-        StatusOf(file, &failed);
-        if (failed != m_failed.contains(file.path))
-        {
-            changed = true;
-            failed ? (void)m_failed.insert(file.path) : (void)m_failed.remove(file.path);
+            paths.push_back(file.path);
         }
     }
-    if (changed)
-    {
-        FillFolders();
-    }
-    if (m_problemCursor >= m_files.size())
+    if (paths.isEmpty())
     {
         m_problemTimer->stop();
         // Look again in a minute: files change and get processed while the editor is open.
@@ -1170,7 +1163,54 @@ void HearthAssetBrowser::CheckNextForProblems()
                 m_problemTimer->start();
             }
         });
+        return;
     }
+    m_problemBusy = true;
+    QPointer<HearthAssetBrowser> self(this);
+    AZStd::thread worker([self, paths]()
+    {
+        using namespace AzToolsFramework::AssetSystem;
+        QSet<QString> failedNow;
+        for (const QString& path : paths)
+        {
+            AZ::Outcome<JobInfoContainer> jobs = AZ::Failure();
+            AzToolsFramework::AssetSystemJobRequestBus::BroadcastResult(jobs, &AzToolsFramework::AssetSystemJobRequestBus::Events::GetAssetJobsInfo,
+                                                                        AZStd::string(path.toUtf8().constData()), false);
+            if (jobs.IsSuccess())
+            {
+                for (const JobInfo& job : jobs.GetValue())
+                {
+                    if (job.m_status == JobStatus::Failed || job.m_status == JobStatus::Failed_InvalidSourceNameExceedsMaxLimit)
+                    {
+                        failedNow.insert(path);
+                    }
+                }
+            }
+        }
+        QMetaObject::invokeMethod(qApp, [self, paths, failedNow]()
+        {
+            if (!self)
+            {
+                return;
+            }
+            self->m_problemBusy = false;
+            bool changed = false;
+            for (const QString& path : paths)
+            {
+                const bool failed = failedNow.contains(path);
+                if (failed != self->m_failed.contains(path))
+                {
+                    changed = true;
+                    failed ? (void)self->m_failed.insert(path) : (void)self->m_failed.remove(path);
+                }
+            }
+            if (changed)
+            {
+                self->FillFolders();
+            }
+        }, Qt::QueuedConnection);
+    });
+    worker.detach();
 }
 
 QStringList HearthAssetBrowser::UsersOf(const HearthAssetFile& file) const

@@ -103,6 +103,33 @@ namespace MiniAudio
         }
         AZ_CONSOLEFREEFUNC(hearth_audioStats, AZ::ConsoleFunctorFlags::Null, "Hearth Engine: write every active sound's state as JSON to the given file");
 
+        //! The Audio window's play button: play the first sound with this name once (stem, as in hearth_audioStats).
+        void hearth_audioPlay(const AZ::ConsoleCommandContainer& arguments)
+        {
+            if (arguments.empty())
+            {
+                return;
+            }
+            const AZStd::string stem(arguments[0]);
+            MiniAudioPlaybackComponentController* found = nullptr;
+            {
+                AZStd::lock_guard<AZStd::mutex> lock(HearthLiveMutex());
+                for (MiniAudioPlaybackComponentController* controller : HearthLive())
+                {
+                    if (controller->HearthSoundName() == stem)
+                    {
+                        found = controller;
+                        break;
+                    }
+                }
+            }
+            if (found)
+            {
+                found->Play();
+            }
+        }
+        AZ_CONSOLEFREEFUNC(hearth_audioPlay, AZ::ConsoleFunctorFlags::Null, "Hearth Engine: play the first sound with the given name (the Audio window's play button)");
+
         AZStd::string HearthEscape(const AZStd::string& text)
         {
             AZStd::string out;

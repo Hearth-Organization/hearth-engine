@@ -330,6 +330,9 @@ HearthLevelGenerator::HearthLevelGenerator(QWidget* parent)
         auto* value = new QLabel(card);
         value->setStyleSheet(QStringLiteral("background-color: rgba(255, 255, 255, 13); color: #ECE6DE; border-radius: 6px; padding: 1px 7px;"
                                             " font-family: \"Geist Mono\"; font-size: 11px;"));
+        value->setMinimumWidth(48);
+        value->setAlignment(Qt::AlignCenter);
+        value->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
         top->addWidget(value);
         groupLayout->addLayout(top);
         auto* slider = new QSlider(Qt::Horizontal, card);
