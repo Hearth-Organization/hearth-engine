@@ -6,6 +6,7 @@
 
 #include "HearthEditorShell.h"
 #include "HearthCommandPalette.h"
+#include "HearthPlaytestOverlay.h"
 #include "QtViewPaneManager.h"
 
 #include <AzCore/Console/IConsole.h>
@@ -102,6 +103,19 @@ HearthEditorShell::HearthEditorShell(QMainWindow* mainWindow)
     auto* build = new QShortcut(QKeySequence(QStringLiteral("Ctrl+B")), mainWindow);
     connect(build, &QShortcut::activated, this, &HearthEditorShell::RequestBuild);
 
+    // Playtest overlay while the game runs in the editor (F11 switches full screen / windowed).
+    m_playtest = new HearthPlaytestOverlay(mainWindow, [this]()
+    {
+        if (m_mainWindow->isFullScreen())
+        {
+            m_mainWindow->showMaximized();
+        }
+        else
+        {
+            m_mainWindow->showFullScreen();
+        }
+    });
+
     m_timer = new QTimer(this);
     m_timer->setInterval(1000);
     int ticks = 0;
@@ -109,6 +123,21 @@ HearthEditorShell::HearthEditorShell(QMainWindow* mainWindow)
     {
         UpdateTitle();
         WatchFullScreen();
+        const bool inGame = GetIEditor() && GetIEditor()->IsInGameMode();
+        if (inGame && !m_lastInGame && m_playtest)
+        {
+            // Show the level's seed on the playtest bar.
+            PostToAgent(QStringLiteral("levelgen_get"), QByteArrayLiteral("{}"), [this](const QByteArray& data)
+            {
+                const QJsonObject answer = QJsonDocument::fromJson(data).object();
+                const QJsonValue seed = answer.value(QStringLiteral("values")).toObject().value(QStringLiteral("seed"));
+                if (m_playtest)
+                {
+                    m_playtest->SetSeed(seed.isString() ? seed.toString() : (seed.isDouble() ? QString::number(static_cast<qulonglong>(seed.toDouble())) : QString()));
+                }
+            });
+        }
+        m_lastInGame = inGame;
         if (ticks++ % 6 == 0)
         {
             UpdateBuildChip();

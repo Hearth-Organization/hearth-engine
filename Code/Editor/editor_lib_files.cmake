@@ -256,6 +256,8 @@ set(FILES
     HearthLevelGenerator.h
     HearthCoopPane.cpp
     HearthCoopPane.h
+    HearthPlaytestOverlay.cpp
+    HearthPlaytestOverlay.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

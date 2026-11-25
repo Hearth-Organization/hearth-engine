@@ -22,6 +22,7 @@ QT_FORWARD_DECLARE_CLASS(QPushButton)
 QT_FORWARD_DECLARE_CLASS(QTimer)
 
 class HearthCommandPalette;
+class HearthPlaytestOverlay;
 
 class HearthEditorShell : public QObject
 {
@@ -63,6 +64,8 @@ private:
     bool m_fullScreenPlay = false;
     bool m_wasMaximized = false;
     bool m_sawGameMode = false;
+    bool m_lastInGame = false;
+    QPointer<HearthPlaytestOverlay> m_playtest;
     QString m_agentToken;
     int m_agentPort = 47830;
 };
