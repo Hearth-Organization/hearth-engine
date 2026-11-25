@@ -9,7 +9,7 @@ name: Hearth Engine SDK (Linux)
 on:
   push:
     branches: [ "hearth/main" ]
-    paths-ignore: [ "HEARTH.md", "**/*.md" ]
+    paths-ignore: [ "HEARTH.md", "**/*.md", ".github/workflows/runner-test.yml" ]
   workflow_dispatch:
 
 concurrency:
