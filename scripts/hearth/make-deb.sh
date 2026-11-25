@@ -17,23 +17,59 @@ cp -al "$src" "$pkg/opt/hearth-engine" 2>/dev/null || cp -a "$src" "$pkg/opt/hea
 # Command: hearth-engine (opens the project manager; the editor needs X11 on Hearth OS).
 cat > "$pkg/usr/bin/hearth-engine" <<'LAUNCH'
 #!/usr/bin/env bash
+# Hearth Engine launcher. Everything the engine prints goes to a log file as well as the terminal,
+# so problems can be read afterwards (by you or by Claude): ~/O3DE/HearthEngine/logs/
 ENGINE=/opt/hearth-engine
 export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-xcb}"
+LOGS="${HEARTH_ENGINE_LOGS:-$HOME/O3DE/HearthEngine/logs}"
+mkdir -p "$LOGS"
+stamp="$(date +%Y-%m-%d_%H-%M-%S)"
+tool="${HEARTH_ENGINE_TOOL:-o3de}"
+log="$LOGS/$stamp-$tool.log"
+ln -sfn "$(basename "$log")" "$LOGS/latest.log"
+# Keep the newest 30 logs.
+ls -1t "$LOGS"/*.log 2>/dev/null | grep -v '/latest.log$' | tail -n +31 | xargs -r rm -f
+{
+    echo "== Hearth Engine $(cat "$ENGINE/HEARTH_VERSION" 2>/dev/null) · $tool · $(date) =="
+    echo "== args: $* =="
+    echo "== $(uname -sr) · $(grep -m1 PRETTY_NAME /etc/os-release 2>/dev/null | cut -d= -f2) =="
+} >> "$log"
+run() { "$@" 2>&1 | tee -a "$log"; return "${PIPESTATUS[0]}"; }
+
 # First run for this user (and after each upgrade): register the engine so projects can find it.
 marker="${XDG_CONFIG_HOME:-$HOME/.config}/hearth-engine/registered-$(cat "$ENGINE/HEARTH_VERSION" 2>/dev/null)"
 if [ ! -e "$marker" ] && [ -x "$ENGINE/scripts/o3de.sh" ]; then
     mkdir -p "$(dirname "$marker")"
-    "$ENGINE/scripts/o3de.sh" register --this-engine >/dev/null 2>&1 && touch "$marker"
+    echo "== registering the engine ==" >> "$log"
+    run "$ENGINE/scripts/o3de.sh" register --this-engine >/dev/null && touch "$marker"
 fi
-for candidate in "$ENGINE"/bin/Linux/profile/Default/o3de "$ENGINE"/bin/Linux/release/Default/o3de; do
-    if [ -x "$candidate" ]; then exec "$candidate" "$@"; fi
+
+exe=""
+for candidate in "$ENGINE"/bin/Linux/profile/Default/"$tool" "$ENGINE"/bin/Linux/release/Default/"$tool"; do
+    [ -x "$candidate" ] && exe="$candidate" && break
 done
-found="$(find "$ENGINE/bin" -type f -name o3de -perm -u+x 2>/dev/null | head -1)"
-[ -n "$found" ] && exec "$found" "$@"
-echo "Hearth Engine: project manager not found in $ENGINE/bin" >&2
-exit 1
+[ -z "$exe" ] && exe="$(find "$ENGINE/bin" -type f -name "$tool" -perm -u+x 2>/dev/null | head -1)"
+if [ -z "$exe" ]; then
+    echo "Hearth Engine: $tool not found in $ENGINE/bin" | tee -a "$log" >&2
+    exit 1
+fi
+run "$exe" "$@"
+code=$?
+echo "== exited with code $code at $(date) ==" >> "$log"
+# Also collect the engine's own log files from this run (project manager, editor, asset processor).
+for own in "$HOME"/.o3de/Logs/*.log "$ENGINE"/bin/Linux/*/Default/user/log/*.log; do
+    [ -f "$own" ] || continue
+    if [ "$(find "$own" -newermt "-10 minutes" 2>/dev/null)" ]; then
+        { echo; echo "== engine log: $own =="; tail -n 400 "$own"; } >> "$log"
+    fi
+done
+exit $code
 LAUNCH
 chmod 755 "$pkg/usr/bin/hearth-engine"
+# Same launcher (and logging) for the editor and the asset processor.
+printf '#!/bin/sh\nHEARTH_ENGINE_TOOL=Editor exec hearth-engine "$@"\n' > "$pkg/usr/bin/hearth-engine-editor"
+printf '#!/bin/sh\nHEARTH_ENGINE_TOOL=AssetProcessor exec hearth-engine "$@"\n' > "$pkg/usr/bin/hearth-engine-assets"
+chmod 755 "$pkg/usr/bin/hearth-engine-editor" "$pkg/usr/bin/hearth-engine-assets"
 echo "$version" > "$pkg/opt/hearth-engine/HEARTH_VERSION"
 
 cp "$here/../../Code/Editor/o3de_logo.svg" "$pkg/usr/share/icons/hicolor/scalable/apps/hearth-engine.svg"
