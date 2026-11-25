@@ -33,6 +33,16 @@ namespace AZ
             "(For Testing) Forces usage of root shader variant in the mesh draw packet level, ignoring any other shader variants that may exist."
         );
 
+        // Hearth Engine (approved mockup "Viewport"): the viewport's Wireframe button. Meshes draw as lines; the draw
+        // packets are rebuilt when it changes so the new fill mode takes effect.
+        AZ_CVAR(bool,
+            r_wireframe,
+            false,
+            [](const bool&) { AZ::Interface<AZ::IConsole>::Get()->PerformCommand("MeshFeatureProcessor.ForceRebuildDrawPackets"); },
+            ConsoleFunctorFlags::Null,
+            "Draws meshes as wireframe (Hearth Engine viewport Lit / Wireframe)."
+        );
+
         MeshDrawPacket::MeshDrawPacket(
             ModelLod& modelLod,
             size_t modelLodMeshIndex,
@@ -412,6 +422,10 @@ namespace AZ
                     // This allows materials to customize the render states that the shader uses.
                     const RHI::RenderStates& renderStatesOverlay = *shaderItem.GetRenderStatesOverlay();
                     RHI::MergeStateInto(renderStatesOverlay, pipelineStateDescriptorDraw.m_renderStates);
+                    if (r_wireframe)
+                    {
+                        pipelineStateDescriptorDraw.m_renderStates.m_rasterState.m_fillMode = RHI::FillMode::Wireframe;
+                    }
 
                     if (!m_modelLod->GetStreamsForMesh(
                             pipelineStateDescriptorDraw.m_inputStreamLayout,

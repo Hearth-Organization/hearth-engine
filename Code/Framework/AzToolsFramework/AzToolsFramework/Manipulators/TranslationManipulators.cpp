@@ -16,7 +16,7 @@ namespace AzToolsFramework
     static const AZ::Color LinearManipulatorXAxisColor = AZ::Color(1.0f, 0.0f, 0.0f, 1.0f);
     static const AZ::Color LinearManipulatorYAxisColor = AZ::Color(0.0f, 1.0f, 0.0f, 1.0f);
     static const AZ::Color LinearManipulatorZAxisColor = AZ::Color(0.0f, 0.0f, 1.0f, 1.0f);
-    static const AZ::Color SurfaceManipulatorColor = AZ::Color(1.0f, 1.0f, 0.0f, 0.5f);
+    static const AZ::Color SurfaceManipulatorColor = AZ::Color(0.91f, 0.455f, 0.231f, 0.85f); // Hearth ember
 
     static TranslationManipulatorsViewCreateInfo DefaultTranslationManipulatorViewCreateInfo()
     {
@@ -322,17 +322,9 @@ namespace AzToolsFramework
     {
         if (m_surfaceManipulator)
         {
-            m_surfaceManipulator->SetView(CreateManipulatorViewSphere(
-                color, radius,
-                []([[maybe_unused]] const ViewportInteraction::MouseInteraction& mouseInteraction, bool mouseOver,
-                   const AZ::Color& defaultColor) -> AZ::Color
-                {
-                    const AZ::Color color[2] = {
-                        defaultColor, AZ::Vector4(BaseManipulator::s_defaultMouseOverColor.GetAsVector3(), SurfaceManipulatorOpacity())
-                    };
-
-                    return color[mouseOver];
-                }));
+            // Hearth Engine (approved mockup "Viewport"): an ember box in the middle of the move gizmo.
+            m_surfaceManipulator->SetView(CreateManipulatorViewBox(
+                AZ::Transform::CreateIdentity(), color, AZ::Vector3::CreateZero(), AZ::Vector3(radius * 0.75f)));
         }
     }
 

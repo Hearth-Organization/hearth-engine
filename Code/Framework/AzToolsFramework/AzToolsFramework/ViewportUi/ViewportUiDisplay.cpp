@@ -30,6 +30,8 @@
 #include <functional>
 #include <AzToolsFramework/API/SettingsRegistryUtils.h>
 #include <AzCore/Settings/SettingsRegistry.h>
+#include <AzCore/Console/IConsole.h>
+#include <AzCore/Interface/Interface.h>
 #include <AzToolsFramework/Viewport/ViewportSettings.h>
 #include <AzToolsFramework/ViewportUi/ViewportUiDisplayLayout.h>
 #include <AzToolsFramework/ViewportUi/ViewportUiSwitcher.h>
@@ -645,10 +647,16 @@ namespace AzToolsFramework::ViewportUi::Internal
         QPushButton* lit = PillButton(m_hearthTopBar, QObject::tr("Lit"), true);
         lit->setChecked(true);
         QPushButton* wire = PillButton(m_hearthTopBar, QObject::tr("Wireframe"), true);
-        QObject::connect(lit, &QPushButton::clicked, [lit] { lit->setChecked(true); });
-        // The renderer has no wireframe view yet; shown so the row matches, but it can't be picked.
-        wire->setEnabled(false);
-        wire->setToolTip(QObject::tr("Wireframe isn't available in this renderer yet"));
+        // Lit / Wireframe: r_wireframe (Atom draws meshes as lines; Hearth Engine addition in MeshDrawPacket).
+        auto setWireframe = [](bool on)
+        {
+            if (auto* console = AZ::Interface<AZ::IConsole>::Get())
+            {
+                console->PerformCommand(on ? "r_wireframe true" : "r_wireframe false");
+            }
+        };
+        QObject::connect(lit, &QPushButton::clicked, [lit, wire, setWireframe] { lit->setChecked(true); wire->setChecked(false); setWireframe(false); });
+        QObject::connect(wire, &QPushButton::clicked, [lit, wire, setWireframe] { wire->setChecked(true); lit->setChecked(false); setWireframe(true); });
         top->addWidget(lit);
         top->addWidget(wire);
 

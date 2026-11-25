@@ -196,7 +196,7 @@ namespace AzToolsFramework
     static const char* const TransformModeClusterRotateTooltip = "Switch to rotate mode (2)";
     static const char* const TransformModeClusterScaleTooltip = "Switch to scale mode (3)";
     static const char* const SpaceClusterWorldTooltip = "Toggle world space lock";
-    static const char* const SpaceClusterParentTooltip = "Toggle parent space lock";
+    [[maybe_unused]] static const char* const SpaceClusterParentTooltip = "Toggle parent space lock";
     static const char* const SpaceClusterLocalTooltip = "Toggle local space lock";
     static const char* const SnappingClusterSnapToWorldTooltip = "Snap selected entities to the world space grid";
 
@@ -573,11 +573,11 @@ namespace AzToolsFramework
             case ReferenceFrame::Local:
                 return m_spaceCluster.m_localButtonId;
             case ReferenceFrame::Parent:
-                return m_spaceCluster.m_parentButtonId;
+                return m_spaceCluster.m_worldButtonId; // no Parent button in Hearth Engine
             case ReferenceFrame::World:
                 return m_spaceCluster.m_worldButtonId;
             }
-            return m_spaceCluster.m_parentButtonId;
+            return m_spaceCluster.m_worldButtonId;
         };
 
         ViewportUi::ViewportUiRequestBus::Event(
@@ -3420,16 +3420,15 @@ namespace AzToolsFramework
 
         // create and register the buttons (strings correspond to icons even if the values appear different)
         m_spaceCluster.m_worldButtonId = RegisterClusterButton(m_spaceCluster.m_clusterId, "World");
-        m_spaceCluster.m_parentButtonId = RegisterClusterButton(m_spaceCluster.m_clusterId, "Parent");
+        // Hearth Engine (approved mockup "Viewport"): World and Local only. Moving relative to the parent still
+        // happens when nothing is locked; the switch then shows World.
+        m_spaceCluster.m_parentButtonId = ViewportUi::InvalidButtonId;
         m_spaceCluster.m_localButtonId = RegisterClusterButton(m_spaceCluster.m_clusterId, "Local");
 
         // set button tooltips
         ViewportUi::ViewportUiRequestBus::Event(
             ViewportUi::DefaultViewportId, &ViewportUi::ViewportUiRequestBus::Events::SetClusterButtonTooltip, m_spaceCluster.m_clusterId,
             m_spaceCluster.m_worldButtonId, SpaceClusterWorldTooltip);
-        ViewportUi::ViewportUiRequestBus::Event(
-            ViewportUi::DefaultViewportId, &ViewportUi::ViewportUiRequestBus::Events::SetClusterButtonTooltip, m_spaceCluster.m_clusterId,
-            m_spaceCluster.m_parentButtonId, SpaceClusterParentTooltip);
         ViewportUi::ViewportUiRequestBus::Event(
             ViewportUi::DefaultViewportId, &ViewportUi::ViewportUiRequestBus::Events::SetClusterButtonTooltip, m_spaceCluster.m_clusterId,
             m_spaceCluster.m_localButtonId, SpaceClusterLocalTooltip);
