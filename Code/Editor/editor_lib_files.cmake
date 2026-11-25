@@ -268,6 +268,8 @@ set(FILES
     HearthSettingsPane.h
     HearthAssetBrowser.cpp
     HearthAssetBrowser.h
+    HearthImportPane.cpp
+    HearthImportPane.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

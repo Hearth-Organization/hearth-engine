@@ -19,6 +19,7 @@
 #include "HearthVoiceStudio.h"
 #include "HearthSettingsPane.h"
 #include "HearthAssetBrowser.h"
+#include "HearthImportPane.h"
 
 #include <algorithm>
 
@@ -706,6 +707,7 @@ void MainWindow::RegisterStdViewClasses()
     HearthVoiceStudio::RegisterViewClass();
     HearthSettingsPane::RegisterViewClass();
     HearthAssetBrowser::RegisterViewClass();
+    HearthImportPane::RegisterViewClass();
     ConsoleVariableEditor::RegisterViewClass();
     CSettingsManagerDialog::RegisterViewClass();
     AzAssetBrowserWindow::RegisterViewClass();

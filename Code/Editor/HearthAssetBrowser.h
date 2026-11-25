@@ -46,9 +46,13 @@ public:
     void ShowFile(const QString& path);
     //! Shows all of the project's assets of one kind (MATERIAL, TEXTURE, MODEL, SOUND, PREFAB).
     void ShowKind(const QString& kind);
+    //! Looks for assets again (after an import), then picks thenShow if it's given.
+    void Rescan(const QString& thenShow = QString());
 
 protected:
     void showEvent(QShowEvent* event) override;
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
 
 private:
     void Scan();
@@ -75,6 +79,7 @@ private:
     int m_problemCursor = 0;
     QTimer* m_problemTimer = nullptr;
     bool m_scanning = false;
+    QString m_showAfterScan;
 
     QString m_folderArea;   //!< "" = all, "*recent", "*problems", "*engine", or an area
     QString m_folderKind;   //!< kind inside an area, or ""

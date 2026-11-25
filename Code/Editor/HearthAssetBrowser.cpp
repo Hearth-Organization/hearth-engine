@@ -5,6 +5,7 @@
 #include "EditorDefs.h"
 
 #include "HearthAssetBrowser.h"
+#include "HearthImportPane.h"
 #include "CryEditDoc.h"
 #include "QtViewPaneManager.h"
 
@@ -41,7 +42,10 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include <QMenu>
+#include <QMimeData>
 #include <QMessageBox>
 #include <QPainter>
 #include <QPainterPath>
@@ -450,6 +454,7 @@ HearthAssetBrowser::HearthAssetBrowser(QWidget* parent)
 {
     setObjectName(QStringLiteral("HearthAssetBrowser"));
     setStyleSheet(QStringLiteral("QWidget#HearthAssetBrowser { background-color: #0D0C0B; }"));
+    setAcceptDrops(true);
     auto* root = new QVBoxLayout(this);
     root->setContentsMargins(10, 10, 10, 10);
     root->setSpacing(10);
@@ -769,6 +774,50 @@ void HearthAssetBrowser::ScanFinished(const QVector<HearthAssetFile>& files, con
     FillFolders();
     m_problemCursor = 0;
     m_problemTimer->start();
+    if (!m_showAfterScan.isEmpty())
+    {
+        const QString path = m_showAfterScan;
+        m_showAfterScan.clear();
+        ShowFile(path);
+    }
+}
+
+void HearthAssetBrowser::Rescan(const QString& thenShow)
+{
+    m_showAfterScan = thenShow;
+    if (!m_scanning)
+    {
+        Scan();
+    }
+}
+
+void HearthAssetBrowser::dragEnterEvent(QDragEnterEvent* event)
+{
+    if (event->mimeData()->hasUrls())
+    {
+        event->acceptProposedAction();
+    }
+}
+
+void HearthAssetBrowser::dropEvent(QDropEvent* event)
+{
+    // Files dropped onto Assets go through Import, so they're checked before they go in.
+    QStringList paths;
+    for (const QUrl& url : event->mimeData()->urls())
+    {
+        if (url.isLocalFile())
+        {
+            paths << url.toLocalFile();
+        }
+    }
+    event->acceptProposedAction();
+    if (const QtViewPane* pane = QtViewPaneManager::instance()->OpenPane(QStringLiteral("Import")))
+    {
+        if (auto* import = qobject_cast<HearthImportPane*>(pane->Widget()))
+        {
+            import->AddFiles(paths, true);
+        }
+    }
 }
 
 void HearthAssetBrowser::FillFolders()
@@ -1484,8 +1533,7 @@ void HearthAssetBrowser::NewAsset()
             out.write(QJsonDocument(material).toJson());
             out.close();
         }
-        Scan();
-        QTimer::singleShot(800, this, [this, path]() { ShowFile(path); });
+        Rescan(path);
     });
     menu.addAction(tr("Folder for a new area"), this, [this, project]()
     {
@@ -1501,7 +1549,7 @@ void HearthAssetBrowser::NewAsset()
             QDir(project).mkpath(QStringLiteral("Assets/%1/%2").arg(kind, clean));
         }
         QDir(project).mkpath(QStringLiteral("Prefabs/%1").arg(clean));
-        Scan();
+        Rescan();
     });
     menu.addSeparator();
     menu.addAction(tr("Voice line…"), this, []() { QtViewPaneManager::instance()->OpenPane(QStringLiteral("Voice Studio")); });
