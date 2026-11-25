@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: hearth-sdk-96
+  group: hearth-sdk
   cancel-in-progress: true
 
 permissions:
