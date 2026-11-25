@@ -649,11 +649,14 @@ bool CCryEditApp::ShowEnableDisableGemDialog(const QString& title, const QString
 
 QString CCryEditApp::ShowWelcomeDialog()
 {
-    WelcomeScreenDialog wsDlg(MainWindow::instance());
-    wsDlg.SetRecentFileList(GetRecentFileList());
-    wsDlg.exec();
-    QString levelName = wsDlg.GetLevelPath();
-    return levelName;
+    // Hearth Engine (approved mockup "Level dialogs"): the editor starts with the Open level window, which also
+    // offers a new level, in place of O3DE's welcome screen.
+    HearthOpenLevelDialog dialog(MainWindow::instance(), true);
+    if (dialog.exec() != QDialog::Accepted)
+    {
+        return QString();
+    }
+    return dialog.GetFileName();
 }
 
 //////////////////////////////////////////////////////////////////////////

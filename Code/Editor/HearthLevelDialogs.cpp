@@ -395,8 +395,9 @@ QString HearthNewLevelDialog::GetLevelsFolder() const
     return QDir(LevelProject()).filePath(QStringLiteral("Levels"));
 }
 
-HearthOpenLevelDialog::HearthOpenLevelDialog(QWidget* parent)
+HearthOpenLevelDialog::HearthOpenLevelDialog(QWidget* parent, bool offerNew)
     : QDialog(parent)
+    , m_offerNew(offerNew)
 {
     LevelDialogLook(this, tr("Open level"));
     resize(560, 440);
@@ -443,6 +444,16 @@ HearthOpenLevelDialog::HearthOpenLevelDialog(QWidget* parent)
     }
     root->addWidget(m_levels, 1);
     auto* buttons = new QHBoxLayout();
+    if (m_offerNew)
+    {
+        QPushButton* create = Hearth::MakeButton(tr("New level…"), false, this);
+        connect(create, &QPushButton::clicked, this, [this]()
+        {
+            m_wantsNew = true;
+            accept();
+        });
+        buttons->addWidget(create);
+    }
     buttons->addStretch(1);
     QPushButton* cancel = Hearth::MakeButton(tr("Cancel"), false, this);
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
@@ -457,6 +468,10 @@ HearthOpenLevelDialog::HearthOpenLevelDialog(QWidget* parent)
 
 QString HearthOpenLevelDialog::GetFileName() const
 {
+    if (m_wantsNew)
+    {
+        return QStringLiteral("new");
+    }
     return m_levels->currentItem() ? m_levels->currentItem()->data(Qt::UserRole).toString() : QString();
 }
 

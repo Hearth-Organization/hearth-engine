@@ -41,12 +41,15 @@ class HearthOpenLevelDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit HearthOpenLevelDialog(QWidget* parent = nullptr);
+    //! offerNew: also a "New level…" button (the editor's first window); GetFileName() is then "new".
+    explicit HearthOpenLevelDialog(QWidget* parent = nullptr, bool offerNew = false);
 
-    QString GetFileName() const; //!< the level's .prefab (full path)
+    QString GetFileName() const; //!< the level's .prefab (full path), or "new"
 
 private:
     QListWidget* m_levels = nullptr;
+    bool m_offerNew = false;
+    bool m_wantsNew = false;
 };
 
 //! The "Save <level> first?" question, in place of the editor's own. Returns what the editor's
