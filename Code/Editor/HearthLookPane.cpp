@@ -18,7 +18,18 @@
 #include <AzToolsFramework/Component/EditorComponentAPIBus.h>
 #include <AzToolsFramework/Entity/EditorEntityContextBus.h>
 
+#include <Atom/Feature/Utils/FrameCaptureBus.h>
+
+#include <QDir>
+#include <QElapsedTimer>
+#include <QFileInfo>
 #include <QHBoxLayout>
+#include <QImage>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QPainterPath>
+#include <QStandardPaths>
+#include <QTimer>
 #include <QInputDialog>
 #include <QJsonArray>
 #include <QLabel>
@@ -104,6 +115,91 @@ namespace
         "QSlider::handle:horizontal { background: #ECE6DE; width: 14px; height: 14px; margin: -5px 0; border-radius: 7px; }";
 } // namespace
 
+//! Before on the left of the line, after on the right; drag the line.
+class HearthLookPreview : public QWidget
+{
+public:
+    explicit HearthLookPreview(QWidget* parent)
+        : QWidget(parent)
+    {
+        setMinimumSize(320, 200);
+        setCursor(Qt::SplitHCursor);
+    }
+    void SetBefore(const QImage& image) { m_before = image; update(); }
+    void SetAfter(const QImage& image) { m_after = image; update(); }
+
+protected:
+    void paintEvent(QPaintEvent*) override
+    {
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setRenderHint(QPainter::SmoothPixmapTransform);
+        QPainterPath clip;
+        clip.addRoundedRect(QRectF(rect()), 12, 12);
+        p.setClipPath(clip);
+        p.fillRect(rect(), QColor(0x0D, 0x0C, 0x0B));
+        const QImage& any = m_after.isNull() ? m_before : m_after;
+        if (any.isNull())
+        {
+            p.setPen(QColor(0x8D, 0x85, 0x7B));
+            p.drawText(rect(), Qt::AlignCenter, QObject::tr("Open a level to see it here"));
+            return;
+        }
+        // Fill the box, keeping the picture's shape (crop the edges).
+        const QSizeF size = QSizeF(any.size()).scaled(QSizeF(size_()), Qt::KeepAspectRatioByExpanding);
+        const QRectF target(QPointF((width() - size.width()) / 2.0, (height() - size.height()) / 2.0), size);
+        const int split = qRound(width() * m_split);
+        if (!m_before.isNull())
+        {
+            p.save();
+            p.setClipRect(QRect(0, 0, split, height()), Qt::IntersectClip);
+            p.drawImage(target, m_before);
+            p.restore();
+        }
+        if (!m_after.isNull())
+        {
+            p.save();
+            p.setClipRect(QRect(split, 0, width() - split, height()), Qt::IntersectClip);
+            p.drawImage(target, m_after);
+            p.restore();
+        }
+        p.setPen(QPen(QColor(0xE8, 0x74, 0x3B), 2));
+        p.drawLine(split, 0, split, height());
+        p.setPen(Qt::NoPen);
+        p.setBrush(QColor(0xE8, 0x74, 0x3B));
+        p.drawEllipse(QPointF(split, height() / 2.0), 9, 9);
+        auto tag = [&p](const QRect& box, const QString& text)
+        {
+            p.setBrush(QColor(13, 12, 11, 210));
+            p.drawRoundedRect(box, 10, 10);
+            p.setPen(QColor(0xEC, 0xE6, 0xDE));
+            p.drawText(box, Qt::AlignCenter, text);
+            p.setPen(Qt::NoPen);
+        };
+        tag(QRect(10, height() - 32, 64, 22), QObject::tr("Before"));
+        tag(QRect(width() - 74, height() - 32, 64, 22), QObject::tr("After"));
+    }
+    void mousePressEvent(QMouseEvent* event) override { Drag(event); }
+    void mouseMoveEvent(QMouseEvent* event) override
+    {
+        if (event->buttons() & Qt::LeftButton)
+        {
+            Drag(event);
+        }
+    }
+
+private:
+    QSize size_() const { return size(); }
+    void Drag(QMouseEvent* event)
+    {
+        m_split = qBound(0.05, event->pos().x() / qMax(1, width()), 0.95);
+        update();
+    }
+    QImage m_before;
+    QImage m_after;
+    double m_split = 0.5;
+};
+
 void HearthLookPane::RegisterViewClass()
 {
     AzToolsFramework::ViewPaneOptions options;
@@ -134,10 +230,46 @@ HearthLookPane::HearthLookPane(QWidget* parent)
     root->addLayout(header);
     connect(m_beforeAfter, &QPushButton::toggled, this, [this](bool before)
     {
-        // Before: the level without the look (shown in the viewport); After: with it.
+        // Before: the level without the look (also in the main viewport); After: with it.
         m_beforeAfter->setText(before ? tr("Showing before") : tr("Before / after"));
         Apply(before);
     });
+
+    // Left: this window's view of the level, before and after. Right: looks, settings and lights.
+    auto* body = new QHBoxLayout();
+    body->setSpacing(10);
+    root->addLayout(body, 1);
+    QVBoxLayout* viewLayout = nullptr;
+    QFrame* view = Hearth::MakeCard(this, &viewLayout);
+    auto* viewTop = new QHBoxLayout();
+    viewTop->addWidget(Hearth::MakeLabel(tr("Viewport"), QStringLiteral("title"), view), 1);
+    m_live = Hearth::MakeButton(tr("● Live"), false, view);
+    m_live->setCheckable(true);
+    m_live->setChecked(true);
+    m_live->setToolTip(tr("Keep the after side up to date"));
+    viewTop->addWidget(m_live);
+    QPushButton* refresh = Hearth::MakeButton(tr("Retake before"), false, view);
+    viewTop->addWidget(refresh);
+    viewLayout->addLayout(viewTop);
+    m_preview = new HearthLookPreview(view);
+    viewLayout->addWidget(m_preview, 1);
+    body->addWidget(view, 3);
+    auto* column = new QVBoxLayout();
+    column->setSpacing(10);
+    body->addLayout(column, 2);
+    root = column;
+    connect(refresh, &QPushButton::clicked, this, &HearthLookPane::CaptureBefore);
+    auto* liveTimer = new QTimer(this);
+    liveTimer->setInterval(2000);
+    connect(liveTimer, &QTimer::timeout, this, [this]()
+    {
+        if (m_live->isChecked() && isVisible() && !m_beforeAfter->isChecked())
+        {
+            CaptureAfter();
+        }
+    });
+    liveTimer->start();
+    QTimer::singleShot(1200, this, &HearthLookPane::CaptureBefore);
     connect(save, &QPushButton::clicked, this, &HearthLookPane::SavePreset);
     connect(apply, &QPushButton::clicked, this, [this]() { Apply(false); });
 
@@ -221,6 +353,110 @@ HearthLookPane::HearthLookPane(QWidget* parent)
 }
 
 HearthLookPane::~HearthLookPane() = default;
+
+void HearthLookPane::Capture(const QString& path, std::function<void()> then)
+{
+    if (m_capturing || !GetIEditor() || GetIEditor()->GetLevelName().isEmpty())
+    {
+        return;
+    }
+    bool canCapture = false;
+    AZ::Render::FrameCaptureRequestBus::BroadcastResult(canCapture, &AZ::Render::FrameCaptureRequestBus::Events::CanCapture);
+    if (!canCapture)
+    {
+        return;
+    }
+    QFile::remove(path);
+    AZ::Render::FrameCaptureOutcome outcome;
+    AZ::Render::FrameCaptureRequestBus::BroadcastResult(
+        outcome, &AZ::Render::FrameCaptureRequestBus::Events::CaptureScreenshot, AZStd::string(path.toUtf8().constData()));
+    if (!outcome.IsSuccess())
+    {
+        return;
+    }
+    m_capturing = true;
+    // The capture is written a frame or two later: wait for the file (at most 3 s).
+    auto clock = std::make_shared<QElapsedTimer>();
+    clock->start();
+    auto* poll = new QTimer(this);
+    poll->setInterval(60);
+    connect(poll, &QTimer::timeout, this, [this, poll, path, clock, then]()
+    {
+        const QFileInfo file(path);
+        if ((file.exists() && file.size() > 0) || clock->elapsed() > 3000)
+        {
+            poll->stop();
+            poll->deleteLater();
+            m_capturing = false;
+            if (then)
+            {
+                then();
+            }
+        }
+    });
+    poll->start();
+}
+
+void HearthLookPane::CaptureBefore()
+{
+    // Switch the look entity off for a moment (deactivate only: nothing in the level changes or needs saving),
+    // take the picture, switch it back on.
+    const QString folder = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QStringLiteral("/hearth-look");
+    QDir().mkpath(folder);
+    AZ::Entity* look = nullptr;
+    AZ::ComponentApplicationBus::Broadcast(&AZ::ComponentApplicationRequests::EnumerateEntities, [&look](AZ::Entity* entity)
+    {
+        if (!look && entity && entity->GetName() == LookEntityName && entity->GetState() == AZ::Entity::State::Active)
+        {
+            bool editorEntity = false;
+            AzToolsFramework::EditorEntityContextRequestBus::BroadcastResult(
+                editorEntity, &AzToolsFramework::EditorEntityContextRequests::IsEditorEntity, entity->GetId());
+            look = editorEntity ? entity : nullptr;
+        }
+    });
+    const AZ::EntityId lookId = look ? look->GetId() : AZ::EntityId();
+    if (look)
+    {
+        look->Deactivate();
+    }
+    QTimer::singleShot(150, this, [this, folder, lookId]()
+    {
+        auto restore = [lookId]()
+        {
+            AZ::Entity* entity = nullptr;
+            AZ::ComponentApplicationBus::BroadcastResult(entity, &AZ::ComponentApplicationRequests::FindEntity, lookId);
+            if (entity && entity->GetState() == AZ::Entity::State::Init)
+            {
+                entity->Activate();
+            }
+        };
+        if (m_capturing)
+        {
+            restore();
+            return;
+        }
+        Capture(folder + QStringLiteral("/before.png"), [this, folder, restore]()
+        {
+            restore();
+            m_preview->SetBefore(QImage(folder + QStringLiteral("/before.png")));
+            QTimer::singleShot(150, this, &HearthLookPane::CaptureAfter);
+        });
+        if (!m_capturing)
+        {
+            restore(); // the capture didn't start (no level, renderer busy)
+        }
+    });
+}
+
+void HearthLookPane::CaptureAfter()
+{
+    const QString folder = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QStringLiteral("/hearth-look");
+    QDir().mkpath(folder);
+    Capture(folder + QStringLiteral("/after.png"), [this, folder]()
+    {
+        m_preview->SetAfter(QImage(folder + QStringLiteral("/after.png")));
+    });
+}
 
 void HearthLookPane::RebuildPresets()
 {

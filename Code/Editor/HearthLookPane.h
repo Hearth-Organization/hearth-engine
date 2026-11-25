@@ -13,6 +13,7 @@
 #include <QMap>
 #include <QWidget>
 
+#include <functional>
 #include <memory>
 #endif
 
@@ -40,6 +41,11 @@ private:
     void UpdateLights();
     void SavePreset();
     void RebuildPresets();
+    //! The window's own view (mockup "Lighting"): the main viewport captured with the look off (before) and on
+    //! (after), shown side by side with a line to drag. "Live" refreshes the after side every couple of seconds.
+    void CaptureBefore();
+    void CaptureAfter();
+    void Capture(const QString& path, std::function<void()> then);
 
     std::unique_ptr<HearthAgentClient> m_agent;
     QMap<QString, QSlider*> m_sliders;
@@ -52,4 +58,7 @@ private:
     QLabel* m_flickering = nullptr;
     QLabel* m_dead = nullptr;
     QLabel* m_status = nullptr;
+    class HearthLookPreview* m_preview = nullptr;
+    QPushButton* m_live = nullptr;
+    bool m_capturing = false;
 };
