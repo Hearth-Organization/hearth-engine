@@ -5,6 +5,7 @@
 #include "EditorDefs.h"
 
 #include "HearthProfilerPane.h"
+#include "HearthAgentClient.h"
 
 #include <AzCore/Debug/ProfilerBus.h>
 #include <Atom/RPI.Public/Pass/PassSystemInterface.h>
@@ -448,8 +449,22 @@ void HearthProfilerPane::UpdateStats()
     {
         const bool inGame = GetIEditor() && GetIEditor()->IsInGameMode();
         const QString level = GetIEditor() ? GetIEditor()->GetLevelName() : QString();
-        m_subtitle->setText(m_recording ? (inGame ? tr("Recording the game · %1").arg(level) : tr("Recording the editor · %1").arg(level))
+        const QString players = m_players > 1 ? tr(" · %1 players").arg(m_players) : QString();
+        m_subtitle->setText(m_recording ? (inGame ? tr("Recording the game · %1%2").arg(level, players) : tr("Recording the editor · %1").arg(level))
                                         : tr("Records the editor and the game while it plays"));
+        // How many players the co-op test has (every few seconds while recording the game).
+        static int ask = 0;
+        if (m_recording && inGame && (ask++ % 5) == 0)
+        {
+            if (!m_agent)
+            {
+                m_agent = std::make_unique<HearthAgentClient>(this);
+            }
+            m_agent->Post(QStringLiteral("coop_status"), {}, [this](const QJsonObject& answer, bool reached)
+            {
+                m_players = reached && answer.value(QStringLiteral("running")).toBool() ? answer.value(QStringLiteral("players")).toArray().size() : 0;
+            }, 3000);
+        }
     }
     if (m_frames.isEmpty())
     {

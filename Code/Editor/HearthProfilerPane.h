@@ -11,6 +11,8 @@
 #include <QString>
 #include <QVector>
 #include <QWidget>
+
+#include <memory>
 #endif
 
 QT_FORWARD_DECLARE_CLASS(QLabel)
@@ -68,6 +70,8 @@ private:
     QLabel* m_frameTitle = nullptr;
     QLabel* m_framesLine = nullptr;  //!< "last 60 · frame 44 picked"
     QLabel* m_subtitle = nullptr;    //!< "Recording the game · Level0 · 2 players"
+    int m_players = 0;               //!< from the agent's co-op test, 0 when none runs
+    std::unique_ptr<class HearthAgentClient> m_agent;
     void SaveCapture();
     QVBoxLayout* m_tips = nullptr;
     QTimer* m_timer = nullptr;
