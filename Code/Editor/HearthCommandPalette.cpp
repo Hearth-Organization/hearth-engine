@@ -152,7 +152,8 @@ void HearthCommandPalette::CollectCommands()
                                                                { QStringLiteral("Hearth Settings"), QString() },
                                                                { QStringLiteral("Browse assets"), QString() },
                                                                { QStringLiteral("Import"), QString() },
-                                                               { QStringLiteral("Asset processing"), QString() } })
+                                                               { QStringLiteral("Asset processing"), QString() },
+                                                               { QStringLiteral("Material editor"), QString() } })
     {
         const QString name = pane.first;
         m_commands.push_back({ QStringLiteral("◫"), tr("Open %1").arg(name), tr("Tools"), pane.second,

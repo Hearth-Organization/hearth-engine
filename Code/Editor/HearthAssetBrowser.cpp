@@ -6,6 +6,7 @@
 
 #include "HearthAssetBrowser.h"
 #include "HearthImportPane.h"
+#include "HearthMaterialPane.h"
 #include "CryEditDoc.h"
 #include "QtViewPaneManager.h"
 
@@ -1423,6 +1424,18 @@ void HearthAssetBrowser::ShowKind(const QString& kind)
 
 void HearthAssetBrowser::OpenInEditor(const HearthAssetFile& file)
 {
+    // Materials open in the Hearth material editor, live in the level.
+    if (file.kind == QLatin1String("MATERIAL") && !file.engine)
+    {
+        if (const QtViewPane* pane = QtViewPaneManager::instance()->OpenPane(QStringLiteral("Material editor")))
+        {
+            if (auto* editor = qobject_cast<HearthMaterialPane*>(pane->Widget()))
+            {
+                editor->OpenMaterial(file.path);
+                return;
+            }
+        }
+    }
     AZ::Data::AssetInfo info;
     AZStd::string watchFolder;
     bool found = false;
