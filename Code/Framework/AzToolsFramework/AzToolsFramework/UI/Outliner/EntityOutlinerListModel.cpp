@@ -60,6 +60,9 @@
 #include <AzToolsFramework/UI/EditorEntityUi/EditorEntityUiInterface.h>
 #include <AzToolsFramework/UI/EditorEntityUi/EditorEntityUiHandlerBase.h>
 #include <AzToolsFramework/UI/Outliner/EntityOutlinerDisplayOptionsMenu.h>
+#include <QHash>
+#include <QPainter>
+#include <QPixmap>
 #include <AzToolsFramework/UI/Outliner/EntityOutlinerDragAndDropContext.h>
 #include <AzToolsFramework/UI/Outliner/EntityOutlinerSortFilterProxyModel.hxx>
 #include <AzToolsFramework/UI/Outliner/EntityOutlinerTreeView.hxx>
@@ -287,6 +290,74 @@ namespace AzToolsFramework
         return dataForAll(index, role);
     }
 
+    namespace
+    {
+        //! Hearth Engine (approved mockup "Editor"): an icon for what an entity is, from its components.
+        QIcon OutlinerHearthTypeIcon(const AZ::Entity* entity)
+        {
+            if (!entity)
+            {
+                return {};
+            }
+            const struct
+            {
+                const char* match;   // part of a component's name, lower case
+                const char* glyph;
+                QRgb colour;
+            } kinds[] = {
+                { "endless level", "▦", 0xFFE8743B }, { "level generator", "▦", 0xFFE8743B },
+                { "character controller", "☺", 0xFFECE6DE }, { "first person", "☺", 0xFFECE6DE },
+                { "camera", "◉", 0xFFECE6DE },
+                { "light", "✺", 0xFFF0D17A }, { "flicker", "✺", 0xFFF0D17A },
+                { "sky", "☀", 0xFFF0D17A }, { "global ibl", "☀", 0xFFF0D17A }, { "post fx", "☀", 0xFFF0D17A }, { "fog", "☀", 0xFFF0D17A },
+                { "audio", "♪", 0xFFA6DD97 }, { "sound", "♪", 0xFFA6DD97 }, { "playback", "♪", 0xFFA6DD97 },
+                { "collider", "⬚", 0xFF8D857B }, { "rigid body", "⬚", 0xFF8D857B }, { "trigger", "⬚", 0xFF8D857B },
+                { "mesh", "◆", 0xFF8D857B },
+            };
+            int best = -1;
+            for (const AZ::Component* component : entity->GetComponents())
+            {
+                AZStd::string name = AzToolsFramework::GetFriendlyComponentName(component);
+                for (char& letter : name)
+                {
+                    letter = static_cast<char>(tolower(static_cast<unsigned char>(letter)));
+                }
+                for (int i = 0; i < static_cast<int>(AZ_ARRAY_SIZE(kinds)); ++i)
+                {
+                    if ((best < 0 || i < best) && name.find(kinds[i].match) != AZStd::string::npos)
+                    {
+                        best = i; // earlier in the list wins: a player with a camera is a player
+                    }
+                }
+            }
+            if (best < 0)
+            {
+                return {};
+            }
+            static QHash<int, QIcon> cache;
+            auto found = cache.find(best);
+            if (found != cache.end())
+            {
+                return found.value();
+            }
+            QPixmap pixmap(32, 32);
+            pixmap.fill(Qt::transparent);
+            {
+                QPainter painter(&pixmap);
+                painter.setRenderHint(QPainter::TextAntialiasing);
+                QFont font = painter.font();
+                font.setPixelSize(24);
+                painter.setFont(font);
+                painter.setPen(QColor::fromRgba(kinds[best].colour));
+                painter.drawText(pixmap.rect(), Qt::AlignCenter, QString::fromUtf8(kinds[best].glyph));
+            }
+            pixmap.setDevicePixelRatio(2.0);
+            const QIcon icon(pixmap);
+            cache.insert(best, icon);
+            return icon;
+        }
+    } // namespace
+
     QVariant EntityOutlinerListModel::GetEntityIcon(const AZ::EntityId& id) const
     {
         auto entityUiHandler = m_editorEntityUiInterface->GetHandler(id);
@@ -319,6 +390,12 @@ namespace AzToolsFramework
         if (!isInitiallyActive)
         {
             return QIcon(QString(":/Entity/entity_notactive.svg"));
+        }
+
+        const QIcon hearthIcon = OutlinerHearthTypeIcon(entity);
+        if (!hearthIcon.isNull())
+        {
+            return hearthIcon;
         }
 
         return QIcon(QString(":/Entity/entity.svg"));

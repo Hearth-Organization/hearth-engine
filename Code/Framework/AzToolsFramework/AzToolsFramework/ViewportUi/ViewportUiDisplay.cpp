@@ -29,6 +29,7 @@
 #include <cmath>
 #include <functional>
 #include <AzToolsFramework/API/SettingsRegistryUtils.h>
+#include <AzCore/Settings/SettingsRegistry.h>
 #include <AzToolsFramework/Viewport/ViewportSettings.h>
 #include <AzToolsFramework/ViewportUi/ViewportUiDisplayLayout.h>
 #include <AzToolsFramework/ViewportUi/ViewportUiSwitcher.h>
@@ -585,6 +586,25 @@ namespace AzToolsFramework::ViewportUi::Internal
         top->addWidget(m_hearthAngleSnap);
         top->addWidget(m_hearthGrid);
         top->addWidget(m_hearthIcons);
+        // Chunks: borders of the endless level's chunks while it generates (the game draws them; see /Hearth/Viewport).
+        QPushButton* chunks = PillButton(m_hearthTopBar, QObject::tr("Chunks"), true);
+        chunks->setToolTip(QObject::tr("Show where each generated chunk starts and ends"));
+        {
+            bool showChunks = false;
+            if (auto* registry = AZ::SettingsRegistry::Get())
+            {
+                registry->Get(showChunks, "/Hearth/Viewport/ShowChunks");
+            }
+            chunks->setChecked(showChunks);
+        }
+        QObject::connect(chunks, &QPushButton::toggled, [](bool on)
+        {
+            if (auto* registry = AZ::SettingsRegistry::Get())
+            {
+                registry->Set("/Hearth/Viewport/ShowChunks", on);
+            }
+        });
+        top->addWidget(chunks);
         m_uiOverlayLayout.AddAnchoredWidget(m_hearthTopBar, Qt::AlignTop);
 
         // Bottom left: what's selected, where, and the frame rate.
@@ -855,6 +875,17 @@ namespace AzToolsFramework::ViewportUi::Internal
             }
             fclose(statm);
         }
+        // What the game reports while it runs, for example "9 chunks · 412 pieces" from the endless level.
+        QString gameStats;
+        if (auto* registry = AZ::SettingsRegistry::Get())
+        {
+            AZStd::string stats;
+            if (registry->Get(stats, "/Hearth/Viewport/Stats") && !stats.empty())
+            {
+                gameStats = QStringLiteral("  ·  %1").arg(QString::fromUtf8(stats.c_str()).toHtmlEscaped());
+            }
+        }
+        memory = gameStats + memory;
         const QString color = m_hearthFps >= 30.0f ? QStringLiteral("#A6DD97") : (m_hearthFps >= 20.0f ? QStringLiteral("#F0D17A") : QStringLiteral("#FF9F8F"));
         m_hearthStatus->setText(QStringLiteral("%1<span style=\"color:%2\">%3 fps</span>%4").arg(text.toHtmlEscaped(), color).arg(qRound(m_hearthFps)).arg(memory));
         m_hearthStatus->adjustSize();

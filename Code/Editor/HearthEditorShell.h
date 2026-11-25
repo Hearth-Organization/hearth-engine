@@ -48,6 +48,7 @@ private:
     void BuildHeader();
     void ApplyLaptopSettings();
     void UpdateTitle();
+    void UpdateDockTitles(); //!< mockup "Editor": "Scene  7", "Console" as the dock headers
     void UpdateBuildChip();
     void WatchFullScreen();
     void PostToAgent(const QString& op, const QByteArray& json, std::function<void(const QByteArray&)> done = {});

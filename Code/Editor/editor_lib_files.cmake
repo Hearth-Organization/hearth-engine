@@ -290,6 +290,8 @@ set(FILES
     HearthLevelDialogs.h
     HearthUiEditor.cpp
     HearthUiEditor.h
+    HearthTestsPane.cpp
+    HearthTestsPane.h
     MainWindow.qrc
     Core/EditorActionsHandler.cpp
     Core/EditorActionsHandler.h

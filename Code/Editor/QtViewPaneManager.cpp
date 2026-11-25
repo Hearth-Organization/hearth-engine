@@ -1077,6 +1077,7 @@ void QtViewPaneManager::RestoreDefaultLayout(bool resetSettings)
         state.viewPanes.push_back(QStringLiteral("Console and logs")); // Hearth Engine console
         state.viewPanes.push_back(QStringLiteral("Claude"));           // Hearth Engine Claude panel
         state.viewPanes.push_back(QStringLiteral("Assets"));           // Hearth Engine assets summary
+        state.viewPanes.push_back(QStringLiteral("Tests"));            // Hearth Engine layout tests, next to Console
 
         state.mainWindowState = m_defaultMainWindowState;
 
@@ -1105,13 +1106,14 @@ void QtViewPaneManager::RestoreDefaultLayout(bool resetSettings)
     const QtViewPane* consoleViewPane = OpenPane(QStringLiteral("Console and logs"), QtViewPane::OpenMode::UseDefaultState);
     const QtViewPane* claudeViewPane = OpenPane(QStringLiteral("Claude"), QtViewPane::OpenMode::UseDefaultState);
     const QtViewPane* assetsSummaryPane = OpenPane(QStringLiteral("Assets"), QtViewPane::OpenMode::UseDefaultState);
+    const QtViewPane* testsViewPane = OpenPane(QStringLiteral("Tests"), QtViewPane::OpenMode::UseDefaultState);
 
     const QtViewPane* levelInspectorPane = nullptr;
 
     // This class does all kinds of behind the scenes magic to make docking / restore work, especially with groups
     // so instead of doing our special default layout attach / docking right now, we want to make it happen
     // after all of the other events have been processed.
-    QTimer::singleShot(0, [this, consoleViewPane, claudeViewPane, assetsSummaryPane, assetBrowserViewPane, InspectorViewPane, levelInspectorPane, entityOutlinerViewPane, resetSettings, selectedEntityIds]
+    QTimer::singleShot(0, [this, consoleViewPane, testsViewPane, claudeViewPane, assetsSummaryPane, assetBrowserViewPane, InspectorViewPane, levelInspectorPane, entityOutlinerViewPane, resetSettings, selectedEntityIds]
     {
         // If we are using the new docking, set the right dock area to be absolute
         // so that the inspector will be to the right of the viewport and console
@@ -1145,7 +1147,13 @@ void QtViewPaneManager::RestoreDefaultLayout(bool resetSettings)
                 AzQtComponents::DockTabWidget* bottomTabWidget = m_advancedDockManager->tabifyDockWidget(assetBrowserViewPane->m_dockWidget, consoleViewPane->m_dockWidget, m_mainWindow);
                 if (bottomTabWidget)
                 {
-                    bottomTabWidget->setCurrentWidget(assetBrowserViewPane->m_dockWidget);
+                    // Mockup "Editor": Console, then Tests, in the bottom tabs.
+                    if (testsViewPane)
+                    {
+                        testsViewPane->m_dockWidget->setFloating(false);
+                        bottomTabWidget->addTab(testsViewPane->m_dockWidget);
+                    }
+                    bottomTabWidget->setCurrentWidget(consoleViewPane->m_dockWidget);
 
                     QDockWidget* bottomTabWidgetParent = qobject_cast<QDockWidget*>(bottomTabWidget->parentWidget());
                     m_mainWindow->resizeDocks({ bottomTabWidgetParent }, { newHeight }, Qt::Vertical);

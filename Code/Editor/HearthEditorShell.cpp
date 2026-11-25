@@ -9,8 +9,13 @@
 #include "HearthCommandPalette.h"
 #include "HearthPlaytestOverlay.h"
 #include "QtViewPaneManager.h"
+#include "LyViewPaneNames.h"
 
+#include <AzCore/Component/ComponentApplicationBus.h>
+#include <AzCore/Component/Entity.h>
 #include <AzCore/Console/IConsole.h>
+#include <AzFramework/Entity/EntityContextBus.h>
+#include <AzToolsFramework/Entity/EditorEntityContextBus.h>
 #include <AzCore/Interface/Interface.h>
 #include <AzCore/Utils/Utils.h>
 #include <AzQtComponents/Components/HearthWidgets.h>
@@ -123,6 +128,7 @@ HearthEditorShell::HearthEditorShell(QMainWindow* mainWindow)
     connect(m_timer, &QTimer::timeout, this, [this, ticks]() mutable
     {
         UpdateTitle();
+        UpdateDockTitles();
         WatchFullScreen();
         const bool inGame = GetIEditor() && GetIEditor()->IsInGameMode();
         if (inGame && !m_lastInGame && m_playtest)
@@ -154,9 +160,9 @@ HearthEditorShell::HearthEditorShell(QMainWindow* mainWindow)
     QTimer::singleShot(1500, this, []()
     {
         QScopedPointer<QSettings> settings(Hearth::NewSettings());
-        if (settings->value(QStringLiteral("editor/layout")).toString() != QLatin1String("hearth-1"))
+        if (settings->value(QStringLiteral("editor/layout")).toString() != QLatin1String("hearth-1.1"))
         {
-            settings->setValue(QStringLiteral("editor/layout"), QStringLiteral("hearth-1"));
+            settings->setValue(QStringLiteral("editor/layout"), QStringLiteral("hearth-1.1"));
             QtViewPaneManager::instance()->RestoreDefaultLayout(true);
         }
     });
@@ -291,6 +297,41 @@ void HearthEditorShell::UpdateTitle()
         }
         lastLevel = level;
     }
+}
+
+void HearthEditorShell::UpdateDockTitles()
+{
+    if (!QtViewPaneManager::exists())
+    {
+        return;
+    }
+    QtViewPaneManager* panes = QtViewPaneManager::instance();
+    auto retitle = [panes](const QString& paneName, const QString& title)
+    {
+        const QtViewPane* pane = panes->GetPane(paneName);
+        if (pane && pane->m_dockWidget && pane->m_dockWidget->windowTitle() != title)
+        {
+            pane->m_dockWidget->setWindowTitle(title);
+        }
+    };
+
+    // Scene: how many entities the level has (the level's own root not counted).
+    AzFramework::EntityContextId editorContext = AzFramework::EntityContextId::CreateNull();
+    AzToolsFramework::EditorEntityContextRequestBus::BroadcastResult(
+        editorContext, &AzToolsFramework::EditorEntityContextRequests::GetEditorEntityContextId);
+    int count = 0;
+    AZ::ComponentApplicationBus::Broadcast(&AZ::ComponentApplicationRequests::EnumerateEntities, [&count, editorContext](AZ::Entity* entity)
+    {
+        AzFramework::EntityContextId owner = AzFramework::EntityContextId::CreateNull();
+        AzFramework::EntityIdContextQueryBus::EventResult(owner, entity->GetId(), &AzFramework::EntityIdContextQueries::GetOwningContextId);
+        if (!owner.IsNull() && owner == editorContext)
+        {
+            ++count;
+        }
+    });
+    count = AZStd::max(0, count - 1);
+    retitle(QString::fromLatin1(LyViewPane::EntityOutliner), tr("Scene  %1").arg(count));
+    retitle(QStringLiteral("Console and logs"), tr("Console"));
 }
 
 void HearthEditorShell::ApplyLaptopSettings()
