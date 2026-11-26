@@ -367,7 +367,7 @@ void EditorActionsHandler::OnActionRegistrationHook()
     {
         constexpr AZStd::string_view actionIdentifier = "o3de.action.file.new";
         AzToolsFramework::ActionProperties actionProperties;
-        actionProperties.m_name = "New Level";
+        actionProperties.m_name = "New level...";
         actionProperties.m_description = "Create a new level";
         actionProperties.m_category = "Level";
         actionProperties.m_menuVisibility = AzToolsFramework::ActionVisibility::AlwaysShow;
@@ -414,7 +414,7 @@ void EditorActionsHandler::OnActionRegistrationHook()
     {
         constexpr AZStd::string_view actionIdentifier = "o3de.action.file.open";
         AzToolsFramework::ActionProperties actionProperties;
-        actionProperties.m_name = "Open Level...";
+        actionProperties.m_name = "Open level...";
         actionProperties.m_description = "Open an existing level";
         actionProperties.m_category = "Level";
         actionProperties.m_menuVisibility = AzToolsFramework::ActionVisibility::AlwaysShow;
@@ -519,7 +519,7 @@ void EditorActionsHandler::OnActionRegistrationHook()
     // Save
     {
         AzToolsFramework::ActionProperties actionProperties;
-        actionProperties.m_name = "Save";
+        actionProperties.m_name = "Save level";
         actionProperties.m_description = "Save the current level";
         actionProperties.m_category = "Level";
         actionProperties.m_menuVisibility = AzToolsFramework::ActionVisibility::AlwaysShow;
