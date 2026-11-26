@@ -22,6 +22,9 @@
 #include <QDateTime>
 #include <QMenu>
 #include <QPainter>
+#include <QPainterPath>
+#include <QPalette>
+#include <QPolygon>
 #include <QSlider>
 #include <QVBoxLayout>
 #include <QWheelEvent>
@@ -430,9 +433,22 @@ namespace AzToolsFramework::ViewportUi::Internal
     // disables system background for widget and gives a transparent background
     static void ConfigureWindowForViewportUi(QPointer<QMainWindow> mainWindow)
     {
+#if defined(AZ_PLATFORM_LINUX)
+        // Hearth Engine: on Linux the viewport UI is a native child window of the viewport, clipped by its mask to
+        // the buttons, instead of a see-through top-level window. Under XWayland the desktop ignored the see-through
+        // parts and the mask of a top-level window, so the whole UI window covered the 3D view in black. A child
+        // window is clipped by the X server itself. Its background is the pills' own colour, for the few pixels
+        // between a pill's rounded corners and the mask.
+        mainWindow->setAttribute(Qt::WA_NativeWindow);
+        mainWindow->setAutoFillBackground(true);
+        QPalette palette = mainWindow->palette();
+        palette.setColor(QPalette::Window, QColor(0x0D, 0x0C, 0x0B));
+        mainWindow->setPalette(palette);
+#else
         // no background for the widget else each set of buttons/text-fields/etc would have a black box around them
         SetTransparentBackground(mainWindow);
         mainWindow->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowDoesNotAcceptFocus);
+#endif
     }
 
     void ViewportUiDisplay::InitializeUiOverlay()
@@ -955,7 +971,24 @@ namespace AzToolsFramework::ViewportUi::Internal
         }
 
         // add all children widget regions
+#if defined(AZ_PLATFORM_LINUX)
+        // Rounded like the pills (the X server clips to this exactly; there is no see-through on Linux, see above).
+        for (QObject* object : m_uiOverlay.children())
+        {
+            auto* child = qobject_cast<QWidget*>(object);
+            if (!child || !child->isVisible() || child->isWindow())
+            {
+                continue;
+            }
+            const QRect area = child->geometry();
+            const qreal radius = qMin<qreal>(14.0, area.height() / 2.0);
+            QPainterPath path;
+            path.addRoundedRect(QRectF(area), radius, radius);
+            region += QRegion(path.toFillPolygon().toPolygon());
+        }
+#else
         region += m_uiOverlay.childrenRegion();
+#endif
 
         // set viewport ui visibility depending on if elements are present
         const bool visible = !region.isEmpty() && UiDisplayEnabled();
@@ -967,8 +1000,18 @@ namespace AzToolsFramework::ViewportUi::Internal
 
     void ViewportUiDisplay::PositionUiOverlayOverRenderViewport()
     {
+#if defined(AZ_PLATFORM_LINUX)
+        // A child of the viewport (see ConfigureWindowForViewportUi): place it over the render overlay in the
+        // viewport's own coordinates, and keep it above the render viewport's window (made after it).
+        m_uiMainWindow.setGeometry(m_renderOverlay->geometry());
+        if (QWidget* parent = m_uiMainWindow.parentWidget(); parent && !parent->children().isEmpty() && parent->children().constLast() != &m_uiMainWindow)
+        {
+            m_uiMainWindow.raise();
+        }
+#else
         QPoint offset = m_renderOverlay->mapToGlobal(QPoint());
         m_uiMainWindow.setGeometry(offset.x(), offset.y(), m_renderOverlay->width(), m_renderOverlay->height());
+#endif
         m_uiOverlay.setGeometry(m_uiMainWindow.rect());
         UpdateUiOverlayGeometry();
     }
