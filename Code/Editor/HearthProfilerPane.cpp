@@ -236,6 +236,9 @@ protected:
         g.setRenderHint(QPainter::Antialiasing);
         if (m_frame.ms <= 0.0)
         {
+            // Nothing recorded: say so instead of an empty space.
+            g.setPen(QColor(0x8D, 0x85, 0x7B));
+            g.drawText(rect(), Qt::AlignCenter, QObject::tr("Press Record, play the slow part, then pick a frame above to see where its time went."));
             return;
         }
         static const QColor depthColors[] = { QColor(0x3D, 0x34, 0x2B), QColor(0x6B, 0x44, 0x30), QColor(0xE8, 0x74, 0x3B), QColor(0xFF, 0x9A, 0x63) };

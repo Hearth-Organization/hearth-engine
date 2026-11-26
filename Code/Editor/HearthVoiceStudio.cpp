@@ -463,6 +463,7 @@ HearthVoiceStudio::HearthVoiceStudio(QWidget* parent)
 
     m_toast = new QLabel(this);
     m_toast->setWordWrap(true);
+    m_toast->setFixedWidth(560); // a set width so the layout gives a wrapped message its full height (it was cut in half)
     m_toast->setStyleSheet(QStringLiteral("background-color: #1D1A17; color: #ECE6DE; border: 1px solid rgba(255, 255, 255, 26); border-radius: 12px; padding: 10px 16px;"));
     m_toast->hide();
     root->addWidget(m_toast, 0, Qt::AlignHCenter);

@@ -30,6 +30,7 @@
 #include <QPainterPath>
 #include <QStandardPaths>
 #include <QTimer>
+#include <QScrollArea>
 #include <QInputDialog>
 #include <QJsonArray>
 #include <QLabel>
@@ -254,9 +255,21 @@ HearthLookPane::HearthLookPane(QWidget* parent)
     m_preview = new HearthLookPreview(view);
     viewLayout->addWidget(m_preview, 1);
     body->addWidget(view, 3);
-    auto* column = new QVBoxLayout();
+    // The right side scrolls (its looks, settings and lights are taller than a laptop screen), and the looks scroll
+    // sideways: together they needed ~1100 x 1200 px, so docking this window pushed the editor past the screen.
+    auto* columnScroll = new QScrollArea(this);
+    columnScroll->setWidgetResizable(true);
+    columnScroll->setFrameShape(QFrame::NoFrame);
+    columnScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    columnScroll->setStyleSheet(QStringLiteral("QScrollArea { background: transparent; }"));
+    auto* columnHolder = new QWidget(columnScroll);
+    columnHolder->setAttribute(Qt::WA_TranslucentBackground);
+    auto* column = new QVBoxLayout(columnHolder);
+    column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(10);
-    body->addLayout(column, 2);
+    columnScroll->setWidget(columnHolder);
+    columnScroll->setMinimumWidth(320);
+    body->addWidget(columnScroll, 2);
     root = column;
     connect(refresh, &QPushButton::clicked, this, &HearthLookPane::CaptureBefore);
     auto* liveTimer = new QTimer(this);
@@ -276,9 +289,19 @@ HearthLookPane::HearthLookPane(QWidget* parent)
     QVBoxLayout* looksLayout = nullptr;
     QFrame* looks = Hearth::MakeCard(this, &looksLayout);
     looksLayout->addWidget(Hearth::MakeLabel(tr("Looks"), QStringLiteral("title"), looks));
-    m_presets = new QHBoxLayout();
+    auto* presetsScroll = new QScrollArea(looks);
+    presetsScroll->setWidgetResizable(true);
+    presetsScroll->setFrameShape(QFrame::NoFrame);
+    presetsScroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    presetsScroll->setFixedHeight(126);
+    presetsScroll->setStyleSheet(QStringLiteral("QScrollArea { background: transparent; }"));
+    auto* presetsHolder = new QWidget(presetsScroll);
+    presetsHolder->setAttribute(Qt::WA_TranslucentBackground);
+    m_presets = new QHBoxLayout(presetsHolder);
+    m_presets->setContentsMargins(0, 0, 0, 0);
     m_presets->setSpacing(8);
-    looksLayout->addLayout(m_presets);
+    presetsScroll->setWidget(presetsHolder);
+    looksLayout->addWidget(presetsScroll);
     root->addWidget(looks);
 
     QVBoxLayout* settingsLayout = nullptr;
@@ -299,7 +322,8 @@ HearthLookPane::HearthLookPane(QWidget* parent)
         layout->setContentsMargins(0, 0, 0, 0);
         auto* slider = new QSlider(Qt::Horizontal, holder);
         slider->setRange(0, qRound((spec.max - spec.min) / spec.step));
-        slider->setFixedWidth(160);
+        slider->setMinimumWidth(100);
+        slider->setMaximumWidth(160);
         slider->setStyleSheet(QLatin1String(LookSliderStyle));
         auto* value = Hearth::MakeLabel(QString(), QStringLiteral("mono"), holder);
         value->setFixedWidth(52);
@@ -487,7 +511,7 @@ void HearthLookPane::RebuildPresets()
     {
         auto* card = new QPushButton(this);
         card->setCursor(Qt::PointingHandCursor);
-        card->setMinimumSize(130, 110);
+        card->setFixedSize(130, 110);
         card->setStyleSheet(QStringLiteral("QPushButton { border: 1px solid rgba(255, 255, 255, 15); border-radius: 12px; text-align: left;"
                                            " background: qlineargradient(x1:0, y1:0, x2:0, y2:0.62, stop:0 %1, stop:1 %2); }"
                                            "QPushButton:hover { border-color: rgba(232, 116, 59, 150); }")
