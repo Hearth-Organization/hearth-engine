@@ -105,7 +105,7 @@ Version: $version
 Architecture: amd64
 Maintainer: Dragongamer9 <43799111+Dragongamer9@users.noreply.github.com>
 Installed-Size: $size_kb
-Depends: libc6, libstdc++6, libvulkan1, libxcb1, libxkbcommon-x11-0, libfontconfig1, zlib1g
+Depends: libc6, libstdc++6, libvulkan1, libxcb1, libxkbcommon-x11-0, libfontconfig1, zlib1g, cmake
 Section: devel
 Priority: optional
 Homepage: https://github.com/Hearth-Organization/hearth-engine
