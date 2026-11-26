@@ -195,7 +195,14 @@ QtViewport::QtViewport(QWidget* parent)
     m_renderOverlay.setUpdatesEnabled(false);
     m_renderOverlay.setMouseTracking(true);
     m_renderOverlay.setObjectName("renderOverlay");
+#if defined(AZ_PLATFORM_LINUX)
+    // Hearth Engine: no native window for the render overlay on Linux. As its own X window it sat on top of the
+    // render viewport and, under XWayland, drew as solid black over the level (the "black viewport"; stock O3DE
+    // too). As a plain widget it draws nothing and lets mouse events through to the render viewport below.
+    m_renderOverlay.setAttribute(Qt::WA_TransparentForMouseEvents);
+#else
     m_renderOverlay.winId(); // Force the render overlay to create a backing native window
+#endif
 
     m_viewportUi.InitializeViewportUi(this, &m_renderOverlay);
 
@@ -620,7 +627,12 @@ void QtViewport::ResetCursor()
 //////////////////////////////////////////////////////////////////////////
 HWND QtViewport::renderOverlayHWND() const
 {
+#if defined(AZ_PLATFORM_LINUX)
+    // The overlay covers the whole viewport, so the viewport's own window is the same area (see the constructor).
+    return reinterpret_cast<HWND>(winId());
+#else
     return reinterpret_cast<HWND>(m_renderOverlay.winId());
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////
