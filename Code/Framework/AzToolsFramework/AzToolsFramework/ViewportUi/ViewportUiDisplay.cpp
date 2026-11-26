@@ -976,7 +976,9 @@ namespace AzToolsFramework::ViewportUi::Internal
         for (QObject* object : m_uiOverlay.children())
         {
             auto* child = qobject_cast<QWidget*>(object);
-            if (!child || !child->isVisible() || child->isWindow())
+            // isHidden(), not isVisible(): while this window is still hidden every child reports isVisible() false,
+            // so the region stayed empty and the window never showed (the Hearth viewport buttons were missing).
+            if (!child || child->isHidden() || child->isWindow())
             {
                 continue;
             }
