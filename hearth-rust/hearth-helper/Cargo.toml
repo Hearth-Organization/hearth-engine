@@ -1,0 +1,22 @@
+[package]
+name = "hearth-helper"
+version = "0.0.0"  # the owner picks version numbers; the helper reports the Python helper's VERSION it matches
+description = "Hearth Engine helper: builds, runs and watches the game, and lets the Hub and Claude drive the editor"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "hearth-helper"
+path = "src/main.rs"
+
+[dependencies]
+hearth-link = { path = "../hearth-link" }
+serde = "1"
+serde_json = "1"
+libc = "0.2"
+ureq = { version = "2", default-features = false, features = ["tls"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }
+sha1_smol = "1"
+base64 = "0.22"

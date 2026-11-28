@@ -11,3 +11,7 @@ of its own). Built and tested on GitHub only (`.github/workflows/hearth-rust.yml
 
 Next, in this order: the Hearth Engine helper (the agent, now Python), Hearth Script, the Level Generator's core,
 packaging and Share, import checks, safe saving.
+- `hearth-helper`: the Hearth Engine helper in Rust, a port of the game's `Tools/HearthAgent/hearth_agent.py` (1.10):
+  the same 46 operations, request files and Hub API (127.0.0.1:47830), for every game in the projects folder at once
+  (each request names its game; X-Hearth-Project on the API). It shares the Python helper's lock, so only one of the
+  two runs. The Python helper stays the one that runs until the owner has tried this one.

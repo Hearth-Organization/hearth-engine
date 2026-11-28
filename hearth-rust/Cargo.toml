@@ -2,7 +2,7 @@
 # Built and tested on GitHub (.github/workflows/hearth-rust.yml), never only on a computer here.
 [workspace]
 resolver = "2"
-members = ["hearth-link"]
+members = ["hearth-link", "hearth-helper"]
 
 [workspace.package]
 edition = "2021"
