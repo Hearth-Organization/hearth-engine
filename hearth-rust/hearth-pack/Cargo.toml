@@ -1,0 +1,16 @@
+[package]
+name = "hearth-pack"
+version = "0.0.0"  # the owner picks version numbers; this one isn't shipped on its own
+description = "Hearth Engine's Package and Share: turns an exported game into a Hearth OS AppImage, a Steam depot folder or a test archive"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "hearth-pack"
+path = "src/main.rs"
+
+[dependencies]
+sha2 = "0.10"
+tar = "0.4"
+flate2 = "1"
