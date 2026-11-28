@@ -1,0 +1,7 @@
+[package]
+name = "hearth-rts"
+version = "0.0.0"  # the owner picks version numbers; this one isn't shipped on its own
+description = "Hearth Engine's real-time strategy kit: paths for hundreds of units at once, fog of war, selecting, orders, resources and buildings"
+edition.workspace = true
+license.workspace = true
+publish = false

@@ -27,6 +27,11 @@ of its own). Built and tested on GitHub only (`.github/workflows/hearth-rust.yml
   version whose error is too small to see: full detail up close, far fewer triangles far away, never a crack (the
   tests check every view of a closed ball and an open, seamed sheet). `hearth-detail model.glb` writes
   `model.hdetail`. The drawing half (picking pieces on the graphics card each frame, in Atom) comes next.
+- `hearth-rts`: the real-time strategy kit. Flow fields (hundreds of units share one path, mud and water avoided,
+  no corner cutting), units and buildings, orders (move, attack-move, attack, hold, gather, build; queued with
+  shift), groups that spread out at the goal, fighting, gathering, training with costs and supply, buildings that
+  block paths, fog of war per team, drag-select, click-select and control groups, and events for sounds and Hearth
+  Script. The same orders always give the same game (for multiplayer that sends only orders).
 
 Next, in this order: Nanite-style detail in Atom, wiring Hearth Script into the game, the Level Generator's core, packaging and Share, import
 checks, safe saving.
