@@ -1,0 +1,14 @@
+[package]
+name = "hearth-physics"
+version = "0.0.0"  # the owner picks version numbers; this one isn't shipped on its own
+description = "Hearth Engine's physics in Rust (replacing PhysX): Rapier bodies and colliders on Hearth World entities"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+# Rapier (Apache-2.0): physics in pure Rust.
+rapier3d = "0.36"
+hearth-world = { path = "../hearth-world" }
+glam = { version = "0.34", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
