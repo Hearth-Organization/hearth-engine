@@ -211,11 +211,6 @@ pub fn editor_processes() -> Vec<(i32, Vec<String>)> {
     find_processes("Editor").into_iter().filter(|(pid, a)| basename(&a[0]) == "Editor" && ours(*pid, a)).collect()
 }
 
-/// Every editor that's open, whichever game.
-pub fn all_editor_processes() -> Vec<(i32, Vec<String>)> {
-    find_processes("Editor").into_iter().filter(|(_, a)| basename(&a[0]) == "Editor").collect()
-}
-
 pub fn game_processes() -> Vec<(i32, Vec<String>)> {
     find_processes(&format!("{}.GameLauncher", p().name))
 }
