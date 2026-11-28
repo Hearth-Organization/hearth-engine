@@ -34,6 +34,7 @@ impl Command {
     }
 }
 
+#[derive(Debug)]
 pub struct RtsConfig;
 
 impl Config for RtsConfig {
