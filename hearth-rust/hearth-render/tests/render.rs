@@ -1,5 +1,5 @@
 use glam::{Mat4, Vec3};
-use hearth_render::{save_png, shapes, Camera, Material, Object, PointLight, Renderer, Scene, Sky, Sun};
+use hearth_render::{save_png, shapes, Camera, GodRays, Material, Object, PointLight, Renderer, Scene, Sky, Sun};
 
 fn pixel(img: &[u8], w: u32, x: u32, y: u32) -> [u8; 4] {
     let i = ((y * w + x) * 4) as usize;
@@ -176,4 +176,55 @@ fn detail_models_draw_full_up_close_and_fewer_triangles_far_away() {
     assert!(counts[0] > counts[1] && counts[1] > counts[2], "farther must mean fewer triangles: {counts:?}");
     // The ball's uv seam and poles stay (so textures never tear), which limits how simple it gets.
     assert!(counts[2] * 5 < counts[0], "far away should be a small part of the full model: {counts:?}");
+}
+
+#[test]
+fn god_rays_shine_through_holes_in_the_roof() {
+    let (w, h) = (320, 240);
+    let Ok(mut r) = Renderer::headless(w, h) else {
+        assert!(std::env::var_os("HEARTH_NEED_GPU").is_none(), "no graphics");
+        return;
+    };
+    let floor = r.add_mesh(&shapes::plane(30.0)).unwrap();
+    let block = r.add_mesh(&shapes::cube()).unwrap();
+    let ball = r.add_mesh(&shapes::sphere(24, 32)).unwrap();
+    // A dark hall: a roof with five square holes in a row, a back wall, a ball on the floor.
+    let mut scene = Scene {
+        camera: Camera { eye: Vec3::new(0.0, -8.0, 1.6), target: Vec3::new(0.0, 0.0, 1.9), ..Camera::default() },
+        sun: Some(Sun { direction: Vec3::new(0.0, -0.35, -1.0), color: [1.0, 0.9, 0.75], intensity: 4.0 }),
+        ambient: [0.015, 0.015, 0.02],
+        clear: [0.0, 0.0, 0.0, 1.0],
+        ..Scene::default()
+    };
+    let grey = Material { color: [0.45, 0.43, 0.4, 1.0], roughness: 0.9, ..Material::default() };
+    let mut put = |mesh, at: Vec3, size: Vec3, m: &Material| scene.objects.push(Object { mesh, transform: Mat4::from_translation(at) * Mat4::from_scale(size), material: m.clone() });
+    put(floor, Vec3::ZERO, Vec3::ONE, &grey);
+    put(block, Vec3::new(0.0, 6.2, 2.5), Vec3::new(30.0, 0.4, 5.0), &grey);
+    put(block, Vec3::new(0.0, 6.25, 4.1), Vec3::new(30.0, 11.5, 0.2), &grey);
+    put(block, Vec3::new(0.0, -6.25, 4.1), Vec3::new(30.0, 11.5, 0.2), &grey);
+    for (a, b) in [(-15.0f32, -4.5f32), (-3.5, -2.5), (-1.5, -0.5), (0.5, 1.5), (2.5, 3.5), (4.5, 15.0)] {
+        put(block, Vec3::new((a + b) / 2.0, 0.0, 4.1), Vec3::new(b - a, 1.0, 0.2), &grey);
+    }
+    put(ball, Vec3::new(0.0, -1.2, 0.6), Vec3::splat(0.6), &Material { color: [0.8, 0.15, 0.1, 1.0], roughness: 0.4, ..Material::default() });
+    let plain = r.render(&scene).unwrap();
+    scene.god_rays = Some(GodRays { density: 0.08, ..GodRays::default() });
+    let rays = r.render(&scene).unwrap();
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../target/renders");
+    save_png(&dir.join("god-rays.png"), &rays, w, h).unwrap();
+    save_png(&dir.join("no-god-rays.png"), &plain, w, h).unwrap();
+    scene.god_rays = Some(GodRays { steps: 16, density: 0.08, ..GodRays::default() });
+    let quick = r.render(&scene).unwrap();
+    save_png(&dir.join("god-rays-16-steps.png"), &quick, w, h).unwrap();
+
+    // Looking through the beam under the middle hole, the air glows; between the beams it doesn't.
+    let gain = |img: &[u8], p: Vec3| {
+        let (x, y) = on_screen(&scene, w, h, p);
+        bright(pixel(img, w, x, y)) as i32 - bright(pixel(&plain, w, x, y)) as i32
+    };
+    let in_beam = gain(&rays, Vec3::new(0.0, 0.0, 2.5));
+    let between = gain(&rays, Vec3::new(1.0, 0.0, 2.5));
+    assert!(in_beam > 40, "the beam should light the air: {in_beam} brighter");
+    assert!(in_beam > between * 2 + 20, "the beam should stand out from the dark between: {in_beam} in it, {between} between");
+    let quick_beam = gain(&quick, Vec3::new(0.0, 0.0, 2.5));
+    assert!(quick_beam > 30, "16 steps still show the beam: {quick_beam}");
 }

@@ -98,6 +98,29 @@ pub struct Sun {
     pub intensity: f32,
 }
 
+/// God rays: beams of sunlight in the air, through windows, gaps and trees. Real light shafts: every pixel steps
+/// through the air toward the camera and checks the sun's shadow at each step, so they work with the sun
+/// off-screen too. Needs `shadows` on (without them the air is evenly hazy).
+#[derive(Clone, Copy, Debug)]
+pub struct GodRays {
+    /// How thick the air is (dust, mist): 0.02 is clear, 0.1 hazy, 0.3 foggy.
+    pub density: f32,
+    /// How bright the beams are.
+    pub strength: f32,
+    /// Steps through the air for each pixel: more is smoother and slower (16 for handhelds, 32 normally, 64 best).
+    pub steps: u32,
+    /// How much brighter the beams are when looking toward the sun (0 = the same all round, 0.8 = much brighter).
+    pub toward_sun: f32,
+    /// The farthest the beams reach (metres).
+    pub distance: f32,
+}
+
+impl Default for GodRays {
+    fn default() -> GodRays {
+        GodRays { density: 0.06, strength: 1.0, steps: 32, toward_sun: 0.5, distance: 120.0 }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct PointLight {
     pub position: Vec3,
@@ -144,11 +167,13 @@ pub struct Scene {
     pub sky: Option<Sky>,
     /// The sun casts shadows.
     pub shadows: bool,
+    /// Beams of sunlight in the air (off when `None`).
+    pub god_rays: Option<GodRays>,
 }
 
 impl Default for Scene {
     fn default() -> Scene {
-        Scene { camera: Camera::default(), sun: None, ambient: [0.03; 3], lights: Vec::new(), objects: Vec::new(), details: Vec::new(), clear: [0.0, 0.0, 0.0, 1.0], exposure: 1.0, sky: None, shadows: true }
+        Scene { camera: Camera::default(), sun: None, ambient: [0.03; 3], lights: Vec::new(), objects: Vec::new(), details: Vec::new(), clear: [0.0, 0.0, 0.0, 1.0], exposure: 1.0, sky: None, shadows: true, god_rays: None }
     }
 }
 
@@ -174,6 +199,8 @@ struct GpuFrame {
     sky_horizon: [f32; 4],
     sky_ground: [f32; 4],
     shadow: [f32; 4],
+    rays: [f32; 4],
+    rays_more: [f32; 4],
     lights: [GpuLight; MAX_LIGHTS],
 }
 
@@ -588,6 +615,11 @@ impl Renderer {
             sky_horizon: c3(sky.map(|s| s.horizon).unwrap_or_default(), sky.is_some()),
             sky_ground: c3(sky.map(|s| s.ground).unwrap_or_default(), sky.is_some()),
             shadow: [if light.is_some() { 1.0 } else { 0.0 }, 0.0015, 1.0 / SHADOW_SIZE as f32, 0.0],
+            rays: match (scene.god_rays, scene.sun) {
+                (Some(g), Some(_)) => [g.density.max(0.0), g.steps.clamp(1, 128) as f32, g.toward_sun.clamp(-0.95, 0.95), g.strength.max(0.0)],
+                _ => [0.0; 4],
+            },
+            rays_more: [scene.god_rays.map(|g| g.distance.max(0.1)).unwrap_or(0.0), 0.0, 0.0, 0.0],
             lights,
         }
     }

@@ -16,6 +16,8 @@ struct Frame {
     sky_horizon: vec4<f32>,
     sky_ground: vec4<f32>,
     shadow: vec4<f32>,      // on, bias, texel size
+    rays: vec4<f32>,        // god rays: density, steps (0 = off), toward the sun, strength
+    rays_more: vec4<f32>,   // farthest reach
     lights: array<Light, 16>,
 };
 struct Object {
@@ -113,6 +115,50 @@ fn sun_visible(world: vec3<f32>, n: vec3<f32>) -> f32 {
     return lit / 9.0;
 }
 
+// Is this point in the air lit by the sun? (One sample: the steps blur it anyway.)
+fn air_lit(p: vec3<f32>) -> f32 {
+    if (frame.shadow.x < 0.5) {
+        return 1.0;
+    }
+    let c = frame.light_view_proj * vec4<f32>(p, 1.0);
+    let ndc = c.xyz / c.w;
+    let uv = vec2<f32>(ndc.x * 0.5 + 0.5, 0.5 - ndc.y * 0.5);
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 || ndc.z > 1.0) {
+        return 1.0;
+    }
+    return textureSampleCompareLevel(shadow_map, shadow_sampler, uv, ndc.z - frame.shadow.y);
+}
+
+// God rays: sunlight scattered toward the camera by the air between the camera and `to`. Gives the light added
+// (rgb) and how much of what's behind still shows through (a).
+fn air(to: vec3<f32>, px: vec2<f32>) -> vec4<f32> {
+    let steps = u32(frame.rays.y);
+    if (steps == 0u || frame.sun_color.a <= 0.0) {
+        return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+    }
+    let from = frame.camera.xyz;
+    let full = to - from;
+    let dist = min(length(full), frame.rays_more.x);
+    let dir = full / max(length(full), 0.0001);
+    let ds = dist / f32(steps);
+    // A different start in each pixel, so steps show as fine grain instead of bands.
+    let jitter = fract(52.9829189 * fract(dot(px, vec2<f32>(0.06711056, 0.00583715))));
+    // Henyey-Greenstein: brighter looking toward the sun (scaled so that even all round is 1).
+    let g = frame.rays.z;
+    let cosine = dot(dir, -frame.sun_dir.xyz);
+    let phase = (1.0 - g * g) / pow(max(1.0 + g * g - 2.0 * g * cosine, 0.0001), 1.5);
+    let sigma = frame.rays.x;
+    let step_through = exp(-sigma * ds);
+    var through = 1.0;
+    var gathered = 0.0;
+    for (var k = 0u; k < steps; k++) {
+        let p = from + dir * ((f32(k) + jitter) * ds);
+        gathered += through * air_lit(p) * (1.0 - step_through);
+        through *= step_through;
+    }
+    return vec4<f32>(frame.sun_color.rgb * phase * frame.rays.w * gathered, through);
+}
+
 fn aces(x: vec3<f32>) -> vec3<f32> {
     return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), vec3<f32>(0.0), vec3<f32>(1.0));
 }
@@ -149,6 +195,8 @@ fn fs_main(i: VOut) -> @location(0) vec4<f32> {
         let fall = pow(clamp(1.0 - pow(dist / range, 4.0), 0.0, 1.0), 2.0) / max(dist * dist, 0.01);
         c += shade(n, v, d / max(dist, 0.0001), lt.color.rgb * fall, albedo, metallic, rough);
     }
+    let haze = air(i.world, i.clip.xy);
+    c = c * haze.a + haze.rgb;
     return vec4<f32>(aces(c * frame.counts.y), object.color.a * tex.a);
 }
 
@@ -169,5 +217,6 @@ fn fs_sky(i: SkyOut) -> @location(0) vec4<f32> {
     let far = frame.inv_view_proj * vec4<f32>(i.ndc, 1.0, 1.0);
     let near = frame.inv_view_proj * vec4<f32>(i.ndc, 0.0, 1.0);
     let d = normalize(far.xyz / far.w - near.xyz / near.w);
-    return vec4<f32>(aces(sky(d) * frame.counts.y), 1.0);
+    let haze = air(frame.camera.xyz + d * max(frame.rays_more.x, 0.1), i.clip.xy);
+    return vec4<f32>(aces((sky(d) * haze.a + haze.rgb) * frame.counts.y), 1.0);
 }
