@@ -1,0 +1,11 @@
+[package]
+name = "hearth-script"
+version = "0.0.0"
+description = "Hearth Script: Hearth Engine's small, safe language for what happens in a game"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "hearth-script"
+path = "src/bin/hearth-script.rs"
