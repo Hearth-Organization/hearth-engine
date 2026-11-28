@@ -13,4 +13,5 @@ crate-type = ["staticlib", "rlib"]
 [dependencies]
 hearth-script = { path = "../hearth-script" }
 hearth-detail = { path = "../hearth-detail" }
+hearth-texture = { path = "../hearth-texture" }
 serde_json = "1"

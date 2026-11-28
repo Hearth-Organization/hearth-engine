@@ -1,0 +1,11 @@
+[package]
+name = "hearth-texture"
+version = "0.0.0"  # the owner picks version numbers; this one isn't shipped on its own
+description = "Hearth Engine's texture compression in Rust (BC1, BC1a, BC3, BC4, BC5), replacing libsquish in the image processor"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+# MIT: a Rust port of libsquish (the same algorithms the engine used through CryTextureSquisher).
+texpresso = { version = "2", default-features = false }

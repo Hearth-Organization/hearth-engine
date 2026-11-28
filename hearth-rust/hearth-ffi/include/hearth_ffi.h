@@ -33,6 +33,14 @@ bool hd_select(HdDetail* d, float cx, float cy, float cz, float pixels_per_unit,
 const uint32_t* hd_selected(const HdDetail* d, uint32_t* count);
 const char* hd_describe(HdDetail* d);
 
+/* Hearth Texture: BC compression for the asset pipeline. bc: 1 BC1, 2 BC1a, 3 BC3, 4 BC4, 5 BC5.
+ * source: 1 RGBA8, 2 RGBX8, 3 R8, 4 RGBA32F. quality: 0 preview, 1 fast, 2 normal, 3 slow. weights: 3 floats or null. */
+uint64_t ht_compressed_size(uint32_t bc, uint32_t width, uint32_t height);
+bool ht_compress(uint32_t bc, uint32_t source, const uint8_t* src, uint32_t width, uint32_t height, uint32_t pitch,
+                 uint32_t quality, const float* weights, uint8_t* out, uint64_t out_len);
+bool ht_decompress(uint32_t bc, const uint8_t* data, uint64_t data_len, uint32_t width, uint32_t height, uint8_t* out,
+                   uint32_t out_pitch, bool as_float);
+
 #ifdef __cplusplus
 }
 #endif

@@ -93,3 +93,21 @@ fn detail_opens_builds_and_selects_by_distance() {
     }
     let _ = std::fs::remove_dir_all(dir);
 }
+
+#[test]
+fn textures_compress_through_the_bridge() {
+    let (w, h) = (8u32, 8u32);
+    let src: Vec<u8> = (0..w * h).flat_map(|i| [(i * 4) as u8, (i * 3) as u8, 200, 255]).collect();
+    let size = ht_compressed_size(1, w, h) as usize;
+    assert_eq!(size, 32);
+    assert_eq!(ht_compressed_size(9, w, h), 0);
+    let mut out = vec![0u8; size];
+    unsafe {
+        assert!(ht_compress(1, 1, src.as_ptr(), w, h, w * 4, 2, std::ptr::null(), out.as_mut_ptr(), size as u64));
+        assert!(!ht_compress(1, 1, src.as_ptr(), w, h, w * 4, 2, std::ptr::null(), out.as_mut_ptr(), 4), "too little room");
+        let mut back = vec![0u8; (w * h * 16) as usize];
+        assert!(ht_decompress(1, out.as_ptr(), size as u64, w, h, back.as_mut_ptr(), w * 16, true));
+        let first = f32::from_le_bytes([back[8], back[9], back[10], back[11]]);
+        assert!((first - 200.0 / 255.0).abs() < 0.05, "blue comes back: {first}");
+    }
+}

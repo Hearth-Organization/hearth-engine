@@ -381,3 +381,90 @@ pub unsafe extern "C" fn hd_describe(d: *mut HdDetail) -> *const c_char {
     let s = format!("{full} triangles, {} pieces over {} levels; drawing {} now", d.detail.clusters.len(), d.detail.levels, d.selected.len() / 3);
     keep(&mut d.error, &s)
 }
+
+// ---------------------------------------------------------------- Hearth Texture (the asset pipeline's compressor)
+
+/// Bytes one mip takes compressed (`bc`: 1 BC1, 2 BC1a, 3 BC3, 4 BC4, 5 BC5). 0 for an unknown format.
+#[no_mangle]
+pub extern "C" fn ht_compressed_size(bc: u32, width: u32, height: u32) -> u64 {
+    hearth_texture::Bc::from_code(bc).map(|b| b.compressed_size(width as usize, height as usize) as u64).unwrap_or(0)
+}
+
+/// Compresses one mip. `source`: 1 RGBA8, 2 RGBX8, 3 R8, 4 RGBA32F, rows `pitch` bytes apart. `quality` 0-3. Writes
+/// `ht_compressed_size` bytes to `out`. False when something doesn't fit.
+///
+/// # Safety
+/// `src` must hold `height` rows of `pitch` bytes; `out` must hold `out_len` bytes.
+#[no_mangle]
+#[allow(clippy::too_many_arguments)]
+pub unsafe extern "C" fn ht_compress(
+    bc: u32,
+    source: u32,
+    src: *const u8,
+    width: u32,
+    height: u32,
+    pitch: u32,
+    quality: u32,
+    weights: *const f32,
+    out: *mut u8,
+    out_len: u64,
+) -> bool {
+    let (Some(bc), Some(source)) = (hearth_texture::Bc::from_code(bc), hearth_texture::Source::from_code(source)) else { return false };
+    if src.is_null() || out.is_null() || width == 0 || height == 0 {
+        return false;
+    }
+    let (w, h) = (width as usize, height as usize);
+    let need = bc.compressed_size(w, h);
+    if (out_len as usize) < need {
+        return false;
+    }
+    let len = pitch as usize * (h - 1) + w * source.bytes_per_pixel();
+    let input = unsafe { std::slice::from_raw_parts(src, len) };
+    let weights = if weights.is_null() { [1.0, 1.0, 1.0] } else { unsafe { [*weights, *weights.add(1), *weights.add(2)] } };
+    let result = catch_unwind(|| {
+        let rgba = hearth_texture::to_rgba8(input, source, w, h, pitch as usize, bc)?;
+        Ok::<Vec<u8>, String>(hearth_texture::compress(&rgba, w, h, bc, quality, weights))
+    });
+    match result {
+        Ok(Ok(data)) => {
+            unsafe { std::slice::from_raw_parts_mut(out, need) }.copy_from_slice(&data);
+            true
+        }
+        _ => false,
+    }
+}
+
+/// Decompresses one mip into rows `out_pitch` bytes apart: RGBA8, or RGBA32F (0 to 1) when `as_float`.
+///
+/// # Safety
+/// `data` must hold `data_len` bytes; `out` must hold `height` rows of `out_pitch` bytes.
+#[no_mangle]
+#[allow(clippy::too_many_arguments)]
+pub unsafe extern "C" fn ht_decompress(bc: u32, data: *const u8, data_len: u64, width: u32, height: u32, out: *mut u8, out_pitch: u32, as_float: bool) -> bool {
+    let Some(bc) = hearth_texture::Bc::from_code(bc) else { return false };
+    if data.is_null() || out.is_null() || width == 0 || height == 0 {
+        return false;
+    }
+    let (w, h, pitch) = (width as usize, height as usize, out_pitch as usize);
+    let bpp = if as_float { 16 } else { 4 };
+    if pitch < w * bpp {
+        return false;
+    }
+    let input = unsafe { std::slice::from_raw_parts(data, data_len as usize) };
+    let Ok(Ok(rgba)) = catch_unwind(|| hearth_texture::decompress(input, w, h, bc)) else { return false };
+    let output = unsafe { std::slice::from_raw_parts_mut(out, pitch * (h - 1) + w * bpp) };
+    for y in 0..h {
+        let row = &rgba[y * w * 4..(y + 1) * w * 4];
+        let dst = &mut output[y * pitch..y * pitch + w * bpp];
+        if as_float {
+            for (d, s) in dst.chunks_exact_mut(16).zip(row.chunks_exact(4)) {
+                for (k, v) in s.iter().enumerate() {
+                    d[k * 4..k * 4 + 4].copy_from_slice(&(*v as f32 / 255.0).to_le_bytes());
+                }
+            }
+        } else {
+            dst.copy_from_slice(row);
+        }
+    }
+    true
+}
