@@ -13,6 +13,7 @@
 //! The game's own levels (like Noclip Protocol's Level 0) build their look on top of this.
 
 pub mod noise;
+pub mod wfc;
 
 use noise::{hash, unit, zone};
 
