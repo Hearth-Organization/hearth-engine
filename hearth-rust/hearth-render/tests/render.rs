@@ -47,7 +47,11 @@ fn a_lit_scene_renders_and_is_saved() {
 
     // The ball is in the middle and red; the top corner is the dark background.
     let ball_px = pixel(&img, w, w / 2, h / 2 - 10);
-    assert!(ball_px[0] > ball_px[1] + 30 && ball_px[0] > 60, "the middle should be the red ball: {ball_px:?}");
+    let samples: Vec<String> = [(w / 2, h / 2 - 10), (w / 2, h / 4), (w / 2, 3 * h / 4), (w / 4, h / 2), (3 * w / 4, h / 2), (2, 2)]
+        .iter()
+        .map(|&(x, y)| format!("{x},{y}={:?}", pixel(&img, w, x, y)))
+        .collect();
+    assert!(ball_px[0] > ball_px[1] + 30 && ball_px[0] > 60, "the middle should be the red ball: {}", samples.join(" "));
     let sky = pixel(&img, w, 2, 2);
     assert!(bright(sky) < 60, "the corner should be the background: {sky:?}");
     // Without the lights the ball goes dark.
