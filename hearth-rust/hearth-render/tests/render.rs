@@ -1,5 +1,5 @@
 use glam::{Mat4, Vec3};
-use hearth_render::{save_png, shapes, Camera, Material, Object, PointLight, Renderer, Scene, Sun};
+use hearth_render::{save_png, shapes, Camera, Material, Object, PointLight, Renderer, Scene, Sky, Sun};
 
 fn pixel(img: &[u8], w: u32, x: u32, y: u32) -> [u8; 4] {
     let i = ((y * w + x) * 4) as usize;
@@ -76,4 +76,67 @@ fn bad_meshes_are_explained() {
     let mut m = shapes::cube();
     m.indices[0] = 999;
     assert!(r.add_mesh(&m).unwrap_err().contains("vertex 999"));
+}
+
+fn on_screen(scene: &Scene, w: u32, h: u32, p: Vec3) -> (u32, u32) {
+    let c = scene.camera.view_proj(w as f32 / h as f32) * p.extend(1.0);
+    let (x, y) = (c.x / c.w, c.y / c.w);
+    (((x * 0.5 + 0.5) * w as f32) as u32, ((0.5 - y * 0.5) * h as f32) as u32)
+}
+
+#[test]
+fn sky_shadows_textures_and_reflections() {
+    let (w, h) = (320, 240);
+    let Ok(mut r) = Renderer::headless(w, h) else {
+        assert!(std::env::var_os("HEARTH_NEED_GPU").is_none(), "no graphics");
+        return;
+    };
+    // A checker floor texture.
+    let n = 64;
+    let checker: Vec<u8> = (0..n * n).flat_map(|i| if ((i % n) / 8 + (i / n) / 8) % 2 == 0 { [200, 200, 200, 255] } else { [60, 60, 60, 255] }).collect();
+    let tex = r.add_texture(&checker, n, n).unwrap();
+    assert!(r.add_texture(&checker[..10], n, n).is_err());
+    let mut floor = shapes::plane(12.0);
+    for v in &mut floor.vertices {
+        v.uv = [v.uv[0] * 6.0, v.uv[1] * 6.0];
+    }
+    let floor = r.add_mesh(&floor).unwrap();
+    let ball = r.add_mesh(&shapes::sphere(32, 48)).unwrap();
+    let block = r.add_mesh(&shapes::cube()).unwrap();
+    let mut scene = Scene {
+        camera: Camera { eye: Vec3::new(0.0, -6.0, 2.5), target: Vec3::new(0.0, 0.0, 0.5), ..Camera::default() },
+        sun: Some(Sun { direction: Vec3::new(0.5, -0.8, -1.0), color: [1.0, 0.95, 0.85], intensity: 3.0 }),
+        sky: Some(Sky::default()),
+        ..Scene::default()
+    };
+    scene.objects.push(Object { mesh: floor, transform: Mat4::IDENTITY, material: Material { color: [1.0; 4], roughness: 0.9, texture: Some(tex), ..Material::default() } });
+    scene.objects.push(Object { mesh: ball, transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 1.0)), material: Material { color: [0.8, 0.1, 0.1, 1.0], roughness: 0.35, ..Material::default() } });
+    let block_at = Vec3::new(-2.2, 0.3, 0.5);
+    scene.objects.push(Object {
+        mesh: block,
+        transform: Mat4::from_translation(block_at) * Mat4::from_rotation_z(0.6),
+        material: Material { color: [1.0, 0.78, 0.34, 1.0], metallic: 1.0, roughness: 0.3, ..Material::default() },
+    });
+    let lit = r.render(&scene).unwrap();
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../target/renders");
+    save_png(&dir.join("sky-shadows-textures.png"), &lit, w, h).unwrap();
+    scene.shadows = false;
+    let flat = r.render(&scene).unwrap();
+    save_png(&dir.join("no-shadows.png"), &flat, w, h).unwrap();
+
+    let sky = pixel(&lit, w, w / 2, 3);
+    assert!(sky[2] > sky[0], "the sky at the top is blue: {sky:?}");
+    // The ball's shadow falls toward the camera, on the floor.
+    let (sx, sy) = on_screen(&scene, w, h, Vec3::new(0.5, -0.8, 0.0));
+    let (a, b) = (bright(pixel(&lit, w, sx, sy)), bright(pixel(&flat, w, sx, sy)));
+    assert!(a * 10 < b * 7, "the ball's shadow should darken the floor at {sx},{sy}: {a} with shadows, {b} without");
+    // Gold reflects the sky, so it looks gold, not brown.
+    let (gx, gy) = on_screen(&scene, w, h, block_at + Vec3::new(0.0, -0.5, 0.2));
+    let g = pixel(&lit, w, gx, gy);
+    assert!(g[0] > 90 && g[0] > g[2] + 30, "the gold block should look gold at {gx},{gy}: {g:?}");
+    // The checker shows: light and dark squares on the floor.
+    let (fx, fy) = on_screen(&scene, w, h, Vec3::new(-1.5, -2.5, 0.0));
+    let row: Vec<u32> = (0..40).map(|d| bright(pixel(&flat, w, (fx + d).min(w - 1), fy))).collect();
+    let (lo, hi) = (row.iter().min().unwrap(), row.iter().max().unwrap());
+    assert!(hi - lo > 60, "the floor texture should show (brightness {lo} to {hi})");
 }

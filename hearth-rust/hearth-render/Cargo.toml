@@ -12,3 +12,4 @@ pollster = "1"
 bytemuck = { version = "1", features = ["derive"] }
 glam = { version = "0.34", features = ["bytemuck"] }
 png = "0.17"
+hearth-texture = { path = "../hearth-texture" }

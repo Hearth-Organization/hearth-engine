@@ -1,9 +1,10 @@
 //! Atom in Rust: Hearth Engine's renderer, on wgpu (Vulkan on Linux, any graphics card, or Mesa's software
 //! driver when there's none, which is how GitHub renders the test pictures).
 //!
-//! What it draws today: meshes with physically based materials (colour, metal, roughness, glow), a sun, up to 16
-//! point lights, ambient light, depth, ACES tone mapping, into a window or an image. Next: textures, shadows, the
-//! Nanite-style detail from hearth-detail, then the rest of what Atom does.
+//! What it draws today: meshes with physically based materials (colour, metal, roughness, glow, a colour texture
+//! with mipmaps), a sun with soft shadows, up to 16 point lights, a sky that lights the scene and shows in
+//! reflections, depth and ACES tone mapping, into an image. Next: normal maps, the Nanite-style detail from
+//! hearth-detail, a window, then the rest of what Atom does.
 
 pub mod shapes;
 
@@ -38,11 +39,30 @@ pub struct Material {
     pub metallic: f32,
     pub roughness: f32,
     pub emissive: [f32; 3],
+    /// A colour texture (multiplied by `color`).
+    pub texture: Option<TextureId>,
 }
 
 impl Default for Material {
     fn default() -> Material {
-        Material { color: [0.8, 0.8, 0.8, 1.0], metallic: 0.0, roughness: 0.5, emissive: [0.0; 3] }
+        Material { color: [0.8, 0.8, 0.8, 1.0], metallic: 0.0, roughness: 0.5, emissive: [0.0; 3], texture: None }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct TextureId(u32);
+
+/// A simple sky: colours straight up, at the horizon and below. It lights the scene and shows in reflections.
+#[derive(Clone, Copy, Debug)]
+pub struct Sky {
+    pub zenith: [f32; 3],
+    pub horizon: [f32; 3],
+    pub ground: [f32; 3],
+}
+
+impl Default for Sky {
+    fn default() -> Sky {
+        Sky { zenith: [0.15, 0.3, 0.7], horizon: [0.7, 0.75, 0.8], ground: [0.15, 0.13, 0.12] }
     }
 }
 
@@ -106,11 +126,15 @@ pub struct Scene {
     /// Linear background colour.
     pub clear: [f32; 4],
     pub exposure: f32,
+    /// Drawn behind everything and used for light and reflections (instead of `ambient`).
+    pub sky: Option<Sky>,
+    /// The sun casts shadows.
+    pub shadows: bool,
 }
 
 impl Default for Scene {
     fn default() -> Scene {
-        Scene { camera: Camera::default(), sun: None, ambient: [0.03; 3], lights: Vec::new(), objects: Vec::new(), clear: [0.0, 0.0, 0.0, 1.0], exposure: 1.0 }
+        Scene { camera: Camera::default(), sun: None, ambient: [0.03; 3], lights: Vec::new(), objects: Vec::new(), clear: [0.0, 0.0, 0.0, 1.0], exposure: 1.0, sky: None, shadows: true }
     }
 }
 
@@ -125,13 +149,21 @@ struct GpuLight {
 #[derive(Clone, Copy, Pod, Zeroable)]
 struct GpuFrame {
     view_proj: [[f32; 4]; 4],
+    inv_view_proj: [[f32; 4]; 4],
+    light_view_proj: [[f32; 4]; 4],
     camera: [f32; 4],
     sun_dir: [f32; 4],
     sun_color: [f32; 4],
     ambient: [f32; 4],
     counts: [f32; 4],
+    sky_zenith: [f32; 4],
+    sky_horizon: [f32; 4],
+    sky_ground: [f32; 4],
+    shadow: [f32; 4],
     lights: [GpuLight; MAX_LIGHTS],
 }
+
+pub const SHADOW_SIZE: u32 = 2048;
 
 #[repr(C)]
 #[derive(Clone, Copy, Pod, Zeroable)]
@@ -147,16 +179,25 @@ struct GpuMesh {
     vertices: wgpu::Buffer,
     indices: wgpu::Buffer,
     count: u32,
+    /// The mesh's box (min, max), for fitting the sun's shadow to the scene.
+    bounds: (Vec3, Vec3),
 }
 
 pub struct Renderer {
     device: wgpu::Device,
     queue: wgpu::Queue,
     pipeline: wgpu::RenderPipeline,
+    shadow_pipeline: wgpu::RenderPipeline,
+    sky_pipeline: wgpu::RenderPipeline,
     object_layout: wgpu::BindGroupLayout,
     frame_buffer: wgpu::Buffer,
     frame_group: wgpu::BindGroup,
+    shadow_frame_group: wgpu::BindGroup,
+    shadow_map: wgpu::Texture,
     meshes: HashMap<MeshId, GpuMesh>,
+    textures: HashMap<TextureId, wgpu::TextureView>,
+    white: wgpu::TextureView,
+    sampler: wgpu::Sampler,
     next_mesh: u32,
     pub width: u32,
     pub height: u32,
@@ -176,6 +217,28 @@ fn uniform_layout(device: &wgpu::Device, label: &str, visibility: wgpu::ShaderSt
             count: None,
         }],
     })
+}
+
+fn texture_entry(binding: u32, sample_type: wgpu::TextureSampleType) -> wgpu::BindGroupLayoutEntry {
+    wgpu::BindGroupLayoutEntry {
+        binding,
+        visibility: wgpu::ShaderStages::FRAGMENT,
+        ty: wgpu::BindingType::Texture { sample_type, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false },
+        count: None,
+    }
+}
+
+fn sampler_entry(binding: u32, kind: wgpu::SamplerBindingType) -> wgpu::BindGroupLayoutEntry {
+    wgpu::BindGroupLayoutEntry { binding, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Sampler(kind), count: None }
+}
+
+fn uniform_entry() -> wgpu::BindGroupLayoutEntry {
+    wgpu::BindGroupLayoutEntry {
+        binding: 0,
+        visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+        ty: wgpu::BindingType::Buffer { ty: wgpu::BufferBindingType::Uniform, has_dynamic_offset: false, min_binding_size: None },
+        count: None,
+    }
 }
 
 fn targets(device: &wgpu::Device, width: u32, height: u32) -> (wgpu::Texture, wgpu::Texture) {
@@ -224,9 +287,18 @@ impl Renderer {
         .map_err(|e| format!("the graphics card wouldn't start: {e}"))?;
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("hearth pbr"), source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()) });
-        let frame_layout = uniform_layout(&device, "frame", wgpu::ShaderStages::VERTEX_FRAGMENT);
-        let object_layout = uniform_layout(&device, "object", wgpu::ShaderStages::VERTEX_FRAGMENT);
+        let frame_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("frame"),
+            entries: &[uniform_entry(), texture_entry(1, wgpu::TextureSampleType::Depth), sampler_entry(2, wgpu::SamplerBindingType::Comparison)],
+        });
+        let shadow_frame_layout = uniform_layout(&device, "shadow frame", wgpu::ShaderStages::VERTEX_FRAGMENT);
+        let object_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("object"),
+            entries: &[uniform_entry(), texture_entry(1, wgpu::TextureSampleType::Float { filterable: true }), sampler_entry(2, wgpu::SamplerBindingType::Filtering)],
+        });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("hearth pbr"), bind_group_layouts: &[Some(&frame_layout), Some(&object_layout)], immediate_size: 0 });
+        let shadow_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("hearth shadow"), bind_group_layouts: &[Some(&shadow_frame_layout), Some(&object_layout)], immediate_size: 0 });
+        let sky_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("hearth sky"), bind_group_layouts: &[Some(&frame_layout)], immediate_size: 0 });
         let attributes = [
             wgpu::VertexAttribute { format: wgpu::VertexFormat::Float32x3, offset: 0, shader_location: 0 },
             wgpu::VertexAttribute { format: wgpu::VertexFormat::Float32x3, offset: 12, shader_location: 1 },
@@ -255,19 +327,118 @@ impl Renderer {
             multiview_mask: None,
             cache: None,
         });
+        let shadow_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("hearth shadow"),
+            layout: Some(&shadow_layout),
+            vertex: wgpu::VertexState { module: &shader, entry_point: Some("vs_shadow"), compilation_options: Default::default(), buffers: &buffers },
+            fragment: None,
+            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: DEPTH,
+                depth_write_enabled: Some(true),
+                depth_compare: Some(wgpu::CompareFunction::Less),
+                stencil: Default::default(),
+                bias: wgpu::DepthBiasState { constant: 2, slope_scale: 2.0, clamp: 0.0 },
+            }),
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let sky_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("hearth sky"),
+            layout: Some(&sky_layout),
+            vertex: wgpu::VertexState { module: &shader, entry_point: Some("vs_sky"), compilation_options: Default::default(), buffers: &[] },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: Some("fs_sky"),
+                compilation_options: Default::default(),
+                targets: &[Some(wgpu::ColorTargetState { format: COLOR, blend: None, write_mask: wgpu::ColorWrites::ALL })],
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: DEPTH,
+                depth_write_enabled: Some(false),
+                depth_compare: Some(wgpu::CompareFunction::Always),
+                stencil: Default::default(),
+                bias: Default::default(),
+            }),
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
         let frame_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("frame"),
             size: std::mem::size_of::<GpuFrame>() as u64,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
+        let shadow_map = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("hearth shadow map"),
+            size: wgpu::Extent3d { width: SHADOW_SIZE, height: SHADOW_SIZE, depth_or_array_layers: 1 },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: DEPTH,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            view_formats: &[],
+        });
+        let shadow_view = shadow_map.create_view(&wgpu::TextureViewDescriptor::default());
+        let shadow_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("hearth shadow"),
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            compare: Some(wgpu::CompareFunction::LessEqual),
+            ..Default::default()
+        });
         let frame_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("frame"),
             layout: &frame_layout,
+            entries: &[
+                wgpu::BindGroupEntry { binding: 0, resource: frame_buffer.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(&shadow_view) },
+                wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(&shadow_sampler) },
+            ],
+        });
+        let shadow_frame_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("shadow frame"),
+            layout: &shadow_frame_layout,
             entries: &[wgpu::BindGroupEntry { binding: 0, resource: frame_buffer.as_entire_binding() }],
         });
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("hearth textures"),
+            address_mode_u: wgpu::AddressMode::Repeat,
+            address_mode_v: wgpu::AddressMode::Repeat,
+            address_mode_w: wgpu::AddressMode::Repeat,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::MipmapFilterMode::Linear,
+            anisotropy_clamp: 8,
+            ..Default::default()
+        });
+        let white = upload_texture(&device, &queue, &[[255, 255, 255, 255]], 1, 1);
         let (color, depth) = targets(&device, width, height);
-        Ok(Renderer { device, queue, pipeline, object_layout, frame_buffer, frame_group, meshes: HashMap::new(), next_mesh: 1, width, height, color, depth, adapter_name })
+        Ok(Renderer {
+            device,
+            queue,
+            pipeline,
+            shadow_pipeline,
+            sky_pipeline,
+            object_layout,
+            frame_buffer,
+            frame_group,
+            shadow_frame_group,
+            shadow_map,
+            meshes: HashMap::new(),
+            textures: HashMap::new(),
+            white,
+            sampler,
+            next_mesh: 1,
+            width,
+            height,
+            color,
+            depth,
+            adapter_name,
+        })
     }
 
     /// Puts a mesh on the graphics card.
@@ -282,7 +453,25 @@ impl Renderer {
         let indices = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("indices"), contents: bytemuck::cast_slice(&mesh.indices), usage: wgpu::BufferUsages::INDEX });
         let id = MeshId(self.next_mesh);
         self.next_mesh += 1;
-        self.meshes.insert(id, GpuMesh { vertices, indices, count: mesh.indices.len() as u32 });
+        let (lo, hi) = mesh.vertices.iter().fold((Vec3::splat(f32::MAX), Vec3::splat(f32::MIN)), |(lo, hi), v| {
+            let p = Vec3::from(v.pos);
+            (lo.min(p), hi.max(p))
+        });
+        self.meshes.insert(id, GpuMesh { vertices, indices, count: mesh.indices.len() as u32, bounds: (lo, hi) });
+        Ok(id)
+    }
+
+    /// Puts a colour texture on the graphics card (RGBA, 8 bits a channel, sRGB, top row first), with its mipmaps
+    /// made the light-correct way (hearth-texture).
+    pub fn add_texture(&mut self, rgba: &[u8], width: u32, height: u32) -> Result<TextureId, String> {
+        if width == 0 || height == 0 || rgba.len() != (width * height * 4) as usize {
+            return Err(format!("the texture's pixels don't match its size ({width} x {height})"));
+        }
+        let pixels: Vec<[u8; 4]> = rgba.as_chunks::<4>().0.to_vec();
+        let view = upload_texture(&self.device, &self.queue, &pixels, width, height);
+        let id = TextureId(self.next_mesh);
+        self.next_mesh += 1;
+        self.textures.insert(id, view);
         Ok(id)
     }
 
@@ -298,6 +487,38 @@ impl Renderer {
         }
     }
 
+    /// The box around everything in the scene.
+    fn scene_bounds(&self, scene: &Scene) -> Option<(Vec3, Vec3)> {
+        let mut b: Option<(Vec3, Vec3)> = None;
+        for o in &scene.objects {
+            let Some(m) = self.meshes.get(&o.mesh) else { continue };
+            let (lo, hi) = m.bounds;
+            for k in 0..8 {
+                let c = Vec3::new(if k & 1 == 0 { lo.x } else { hi.x }, if k & 2 == 0 { lo.y } else { hi.y }, if k & 4 == 0 { lo.z } else { hi.z });
+                let p = o.transform.transform_point3(c);
+                b = Some(match b {
+                    Some((a, z)) => (a.min(p), z.max(p)),
+                    None => (p, p),
+                });
+            }
+        }
+        b
+    }
+
+    /// The sun's view: an orthographic box around the whole scene, looking along the sun.
+    fn sun_view(&self, scene: &Scene) -> Option<Mat4> {
+        let sun = scene.sun?;
+        let (lo, hi) = self.scene_bounds(scene)?;
+        let centre = (lo + hi) * 0.5;
+        let radius = ((hi - lo).length() * 0.5).max(0.01);
+        let d = sun.direction.normalize_or(Vec3::NEG_Z);
+        let up = if d.z.abs() > 0.99 { Vec3::Y } else { Vec3::Z };
+        let eye = centre - d * radius * 2.0;
+        let view = glam::camera::rh::view::look_at_mat4(eye, centre, up);
+        let proj = glam::camera::rh::proj::directx::orthographic(-radius, radius, -radius, radius, 0.01, radius * 4.0);
+        Some(proj * view)
+    }
+
     fn frame_data(&self, scene: &Scene) -> GpuFrame {
         let mut lights = [GpuLight { pos_range: [0.0; 4], color: [0.0; 4] }; MAX_LIGHTS];
         for (g, l) in lights.iter_mut().zip(scene.lights.iter().take(MAX_LIGHTS)) {
@@ -311,13 +532,23 @@ impl Renderer {
             None => ([0.0, 0.0, -1.0, 0.0], [0.0; 4]),
         };
         let e = scene.camera.eye;
+        let vp = scene.camera.view_proj(self.width as f32 / self.height as f32);
+        let light = if scene.shadows { self.sun_view(scene) } else { None };
+        let sky = scene.sky;
+        let c3 = |c: [f32; 3], on: bool| [c[0], c[1], c[2], if on { 1.0 } else { 0.0 }];
         GpuFrame {
-            view_proj: scene.camera.view_proj(self.width as f32 / self.height as f32).to_cols_array_2d(),
+            view_proj: vp.to_cols_array_2d(),
+            inv_view_proj: vp.inverse().to_cols_array_2d(),
+            light_view_proj: light.unwrap_or(Mat4::IDENTITY).to_cols_array_2d(),
             camera: [e.x, e.y, e.z, 1.0],
             sun_dir,
             sun_color,
             ambient: [scene.ambient[0], scene.ambient[1], scene.ambient[2], 0.0],
             counts: [scene.lights.len().min(MAX_LIGHTS) as f32, scene.exposure, 0.0, 0.0],
+            sky_zenith: c3(sky.map(|s| s.zenith).unwrap_or_default(), sky.is_some()),
+            sky_horizon: c3(sky.map(|s| s.horizon).unwrap_or_default(), sky.is_some()),
+            sky_ground: c3(sky.map(|s| s.ground).unwrap_or_default(), sky.is_some()),
+            shadow: [if light.is_some() { 1.0 } else { 0.0 }, 0.0015, 1.0 / SHADOW_SIZE as f32, 0.0],
             lights,
         }
     }
@@ -339,12 +570,47 @@ impl Renderer {
                 emissive: [m.emissive[0], m.emissive[1], m.emissive[2], 0.0],
             };
             let buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("object"), contents: bytemuck::bytes_of(&data), usage: wgpu::BufferUsages::UNIFORM });
+            let view = match m.texture {
+                Some(t) => self.textures.get(&t).ok_or_else(|| format!("a material uses texture {t:?}, which isn't on the graphics card"))?,
+                None => &self.white,
+            };
             let group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
                 label: Some("object"),
                 layout: &self.object_layout,
-                entries: &[wgpu::BindGroupEntry { binding: 0, resource: buffer.as_entire_binding() }],
+                entries: &[
+                    wgpu::BindGroupEntry { binding: 0, resource: buffer.as_entire_binding() },
+                    wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(view) },
+                    wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(&self.sampler) },
+                ],
             });
             groups.push((group, buffer));
+        }
+        // The sun's shadow map first.
+        {
+            let shadow_view = self.shadow_map.create_view(&wgpu::TextureViewDescriptor::default());
+            let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("hearth shadow"),
+                color_attachments: &[],
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &shadow_view,
+                    depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Clear(1.0), store: wgpu::StoreOp::Store }),
+                    stencil_ops: None,
+                }),
+                occlusion_query_set: None,
+                timestamp_writes: None,
+                multiview_mask: None,
+            });
+            if scene.shadows && scene.sun.is_some() {
+                pass.set_pipeline(&self.shadow_pipeline);
+                pass.set_bind_group(0, &self.shadow_frame_group, &[]);
+                for (o, (group, _)) in scene.objects.iter().zip(&groups) {
+                    let mesh = &self.meshes[&o.mesh];
+                    pass.set_bind_group(1, group, &[]);
+                    pass.set_vertex_buffer(0, mesh.vertices.slice(..));
+                    pass.set_index_buffer(mesh.indices.slice(..), wgpu::IndexFormat::Uint32);
+                    pass.draw_indexed(0..mesh.count, 0, 0..1);
+                }
+            }
         }
         let color_view = self.color.create_view(&wgpu::TextureViewDescriptor::default());
         let depth_view = self.depth.create_view(&wgpu::TextureViewDescriptor::default());
@@ -366,8 +632,12 @@ impl Renderer {
             timestamp_writes: None,
             multiview_mask: None,
         });
-        pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.frame_group, &[]);
+        if scene.sky.is_some() {
+            pass.set_pipeline(&self.sky_pipeline);
+            pass.draw(0..3, 0..1);
+        }
+        pass.set_pipeline(&self.pipeline);
         for (o, (group, _)) in scene.objects.iter().zip(&groups) {
             let mesh = &self.meshes[&o.mesh];
             pass.set_bind_group(1, group, &[]);
@@ -415,6 +685,37 @@ impl Renderer {
         readback.unmap();
         Ok(out)
     }
+}
+
+/// A texture with its whole mip chain (made by hearth-texture: averaged as light, sharp without ringing).
+fn upload_texture(device: &wgpu::Device, queue: &wgpu::Queue, pixels: &[[u8; 4]], width: u32, height: u32) -> wgpu::TextureView {
+    use hearth_texture::mips::{chain, Image, Options};
+    let top = Image { width: width as usize, height: height as usize, pixels: pixels.iter().map(|p| [p[0] as f32 / 255.0, p[1] as f32 / 255.0, p[2] as f32 / 255.0, p[3] as f32 / 255.0]).collect() };
+    let levels = chain(&top, &Options::default());
+    let texture = device.create_texture(&wgpu::TextureDescriptor {
+        label: Some("hearth texture"),
+        size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        mip_level_count: levels.len() as u32,
+        sample_count: 1,
+        dimension: wgpu::TextureDimension::D2,
+        format: wgpu::TextureFormat::Rgba8UnormSrgb,
+        usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+        view_formats: &[],
+    });
+    for (mip, level) in levels.iter().enumerate() {
+        let bytes: Vec<u8> = if mip == 0 {
+            pixels.iter().flatten().copied().collect()
+        } else {
+            level.pixels.iter().flat_map(|p| p.map(|c| (c.clamp(0.0, 1.0) * 255.0 + 0.5) as u8)).collect()
+        };
+        queue.write_texture(
+            wgpu::TexelCopyTextureInfo { texture: &texture, mip_level: mip as u32, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
+            &bytes,
+            wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(level.width as u32 * 4), rows_per_image: Some(level.height as u32) },
+            wgpu::Extent3d { width: level.width as u32, height: level.height as u32, depth_or_array_layers: 1 },
+        );
+    }
+    texture.create_view(&wgpu::TextureViewDescriptor::default())
 }
 
 /// Saves an RGBA picture as a PNG.
