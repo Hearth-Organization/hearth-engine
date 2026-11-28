@@ -1,0 +1,13 @@
+[package]
+name = "hearth-world"
+version = "0.0.0"  # the owner picks version numbers; this one isn't shipped on its own
+description = "Hearth Engine's entities and components in Rust (replacing O3DE's AzFramework entities): things, parents and children, transforms, systems, levels saved and loaded"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+glam = { version = "0.34", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+hearth-save = { path = "../hearth-save" }

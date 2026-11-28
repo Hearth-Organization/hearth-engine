@@ -2,7 +2,7 @@
 # Built and tested on GitHub (.github/workflows/hearth-rust.yml), never only on a computer here.
 [workspace]
 resolver = "2"
-members = ["hearth-link", "hearth-helper", "hearth-script", "hearth-detail", "hearth-rts", "hearth-kits", "hearth-ffi", "hearth-save", "hearth-levelgen", "hearth-pack", "hearth-import", "hearth-logs", "hearth-playtest", "hearth-project", "hearth-texture", "hearth-net", "hearth-anim", "hearth-render"]
+members = ["hearth-link", "hearth-helper", "hearth-script", "hearth-detail", "hearth-rts", "hearth-kits", "hearth-ffi", "hearth-save", "hearth-levelgen", "hearth-pack", "hearth-import", "hearth-logs", "hearth-playtest", "hearth-project", "hearth-texture", "hearth-net", "hearth-anim", "hearth-render", "hearth-world"]
 
 [workspace.package]
 edition = "2021"
