@@ -37,5 +37,21 @@ of its own). Built and tested on GitHub only (`.github/workflows/hearth-rust.yml
   the next, inventory stacks and crafting (with workbenches), turn-based tactics (turn order by speed, where a unit
   can walk, who it can hit), and tower defense (waves, paths that change when towers go up, never fully blocked).
 
-Next, in this order: Nanite-style detail in Atom, wiring Hearth Script into the game, the Level Generator's core, packaging and Share, import
-checks, safe saving.
+- `hearth-ffi`: the bridge the engine's HearthRust gem calls (C interface to Hearth Script and Hearth Detail).
+- `hearth-save`: safe saving for games and tools: atomic writes, a backup, never defaults over a broken file,
+  merge on write, save slots with summaries.
+- `hearth-levelgen`: the Level Generator core: endless worlds built chunk by chunk from a seed, every chunk
+  connected to its neighbours (at least two doorways a side), no wall built twice, per-cell choices and smooth zones.
+- `hearth-pack`: Package and Share (Hearth OS AppImage with SHA256SUMS, Steam depot folder, test archive), a port
+  of the game's finish_package.py with the game's own files given as extras; `hearth-pack verify` checks a download.
+- `hearth-import`: import checks for models in plain words (wrong units, lying on its side, far from the origin,
+  inside out, no uvs, holes, tangled edges, too many triangles).
+- `hearth-logs`: crash and log reports: errors grouped, the crash and what came just before, fixes for the common
+  problems.
+- `hearth-playtest`: playtest reports from JSON-lines recordings: deaths and killers, stuck spots, slow places,
+  time per level, quits, and the deadliest places across many players.
+
+The Hearth list is done (the Voice Studio link, co-op lobby, Hub start page and build commands came over with
+`hearth-helper`). Next: the rest of the engine, piece by piece (the owner, Nov 28: "start rewriting everything else
+in hearth engine as well in rust"): the project and gem tools first, then the asset pipeline, gameplay systems,
+physics and audio, and the renderer last.
