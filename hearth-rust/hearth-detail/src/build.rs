@@ -54,7 +54,7 @@ impl Detail {
         for &c in clusters {
             let c = &self.clusters[c];
             let ix = &self.indices[c.first_index as usize..(c.first_index + c.index_count) as usize];
-            out.extend(ix.chunks_exact(3).map(|t| [t[0], t[1], t[2]]));
+            out.extend(ix.as_chunks::<3>().0.iter().copied());
         }
         out
     }
@@ -159,7 +159,7 @@ fn group(ids: &[usize], pieces: &[Piece], topo: &Topology) -> Vec<Vec<usize>> {
 
 /// Builds every detail level for a model.
 pub fn build(mesh: &Mesh) -> Result<Detail, String> {
-    if mesh.indices.len() % 3 != 0 {
+    if !mesh.indices.len().is_multiple_of(3) {
         return Err("the model's triangle list isn't whole (its length isn't a multiple of 3)".into());
     }
     if let Some(&bad) = mesh.indices.iter().find(|&&i| i as usize >= mesh.vertices.len()) {
@@ -169,7 +169,7 @@ pub fn build(mesh: &Mesh) -> Result<Detail, String> {
     if mesh.indices.is_empty() {
         return Err("the model has no triangles".into());
     }
-    let tris: Vec<Tri> = mesh.indices.chunks_exact(3).map(|t| [t[0], t[1], t[2]]).collect();
+    let tris: Vec<Tri> = mesh.indices.as_chunks::<3>().0.to_vec();
 
     let mut pieces: Vec<Piece> = Vec::new();
     let mut current: Vec<usize> = Vec::new();

@@ -26,8 +26,8 @@ impl Mesh {
     /// Smooth normals from the triangles, for models that come without them.
     pub fn compute_normals(&mut self) {
         let mut n = vec![[0f32; 3]; self.vertices.len()];
-        for t in self.indices.chunks_exact(3) {
-            let [a, b, c] = [t[0] as usize, t[1] as usize, t[2] as usize];
+        for t in self.indices.as_chunks::<3>().0 {
+            let [a, b, c] = t.map(|i| i as usize);
             let f = cross(crate::math::sub(self.vertices[b].pos, self.vertices[a].pos), crate::math::sub(self.vertices[c].pos, self.vertices[a].pos));
             for &i in &[a, b, c] {
                 n[i] = crate::math::add(n[i], f);
@@ -85,8 +85,8 @@ pub fn prepare(mesh: &Mesh) -> (Mesh, Topology) {
         .collect();
 
     let mut indices = Vec::with_capacity(mesh.indices.len());
-    for t in mesh.indices.chunks_exact(3) {
-        let t = [remap[t[0] as usize], remap[t[1] as usize], remap[t[2] as usize]];
+    for t in mesh.indices.as_chunks::<3>().0 {
+        let t = t.map(|i| remap[i as usize]);
         let p = [pid[t[0] as usize], pid[t[1] as usize], pid[t[2] as usize]];
         if p[0] != p[1] && p[1] != p[2] && p[0] != p[2] {
             indices.extend_from_slice(&t);
