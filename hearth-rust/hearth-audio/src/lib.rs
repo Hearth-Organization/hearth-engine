@@ -19,7 +19,7 @@ use kira::effect::filter::{FilterBuilder, FilterHandle};
 use kira::effect::reverb::{ReverbBuilder, ReverbHandle};
 use kira::listener::ListenerHandle;
 use kira::sound::static_sound::{StaticSoundData, StaticSoundHandle};
-use kira::track::{SpatialTrackBuilder, SpatialTrackHandle, TrackBuilder, TrackHandle};
+use kira::track::{SendTrackBuilder, SendTrackHandle, SpatialTrackBuilder, SpatialTrackHandle};
 use kira::{AudioManager, AudioManagerSettings, Tween};
 use serde::{Deserialize, Serialize};
 
@@ -51,7 +51,7 @@ pub struct Audio<B: Backend> {
     listener: ListenerHandle,
     library: HashMap<String, StaticSoundData>,
     playing: HashMap<Entity, Playing>,
-    room: TrackHandle,
+    room: SendTrackHandle,
     reverb: ReverbHandle,
     /// How walls muffle and echoes work (a game can change these).
     pub acoustics: acoustics::Settings,
@@ -64,12 +64,12 @@ fn smooth() -> Tween {
 
 impl<B: Backend> Audio<B> {
     pub fn new(settings: AudioManagerSettings<B>) -> Result<Audio<B>, String> {
-        let mut manager = AudioManager::<B>::new(settings).map_err(|e| format!("the sound device wouldn't start: {e:?}"))?;
+        let mut manager = AudioManager::<B>::new(settings).map_err(|_| "the sound device wouldn't start".to_string())?;
         let listener = manager.add_listener(Vec3::ZERO, Quat::IDENTITY).map_err(|e| format!("{e:?}"))?;
         // The room's echo: everything is sent through it, more or less depending on the space.
-        let mut room_builder = TrackBuilder::new();
+        let mut room_builder = SendTrackBuilder::new();
         let reverb = room_builder.add_effect(ReverbBuilder::new().mix(1.0f32).feedback(0.0).damping(0.6));
-        let room = manager.add_sub_track(room_builder).map_err(|e| format!("{e:?}"))?;
+        let room = manager.add_send_track(room_builder).map_err(|e| format!("{e:?}"))?;
         Ok(Audio { manager, listener, library: HashMap::new(), playing: HashMap::new(), room, reverb, acoustics: acoustics::Settings::default(), since_room: 1.0 })
     }
 
