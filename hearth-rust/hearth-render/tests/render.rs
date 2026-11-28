@@ -174,5 +174,6 @@ fn detail_models_draw_full_up_close_and_fewer_triangles_far_away() {
         counts.push(r.last_triangles);
     }
     assert!(counts[0] > counts[1] && counts[1] > counts[2], "farther must mean fewer triangles: {counts:?}");
-    assert!(counts[2] * 10 < counts[0], "far away should be a small part of the full model: {counts:?}");
+    // The ball's uv seam and poles stay (so textures never tear), which limits how simple it gets.
+    assert!(counts[2] * 5 < counts[0], "far away should be a small part of the full model: {counts:?}");
 }
