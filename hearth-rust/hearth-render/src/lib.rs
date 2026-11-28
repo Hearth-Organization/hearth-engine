@@ -65,7 +65,8 @@ impl Default for Camera {
 
 impl Camera {
     pub fn view_proj(&self, aspect: f32) -> Mat4 {
-        Mat4::perspective_rh(self.fov.to_radians(), aspect, self.near, self.far) * Mat4::look_at_rh(self.eye, self.target, self.up)
+        // wgpu's clip space is DirectX-style (depth 0 to 1, Y up).
+        glam::camera::rh::proj::directx::perspective(self.fov.to_radians(), aspect, self.near, self.far) * glam::camera::rh::view::look_at_mat4(self.eye, self.target, self.up)
     }
 }
 
