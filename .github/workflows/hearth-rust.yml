@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write  # the owner, Nov 28: share the renderer's pictures as draft releases
 
 jobs:
   test:
@@ -72,3 +72,14 @@ jobs:
           name: hearth-render-pictures
           path: hearth-rust/target/renders/
           if-no-files-found: ignore
+
+      - name: Share the pictures as a draft release (the owner, Nov 28, 2026)
+        if: always() && github.ref == 'refs/heads/hearth/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls target/renders/*.png >/dev/null 2>&1 || exit 0
+          gh release delete hearth-render-pictures --yes >/dev/null 2>&1 || true
+          gh release create hearth-render-pictures target/renders/*.png --draft \
+            --title "Atom in Rust: test pictures (${GITHUB_SHA::8})" \
+            --notes "What hearth-render drew in run ${{ github.run_id }} on ${{ github.sha }} (Mesa's software driver)."
