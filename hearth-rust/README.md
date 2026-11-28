@@ -21,5 +21,12 @@ of its own). Built and tested on GitHub only (`.github/workflows/hearth-rust.yml
   command, `hearth-script door.hs picked_up "Gym key"`, runs a script; `--check` only looks for mistakes. Not yet
   wired into the editor or the game.
 
-Next, in this order: wiring Hearth Script into the game, the Level Generator's core, packaging and Share, import
+- `hearth-detail`: Nanite-style detail, the builder half. A model (.glb from Hearth Forge, or .obj) is cut into pieces
+  of up to 128 triangles; groups of neighbouring pieces get simpler versions, level after level, with their outside
+  edges kept still, and each piece records its error and its parent's. The game draws, piece by piece, the simplest
+  version whose error is too small to see: full detail up close, far fewer triangles far away, never a crack (the
+  tests check every view of a closed ball and an open, seamed sheet). `hearth-detail model.glb` writes
+  `model.hdetail`. The drawing half (picking pieces on the graphics card each frame, in Atom) comes next.
+
+Next, in this order: Nanite-style detail in Atom, wiring Hearth Script into the game, the Level Generator's core, packaging and Share, import
 checks, safe saving.
