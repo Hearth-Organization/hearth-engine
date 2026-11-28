@@ -115,6 +115,10 @@ fn realpath(s: &str) -> PathBuf {
 pub fn op_status(_args: &Value) -> Value {
     let m = meminfo();
     let build = ctx::get("build");
+    let detail: serde_json::Map<String, Value> = ["MemFree", "MemAvailable", "Cached", "Buffers", "Shmem", "SwapTotal", "SwapFree", "Committed_AS"]
+        .iter()
+        .map(|k| (k.to_string(), json!(m.get(*k))))
+        .collect();
     json!({
         "agent_version": VERSION,
         "agent": "rust",
@@ -125,8 +129,7 @@ pub fn op_status(_args: &Value) -> Value {
         "build": build,
         "memory_free_mb": m.get("MemAvailable"),
         "memory_total_mb": m.get("MemTotal"),
-        "memory_detail": ["MemFree", "MemAvailable", "Cached", "Buffers", "Shmem", "SwapTotal", "SwapFree", "Committed_AS"]
-            .iter().map(|k| (k.to_string(), json!(m.get(*k)))).collect::<serde_json::Map<_, _>>(),
+        "memory_detail": detail,
         "top_memory": top_memory(6),
         "compilers_running": compilers_running(),
         "editor_launch_known": p().launch_file.exists(),
