@@ -178,7 +178,8 @@ impl<'a> Talk<'a> {
                 self.part = None;
                 return Say::End;
             }
-            let Some(p) = self.d.parts.get(&name) else { return Say::End };
+            let d = self.d;
+            let Some(p) = d.parts.get(&name) else { return Say::End };
             if let Some(l) = p.lines.get(self.line) {
                 self.line += 1;
                 for f in &l.set {
@@ -201,7 +202,8 @@ impl<'a> Talk<'a> {
     /// Picks the n-th choice shown (from 0).
     pub fn choose(&mut self, n: usize, flags: &BTreeSet<String>) -> Result<(), String> {
         let name = self.part.clone().ok_or("the talk is over")?;
-        let p = self.d.parts.get(&name).ok_or("the talk is over")?;
+        let d = self.d;
+        let p = d.parts.get(&name).ok_or("the talk is over")?;
         let shown = self.visible(p, flags);
         let c = shown.get(n).ok_or_else(|| format!("there are only {} choices", shown.len()))?;
         self.part = Some(c.to.clone());

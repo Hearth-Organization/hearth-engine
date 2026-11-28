@@ -12,9 +12,9 @@ const LEVEL: &str = "
 ..........................
 ..........................
 ..........................
-..........................
-..........................
 ..........##########......
+..........................
+..........................
 ..........................
 ##########......##########
 ##########......##########
@@ -105,14 +105,14 @@ fn platformer_coyote_time_and_jump_buffer() {
 #[test]
 fn platformer_walls_and_ceilings_stop_it() {
     let t = Tiles::from_text(LEVEL, 1.0);
-    let mut c = Character::new(12.0, 2.0);
+    let mut c = Character::new(17.0, 2.0);
     steps(&mut c, &t, Input::default(), 0.2);
     let mut bumped = false;
     for _ in 0..60 {
         bumped |= c.step(&t, Input { run: 0.0, jump_held: true }, 1.0 / 60.0).bumped_head;
     }
-    assert!(bumped, "the platform at height 3 is overhead");
-    assert!(c.y + c.height <= 3.0 + 1e-3);
+    assert!(bumped, "the platform at height 5 is overhead");
+    assert!(c.y + c.height <= 5.0 + 1e-3);
 }
 
 const TALK: &str = "
