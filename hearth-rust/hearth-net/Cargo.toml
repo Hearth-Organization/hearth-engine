@@ -1,0 +1,13 @@
+[package]
+name = "hearth-net"
+version = "0.0.0"  # the owner picks version numbers; this one isn't shipped on its own
+description = "Hearth Engine's rollback co-op (GGRS): every player's game runs at once and stays the same, smooth on bad connections"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+# GGRS (MIT OR Apache-2.0): rollback networking, a reimagining of GGPO.
+ggrs = "0.13"
+serde = { version = "1", features = ["derive"] }
+hearth-rts = { path = "../hearth-rts" }

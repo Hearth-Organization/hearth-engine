@@ -138,7 +138,7 @@ impl FlowField {
 }
 
 /// Keeps the fields for recent goals, so a group order costs one field and repeated orders cost nothing.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct FlowCache {
     fields: HashMap<Cell, (FlowField, u64)>,
     clock: u64,

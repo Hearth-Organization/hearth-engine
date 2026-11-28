@@ -139,6 +139,7 @@ pub enum Event {
     Cant { team: Team, why: String },
 }
 
+#[derive(Clone)]
 pub struct World {
     pub grid: Grid,
     pub kinds: Vec<Kind>,
