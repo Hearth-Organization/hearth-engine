@@ -106,10 +106,10 @@ impl FlowField {
     pub fn direction(&self, grid: &Grid, p: Pos) -> Pos {
         let c = grid.cell_of(p);
         if c == self.goal {
-            return grid.centre(c).sub(p).normalized();
+            return grid.centre(c).minus(p).normalized();
         }
         match self.next(c) {
-            Some(n) => grid.centre(n).sub(p).normalized(),
+            Some(n) => grid.centre(n).minus(p).normalized(),
             None => Pos::default(),
         }
     }

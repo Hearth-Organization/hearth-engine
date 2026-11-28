@@ -238,7 +238,7 @@ impl World {
 
     fn cells_middle(&self, cells: &[Cell]) -> Pos {
         let n = cells.len().max(1) as f32;
-        let s = cells.iter().fold(Pos::default(), |s, &c| s.add(self.grid.centre(c)));
+        let s = cells.iter().fold(Pos::default(), |s, &c| s.plus(self.grid.centre(c)));
         s.scale(1.0 / n)
     }
 
@@ -311,7 +311,7 @@ impl World {
                     if dx.abs().max(dy.abs()) != r {
                         continue;
                     }
-                    let p = to.add(Pos::new(dx as f32 * gap, dy as f32 * gap));
+                    let p = to.plus(Pos::new(dx as f32 * gap, dy as f32 * gap));
                     if self.grid.walkable(self.grid.cell_of(p)) {
                         spots.push(p);
                     }
@@ -325,15 +325,15 @@ impl World {
         if spots.is_empty() {
             return vec![to; movers.len()];
         }
-        let middle = movers.iter().fold(Pos::default(), |s, &i| s.add(self.units[i].pos)).scale(1.0 / movers.len() as f32);
+        let middle = movers.iter().fold(Pos::default(), |s, &i| s.plus(self.units[i].pos)).scale(1.0 / movers.len() as f32);
         let mut taken = vec![false; spots.len()];
         let mut out = vec![to; movers.len()];
         // Units at the front of the group (nearest the goal) choose first.
         let mut order: Vec<usize> = (0..movers.len()).collect();
         order.sort_by(|&a, &b| self.units[movers[a]].pos.dist(to).total_cmp(&self.units[movers[b]].pos.dist(to)).then(a.cmp(&b)));
         for k in order {
-            let offset = self.units[movers[k]].pos.sub(middle);
-            let want = to.add(offset);
+            let offset = self.units[movers[k]].pos.minus(middle);
+            let want = to.plus(offset);
             let best = (0..spots.len()).filter(|&s| !taken[s]).min_by(|&a, &b| spots[a].dist(want).total_cmp(&spots[b].dist(want)).then(a.cmp(&b)));
             if let Some(s) = best {
                 taken[s] = true;
@@ -390,7 +390,7 @@ impl World {
     }
 
     /// Hits `target` if it's in range (returns true), else returns where to walk.
-    fn fight(&mut self, i: usize, target: usize, dt: f32) -> Result<(), Pos> {
+    fn fight(&mut self, i: usize, target: usize) -> Result<(), Pos> {
         let (u, t) = (&self.units[i], &self.units[target]);
         let Some(a) = self.kinds[u.kind].attack.clone() else { return Err(u.pos) };
         let gap = t.pos.dist(u.pos) - self.kinds[t.kind].radius - self.kinds[u.kind].radius;
@@ -413,7 +413,7 @@ impl World {
         let here = self.grid.cell_of(u.pos);
         let goal = self.grid.cell_of(to);
         if here == goal || u.pos.dist(to) < self.grid.cell_size {
-            return to.sub(u.pos).normalized().scale(speed.min(u.pos.dist(to) * 4.0));
+            return to.minus(u.pos).normalized().scale(speed.min(u.pos.dist(to) * 4.0));
         }
         let pos = u.pos;
         let field = self.flows.get(&self.grid, goal);
@@ -434,7 +434,7 @@ impl World {
             // Idle: fight anything that comes in range.
             if let Some(r) = attack_range {
                 if let Some(t) = self.enemy_near(i, r) {
-                    let _ = self.fight(i, t, dt);
+                    let _ = self.fight(i, t);
                 }
             }
             return Pos::default();
@@ -449,7 +449,7 @@ impl World {
             }
             Order::AttackMove(to) => {
                 if let Some(t) = self.enemy_near(i, sight) {
-                    return match self.fight(i, t, dt) {
+                    return match self.fight(i, t) {
                         Ok(()) => Pos::default(),
                         Err(go) => self.walk_to(i, go),
                     };
@@ -465,7 +465,7 @@ impl World {
                     self.finish_order(i);
                     Pos::default()
                 }
-                Some(t) => match self.fight(i, t, dt) {
+                Some(t) => match self.fight(i, t) {
                     Ok(()) => Pos::default(),
                     Err(go) => self.walk_to(i, go),
                 },
@@ -473,7 +473,7 @@ impl World {
             Order::Hold => {
                 if let Some(r) = attack_range {
                     if let Some(t) = self.enemy_near(i, r) {
-                        let _ = self.fight(i, t, dt);
+                        let _ = self.fight(i, t);
                     }
                 }
                 Pos::default()
@@ -679,14 +679,14 @@ impl World {
                         let gap = k.radius + self.kinds[o.kind].radius;
                         let d = u.pos.dist(o.pos);
                         if d < gap {
-                            let away = if d > 1e-4 { u.pos.sub(o.pos).scale(1.0 / d) } else { Pos::new(if i < j { -1.0 } else { 1.0 }, 0.0) };
-                            push = push.add(away.scale((gap - d) * 0.5));
+                            let away = if d > 1e-4 { u.pos.minus(o.pos).scale(1.0 / d) } else { Pos::new(if i < j { -1.0 } else { 1.0 }, 0.0) };
+                            push = push.plus(away.scale((gap - d) * 0.5));
                         }
                     }
                 }
             }
             let v = wanted.get(i).copied().unwrap_or_default();
-            let step = v.scale(dt).add(push);
+            let step = v.scale(dt).plus(push);
             new_pos[i] = self.slide(u.pos, step);
         }
         for (u, (p, v)) in self.units.iter_mut().zip(new_pos.into_iter().zip(wanted.iter())) {
@@ -700,15 +700,15 @@ impl World {
     /// Moves without entering a wall: slides along it instead.
     fn slide(&self, from: Pos, step: Pos) -> Pos {
         let ok = |p: Pos| self.grid.walkable(self.grid.cell_of(p));
-        let to = from.add(step);
+        let to = from.plus(step);
         if ok(to) {
             return to;
         }
-        let x = from.add(Pos::new(step.x, 0.0));
+        let x = from.plus(Pos::new(step.x, 0.0));
         if ok(x) {
             return x;
         }
-        let y = from.add(Pos::new(0.0, step.y));
+        let y = from.plus(Pos::new(0.0, step.y));
         if ok(y) {
             return y;
         }

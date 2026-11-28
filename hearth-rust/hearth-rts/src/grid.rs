@@ -20,10 +20,10 @@ impl Pos {
     pub fn dist(self, o: Pos) -> f32 {
         ((self.x - o.x).powi(2) + (self.y - o.y).powi(2)).sqrt()
     }
-    pub fn add(self, o: Pos) -> Pos {
+    pub fn plus(self, o: Pos) -> Pos {
         Pos::new(self.x + o.x, self.y + o.y)
     }
-    pub fn sub(self, o: Pos) -> Pos {
+    pub fn minus(self, o: Pos) -> Pos {
         Pos::new(self.x - o.x, self.y - o.y)
     }
     pub fn scale(self, s: f32) -> Pos {
