@@ -36,7 +36,7 @@ fn slower_is_at_least_as_good_and_odd_sizes_work() {
     for (w, h) in [(1, 1), (2, 2), (3, 5)] {
         let rgba = to_rgba8(&picture(w, h), Source::Rgba8, w, h, w * 4, Bc::Bc5).unwrap();
         let d = compress(&rgba, w, h, Bc::Bc5, 2, [1.0; 3]);
-        assert_eq!(d.len(), 16, "one block for tiny mips");
+        assert_eq!(d.len(), w.div_ceil(4) * h.div_ceil(4) * 16, "whole blocks, even for tiny mips");
         decompress(&d, w, h, Bc::Bc5).unwrap();
     }
 }
