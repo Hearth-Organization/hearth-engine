@@ -8,6 +8,7 @@
 #include "EditorDefs.h"
 
 #include "QtViewPaneManager.h"
+#include "HearthWorkspace.h"
 #include "Controls/ConsoleSCB.h"
 #include <AzQtComponents/Components/FancyDocking.h>
 #include <AzQtComponents/Components/Titlebar.h>
@@ -690,6 +691,39 @@ const QtViewPane* QtViewPaneManager::OpenPane(const QString& name, QtViewPane::O
     // Save/Restore support of the duplicates will only be implemented if required.
 
     const bool isMultiPane = modes & QtViewPane::OpenMode::MultiplePanes;
+
+    // Hearth Engine: Hearth's tools open as tabs in the one editor window (HearthWorkspace), never as a window of
+    // their own, from wherever they are opened. The dock widget is made exactly as below, then taken into its tab.
+    if (!isMultiPane && HearthWorkspace::Instance() && HearthWorkspace::Handles(name))
+    {
+        if (!pane->IsConstructed())
+        {
+            QWidget* w = pane->CreateWidget();
+            if (!w)
+            {
+                qWarning() << Q_FUNC_INFO << "Unable to create widget for pane with name" << name;
+                return nullptr;
+            }
+            w->setProperty("restored", (modes & QtViewPane::OpenMode::RestoreLayout) != 0);
+            DockWidget* dock = new DockWidget(w, pane, m_settings, m_mainWindow, m_advancedDockManager);
+            AzQtComponents::StyleManager::repolishStyleSheet(dock);
+            pane->m_dockWidgetInstances.push_back(dock);
+            connect(dock, &QObject::destroyed, this, [this, name, dock]() {
+                QtViewPane* pane = GetPane(name);
+                if (pane && pane->IsValid())
+                {
+                    pane->m_dockWidgetInstances.removeAll(dock);
+                }
+                AzToolsFramework::EditorEventsBus::Broadcast(
+                    &AzToolsFramework::EditorEventsBus::Handler::OnViewPaneClosed, name.toUtf8().data());
+            });
+            pane->m_dockWidget = dock;
+            HearthWorkspace::Instance()->Adopt(name, dock);
+            emit viewPaneCreated(pane);
+        }
+        HearthWorkspace::Instance()->Show(name);
+        return pane;
+    }
 
     DockWidget* newDockWidget = pane->m_dockWidget;
 

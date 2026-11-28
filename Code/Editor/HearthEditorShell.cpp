@@ -5,6 +5,7 @@
 #include "EditorDefs.h"
 
 #include "HearthEditorShell.h"
+#include "HearthWorkspace.h"
 #include "CryEditDoc.h"
 #include "HearthCommandPalette.h"
 #include "HearthPlaytestOverlay.h"
@@ -359,11 +360,19 @@ bool HearthEditorShell::TriggerAction(const char* identifier)
 
 void HearthEditorShell::PlayInViewport()
 {
+    if (HearthWorkspace* workspace = HearthWorkspace::Instance())
+    {
+        workspace->ShowWorld();   // the game plays in the World tab, never behind a tool
+    }
     TriggerAction("o3de.action.game.play");
 }
 
 void HearthEditorShell::PlayFullScreen()
 {
+    if (HearthWorkspace* workspace = HearthWorkspace::Instance())
+    {
+        workspace->ShowWorld();
+    }
     if (GetIEditor() && GetIEditor()->IsInGameMode())
     {
         return;

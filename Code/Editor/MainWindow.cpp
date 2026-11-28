@@ -35,6 +35,7 @@
 #include "HearthAnimationPane.h"
 #include "HearthMaterialCanvasPane.h"
 #include "HearthPathingPane.h"
+#include "HearthWorkspace.h"
 
 #include <algorithm>
 
@@ -418,7 +419,8 @@ void MainWindow::InitCentralWidget()
 
     // Set the central widgets before calling CreateLayout to avoid reparenting everything later
     setCentralWidget(m_viewPaneHost);
-    m_viewPaneHost->setCentralWidget(m_pLayoutWnd);
+    // Hearth Engine: the 3D view is the first tab of the one-window workspace; Hearth's tools open as tabs beside it.
+    m_viewPaneHost->setCentralWidget(HearthWorkspace::Install(m_pLayoutWnd));
 
     if (MainWindow::instance()->IsPreview())
     {

@@ -25,6 +25,8 @@ set(FILES
     LyViewPaneNames.h
     QtViewPaneManager.cpp
     QtViewPaneManager.h
+    HearthWorkspace.cpp
+    HearthWorkspace.h
     ErrorRecorder.cpp
     ErrorRecorder.h
     ErrorDialog.cpp
