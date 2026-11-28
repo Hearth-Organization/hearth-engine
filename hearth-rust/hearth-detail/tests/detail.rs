@@ -146,7 +146,7 @@ fn an_open_sheet_keeps_its_outline_and_its_seam() {
     // The seam's two sides keep their own uvs.
     let far = d.triangles(&d.cut(f32::MAX));
     let us: Vec<f32> = far.iter().flatten().map(|&v| d.vertices[v as usize].uv[0]).collect();
-    assert!(us.iter().any(|&u| u == 1.0) && us.iter().any(|&u| u > 0.0 && u < 0.5));
+    assert!(us.contains(&1.0) && us.iter().any(|&u| u > 0.0 && u < 0.5));
 }
 
 #[test]
@@ -197,7 +197,7 @@ fn models_load() {
     // A small .glb: one triangle with 16-bit indices.
     let json = br#"{"asset":{"version":"2.0"},"buffers":[{"byteLength":44}],"bufferViews":[{"buffer":0,"byteOffset":0,"byteLength":36},{"buffer":0,"byteOffset":36,"byteLength":6}],"accessors":[{"bufferView":0,"componentType":5126,"count":3,"type":"VEC3"},{"bufferView":1,"componentType":5123,"count":3,"type":"SCALAR"}],"meshes":[{"primitives":[{"attributes":{"POSITION":0},"indices":1}]}]}"#;
     let mut json = json.to_vec();
-    while json.len() % 4 != 0 {
+    while !json.len().is_multiple_of(4) {
         json.push(b' ');
     }
     let mut bin = Vec::new();
