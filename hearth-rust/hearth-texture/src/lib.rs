@@ -4,6 +4,8 @@
 //! In: rows of pixels (8-bit RGBA, 8-bit single channel, or 32-bit float RGBA), with any row pitch.
 //! Out: tightly packed blocks, the way the engine's image objects store compressed mips.
 
+pub mod mips;
+
 use texpresso::{Algorithm, Format, Params};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
