@@ -30,6 +30,9 @@ jobs:
           show-progress: false
           lfs: false
 
+      - name: Software graphics (Mesa's Vulkan driver, so hearth-render can draw without a graphics card)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends mesa-vulkan-drivers libvulkan1 >/dev/null
+
       - name: Rust
         run: |
           rustup toolchain install stable --profile minimal --component clippy,rustfmt
@@ -55,7 +58,17 @@ jobs:
           fi
 
       - name: Tests
+        env:
+          HEARTH_NEED_GPU: "1"
         run: cargo test 2>&1 | tee test.log; test ${PIPESTATUS[0]} -eq 0 || { grep -E "panicked|FAILED|error" test.log | head -20 | sed 's/^/::error::/'; exit 1; }
 
       - name: Lint
         run: cargo clippy --all-targets -- -D warnings 2>&1 | tee clippy.log; test ${PIPESTATUS[0]} -eq 0 || { grep -E "^(error|warning)" -A3 clippy.log | head -40 | sed 's/^/::error::/'; exit 1; }
+
+      - name: Pictures the renderer drew
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hearth-render-pictures
+          path: hearth-rust/target/renders/
+          if-no-files-found: ignore

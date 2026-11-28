@@ -1,0 +1,14 @@
+[package]
+name = "hearth-render"
+version = "0.0.0"  # the owner picks version numbers; this one isn't shipped on its own
+description = "Atom in Rust: Hearth Engine's renderer on wgpu (physically based lighting, Nanite-style detail)"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+wgpu = "30"
+pollster = "1"
+bytemuck = { version = "1", features = ["derive"] }
+glam = { version = "0.34", features = ["bytemuck"] }
+png = "0.17"
