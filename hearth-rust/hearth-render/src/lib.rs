@@ -116,6 +116,19 @@ pub struct Object {
     pub material: Material,
 }
 
+/// A model with Nanite-style detail (hearth-detail), placed in the scene.
+#[derive(Clone, Debug)]
+pub struct DetailObject {
+    pub detail: DetailId,
+    pub transform: Mat4,
+    pub material: Material,
+    /// How many pixels a simplification may move the shape on screen (1 is hard to see).
+    pub max_pixels: f32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct DetailId(u32);
+
 #[derive(Clone, Debug)]
 pub struct Scene {
     pub camera: Camera,
@@ -123,6 +136,7 @@ pub struct Scene {
     pub ambient: [f32; 3],
     pub lights: Vec<PointLight>,
     pub objects: Vec<Object>,
+    pub details: Vec<DetailObject>,
     /// Linear background colour.
     pub clear: [f32; 4],
     pub exposure: f32,
@@ -134,7 +148,7 @@ pub struct Scene {
 
 impl Default for Scene {
     fn default() -> Scene {
-        Scene { camera: Camera::default(), sun: None, ambient: [0.03; 3], lights: Vec::new(), objects: Vec::new(), clear: [0.0, 0.0, 0.0, 1.0], exposure: 1.0, sky: None, shadows: true }
+        Scene { camera: Camera::default(), sun: None, ambient: [0.03; 3], lights: Vec::new(), objects: Vec::new(), details: Vec::new(), clear: [0.0, 0.0, 0.0, 1.0], exposure: 1.0, sky: None, shadows: true }
     }
 }
 
@@ -175,6 +189,12 @@ struct GpuObject {
     emissive: [f32; 4],
 }
 
+struct GpuDetail {
+    detail: hearth_detail::Detail,
+    vertices: wgpu::Buffer,
+    bounds: (Vec3, Vec3),
+}
+
 struct GpuMesh {
     vertices: wgpu::Buffer,
     indices: wgpu::Buffer,
@@ -196,6 +216,9 @@ pub struct Renderer {
     shadow_map: wgpu::Texture,
     meshes: HashMap<MeshId, GpuMesh>,
     textures: HashMap<TextureId, wgpu::TextureView>,
+    details: HashMap<DetailId, GpuDetail>,
+    /// Triangles drawn in the last frame (all objects and the detail models' chosen pieces).
+    pub last_triangles: u64,
     white: wgpu::TextureView,
     sampler: wgpu::Sampler,
     next_mesh: u32,
@@ -430,6 +453,8 @@ impl Renderer {
             shadow_map,
             meshes: HashMap::new(),
             textures: HashMap::new(),
+            details: HashMap::new(),
+            last_triangles: 0,
             white,
             sampler,
             next_mesh: 1,
@@ -458,6 +483,20 @@ impl Renderer {
             (lo.min(p), hi.max(p))
         });
         self.meshes.insert(id, GpuMesh { vertices, indices, count: mesh.indices.len() as u32, bounds: (lo, hi) });
+        Ok(id)
+    }
+
+    /// Puts a Nanite-style detail model (from hearth-detail) on the graphics card.
+    pub fn add_detail(&mut self, detail: hearth_detail::Detail) -> Result<DetailId, String> {
+        if detail.clusters.is_empty() {
+            return Err("the detail model has no pieces".into());
+        }
+        let vertices: Vec<Vertex> = detail.vertices.iter().map(|v| Vertex { pos: v.pos, normal: v.normal, uv: v.uv }).collect();
+        let (lo, hi) = vertices.iter().fold((Vec3::splat(f32::MAX), Vec3::splat(f32::MIN)), |(lo, hi), v| (lo.min(Vec3::from(v.pos)), hi.max(Vec3::from(v.pos))));
+        let buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("detail vertices"), contents: bytemuck::cast_slice(&vertices), usage: wgpu::BufferUsages::VERTEX });
+        let id = DetailId(self.next_mesh);
+        self.next_mesh += 1;
+        self.details.insert(id, GpuDetail { detail, vertices: buffer, bounds: (lo, hi) });
         Ok(id)
     }
 
@@ -490,12 +529,12 @@ impl Renderer {
     /// The box around everything in the scene.
     fn scene_bounds(&self, scene: &Scene) -> Option<(Vec3, Vec3)> {
         let mut b: Option<(Vec3, Vec3)> = None;
-        for o in &scene.objects {
-            let Some(m) = self.meshes.get(&o.mesh) else { continue };
-            let (lo, hi) = m.bounds;
+        let boxes = scene.objects.iter().filter_map(|o| self.meshes.get(&o.mesh).map(|m| (m.bounds, o.transform)));
+        let detail_boxes = scene.details.iter().filter_map(|o| self.details.get(&o.detail).map(|d| (d.bounds, o.transform)));
+        for ((lo, hi), transform) in boxes.chain(detail_boxes) {
             for k in 0..8 {
                 let c = Vec3::new(if k & 1 == 0 { lo.x } else { hi.x }, if k & 2 == 0 { lo.y } else { hi.y }, if k & 4 == 0 { lo.z } else { hi.z });
-                let p = o.transform.transform_point3(c);
+                let p = transform.transform_point3(c);
                 b = Some(match b {
                     Some((a, z)) => (a.min(p), z.max(p)),
                     None => (p, p),
@@ -553,38 +592,62 @@ impl Renderer {
         }
     }
 
+    fn object_group(&self, transform: &Mat4, m: &Material) -> Result<wgpu::BindGroup, String> {
+        let data = GpuObject {
+            model: transform.to_cols_array_2d(),
+            normal: transform.inverse().transpose().to_cols_array_2d(),
+            color: m.color,
+            params: [m.metallic, m.roughness, 0.0, 0.0],
+            emissive: [m.emissive[0], m.emissive[1], m.emissive[2], 0.0],
+        };
+        let buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("object"), contents: bytemuck::bytes_of(&data), usage: wgpu::BufferUsages::UNIFORM });
+        let view = match m.texture {
+            Some(t) => self.textures.get(&t).ok_or_else(|| format!("a material uses texture {t:?}, which isn't on the graphics card"))?,
+            None => &self.white,
+        };
+        Ok(self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("object"),
+            layout: &self.object_layout,
+            entries: &[
+                wgpu::BindGroupEntry { binding: 0, resource: buffer.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(view) },
+                wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(&self.sampler) },
+            ],
+        }))
+    }
+
+    /// Everything to draw this frame: (vertices, indices, index count, object bind group).
+    fn items(&self, scene: &Scene) -> Result<Vec<(wgpu::Buffer, wgpu::Buffer, u32, wgpu::BindGroup)>, String> {
+        let mut items = Vec::with_capacity(scene.objects.len() + scene.details.len());
+        for o in &scene.objects {
+            let mesh = self.meshes.get(&o.mesh).ok_or_else(|| format!("a thing in the scene uses mesh {:?}, which isn't on the graphics card", o.mesh))?;
+            items.push((mesh.vertices.clone(), mesh.indices.clone(), mesh.count, self.object_group(&o.transform, &o.material)?));
+        }
+        // Detail models: the pieces for this camera, picked now (full detail near, far fewer triangles far away).
+        let pixels_per_unit = self.height as f32 * 0.5 / (scene.camera.fov.to_radians() * 0.5).tan();
+        for o in &scene.details {
+            let d = self.details.get(&o.detail).ok_or_else(|| format!("a thing in the scene uses detail model {:?}, which isn't on the graphics card", o.detail))?;
+            let camera = o.transform.inverse().transform_point3(scene.camera.eye);
+            let chosen = d.detail.cut_for_camera(camera.to_array(), pixels_per_unit, o.max_pixels.max(0.05));
+            let mut indices: Vec<u32> = Vec::new();
+            for c in chosen {
+                let c = &d.detail.clusters[c];
+                indices.extend_from_slice(&d.detail.indices[c.first_index as usize..(c.first_index + c.index_count) as usize]);
+            }
+            if indices.is_empty() {
+                continue;
+            }
+            let ib = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("detail indices"), contents: bytemuck::cast_slice(&indices), usage: wgpu::BufferUsages::INDEX });
+            items.push((d.vertices.clone(), ib, indices.len() as u32, self.object_group(&o.transform, &o.material)?));
+        }
+        Ok(items)
+    }
+
     /// Draws the scene into the renderer's picture.
     fn draw(&mut self, scene: &Scene, encoder: &mut wgpu::CommandEncoder) -> Result<(), String> {
         self.queue.write_buffer(&self.frame_buffer, 0, bytemuck::bytes_of(&self.frame_data(scene)));
-        let mut groups = Vec::with_capacity(scene.objects.len());
-        for o in &scene.objects {
-            if !self.meshes.contains_key(&o.mesh) {
-                return Err(format!("a thing in the scene uses mesh {:?}, which isn't on the graphics card", o.mesh));
-            }
-            let m = &o.material;
-            let data = GpuObject {
-                model: o.transform.to_cols_array_2d(),
-                normal: o.transform.inverse().transpose().to_cols_array_2d(),
-                color: m.color,
-                params: [m.metallic, m.roughness, 0.0, 0.0],
-                emissive: [m.emissive[0], m.emissive[1], m.emissive[2], 0.0],
-            };
-            let buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("object"), contents: bytemuck::bytes_of(&data), usage: wgpu::BufferUsages::UNIFORM });
-            let view = match m.texture {
-                Some(t) => self.textures.get(&t).ok_or_else(|| format!("a material uses texture {t:?}, which isn't on the graphics card"))?,
-                None => &self.white,
-            };
-            let group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-                label: Some("object"),
-                layout: &self.object_layout,
-                entries: &[
-                    wgpu::BindGroupEntry { binding: 0, resource: buffer.as_entire_binding() },
-                    wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(view) },
-                    wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(&self.sampler) },
-                ],
-            });
-            groups.push((group, buffer));
-        }
+        let items = self.items(scene)?;
+        self.last_triangles = items.iter().map(|i| i.2 as u64 / 3).sum();
         // The sun's shadow map first.
         {
             let shadow_view = self.shadow_map.create_view(&wgpu::TextureViewDescriptor::default());
@@ -603,12 +666,11 @@ impl Renderer {
             if scene.shadows && scene.sun.is_some() {
                 pass.set_pipeline(&self.shadow_pipeline);
                 pass.set_bind_group(0, &self.shadow_frame_group, &[]);
-                for (o, (group, _)) in scene.objects.iter().zip(&groups) {
-                    let mesh = &self.meshes[&o.mesh];
+                for (vb, ib, count, group) in &items {
                     pass.set_bind_group(1, group, &[]);
-                    pass.set_vertex_buffer(0, mesh.vertices.slice(..));
-                    pass.set_index_buffer(mesh.indices.slice(..), wgpu::IndexFormat::Uint32);
-                    pass.draw_indexed(0..mesh.count, 0, 0..1);
+                    pass.set_vertex_buffer(0, vb.slice(..));
+                    pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
+                    pass.draw_indexed(0..*count, 0, 0..1);
                 }
             }
         }
@@ -638,12 +700,11 @@ impl Renderer {
             pass.draw(0..3, 0..1);
         }
         pass.set_pipeline(&self.pipeline);
-        for (o, (group, _)) in scene.objects.iter().zip(&groups) {
-            let mesh = &self.meshes[&o.mesh];
+        for (vb, ib, count, group) in &items {
             pass.set_bind_group(1, group, &[]);
-            pass.set_vertex_buffer(0, mesh.vertices.slice(..));
-            pass.set_index_buffer(mesh.indices.slice(..), wgpu::IndexFormat::Uint32);
-            pass.draw_indexed(0..mesh.count, 0, 0..1);
+            pass.set_vertex_buffer(0, vb.slice(..));
+            pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
+            pass.draw_indexed(0..*count, 0, 0..1);
         }
         Ok(())
     }

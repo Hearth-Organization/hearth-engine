@@ -317,15 +317,6 @@ pub unsafe extern "C" fn hd_bounds(d: *const HdDetail, out: *mut f32) {
     unsafe { std::slice::from_raw_parts_mut(out, 6) }.copy_from_slice(&[lo[0], lo[1], lo[2], hi[0], hi[1], hi[2]]);
 }
 
-/// How big an error of `error` model units looks from the camera, in pixels.
-fn looks(error: f32, s: &hearth_detail::math::Sphere, camera: [f32; 3], pixels_per_unit: f32) -> f32 {
-    if error.is_infinite() {
-        return f32::INFINITY;
-    }
-    let d = hearth_detail::math::dist2(s.center, camera).sqrt() - s.radius;
-    error / d.max(1e-3) * pixels_per_unit
-}
-
 /// The pieces to draw from `camera` (in the model's own space): those whose error looks at most `max_pixels` and
 /// whose simpler version's error doesn't. `pixels_per_unit` is how many pixels one unit 1 unit away covers (screen
 /// height / (2 tan(fov/2)), divided by the model's scale). Returns true when the choice changed since last time; the
@@ -336,15 +327,7 @@ fn looks(error: f32, s: &hearth_detail::math::Sphere, camera: [f32; 3], pixels_p
 #[no_mangle]
 pub unsafe extern "C" fn hd_select(d: *mut HdDetail, cx: f32, cy: f32, cz: f32, pixels_per_unit: f32, max_pixels: f32) -> bool {
     let Some(d) = (unsafe { d.as_mut() }) else { return false };
-    let cam = [cx, cy, cz];
-    let chosen: Vec<u32> = d
-        .detail
-        .clusters
-        .iter()
-        .enumerate()
-        .filter(|(_, c)| looks(c.error, &c.lod_bounds, cam, pixels_per_unit) <= max_pixels && looks(c.parent_error, &c.parent_bounds, cam, pixels_per_unit) > max_pixels)
-        .map(|(i, _)| i as u32)
-        .collect();
+    let chosen: Vec<u32> = d.detail.cut_for_camera([cx, cy, cz], pixels_per_unit, max_pixels).into_iter().map(|i| i as u32).collect();
     if chosen == d.chosen && !d.selected.is_empty() {
         return false;
     }

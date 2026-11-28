@@ -49,6 +49,25 @@ impl Detail {
         self.clusters.iter().enumerate().filter(|(_, c)| c.error <= max_error && c.parent_error > max_error).map(|(i, _)| i).collect()
     }
 
+    /// The pieces to draw from `camera` (in the model's own space): each one whose error looks at most `max_pixels`
+    /// on screen while its simpler version's doesn't. `pixels_per_unit`: how many pixels one unit, one unit away,
+    /// covers (screen height / (2 tan(fov / 2))). The model's scale cancels out, so it needs no scaling.
+    pub fn cut_for_camera(&self, camera: [f32; 3], pixels_per_unit: f32, max_pixels: f32) -> Vec<usize> {
+        let looks = |error: f32, s: &crate::math::Sphere| {
+            if error.is_infinite() {
+                return f32::INFINITY;
+            }
+            let d = crate::math::dist2(s.center, camera).sqrt() - s.radius;
+            error / d.max(1e-3) * pixels_per_unit
+        };
+        self.clusters
+            .iter()
+            .enumerate()
+            .filter(|(_, c)| looks(c.error, &c.lod_bounds) <= max_pixels && looks(c.parent_error, &c.parent_bounds) > max_pixels)
+            .map(|(i, _)| i)
+            .collect()
+    }
+
     pub fn triangles(&self, clusters: &[usize]) -> Vec<Tri> {
         let mut out = Vec::new();
         for &c in clusters {

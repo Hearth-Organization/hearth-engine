@@ -140,3 +140,39 @@ fn sky_shadows_textures_and_reflections() {
     let (lo, hi) = (row.iter().min().unwrap(), row.iter().max().unwrap());
     assert!(hi - lo > 60, "the floor texture should show (brightness {lo} to {hi})");
 }
+
+#[test]
+fn detail_models_draw_full_up_close_and_fewer_triangles_far_away() {
+    let (w, h) = (256, 192);
+    let Ok(mut r) = Renderer::headless(w, h) else {
+        assert!(std::env::var_os("HEARTH_NEED_GPU").is_none(), "no graphics");
+        return;
+    };
+    // A bumpy ball of about 20 000 triangles, built into detail levels.
+    let ball = shapes::sphere(100, 100);
+    let mesh = hearth_detail::Mesh {
+        vertices: ball.vertices.iter().map(|v| {
+            let bump = 1.0 + 0.04 * (v.pos[0] * 23.0).sin() * (v.pos[1] * 19.0).cos();
+            hearth_detail::Vertex { pos: [v.pos[0] * bump, v.pos[1] * bump, v.pos[2] * bump], normal: v.normal, uv: v.uv }
+        }).collect(),
+        indices: ball.indices.clone(),
+    };
+    let detail = hearth_detail::build(&mesh).unwrap();
+    let id = r.add_detail(detail).unwrap();
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../target/renders");
+    let mut scene = Scene {
+        sun: Some(Sun { direction: Vec3::new(0.3, 0.6, -1.0), color: [1.0, 1.0, 1.0], intensity: 3.0 }),
+        sky: Some(Sky::default()),
+        ..Scene::default()
+    };
+    scene.details.push(hearth_render::DetailObject { detail: id, transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 1.0)), material: Material { color: [0.7, 0.6, 0.5, 1.0], ..Material::default() }, max_pixels: 1.0 });
+    let mut counts = Vec::new();
+    for (name, dist) in [("detail-near", 2.5f32), ("detail-mid", 12.0), ("detail-far", 60.0)] {
+        scene.camera = Camera { eye: Vec3::new(0.0, -dist, 1.0 + dist * 0.2), target: Vec3::new(0.0, 0.0, 1.0), ..Camera::default() };
+        let img = r.render(&scene).unwrap();
+        save_png(&dir.join(format!("{name}.png")), &img, w, h).unwrap();
+        counts.push(r.last_triangles);
+    }
+    assert!(counts[0] > counts[1] && counts[1] > counts[2], "farther must mean fewer triangles: {counts:?}");
+    assert!(counts[2] * 10 < counts[0], "far away should be a small part of the full model: {counts:?}");
+}
