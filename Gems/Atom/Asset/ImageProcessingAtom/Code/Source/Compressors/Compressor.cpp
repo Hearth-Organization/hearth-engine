@@ -10,12 +10,19 @@
 #include <AzCore/PlatformIncl.h>
 #include <Compressors/ASTCCompressor.h>
 #include <Compressors/CTSquisher.h>
+#include <Compressors/HearthRustCompressor.h>
 #include <Compressors/ISPCTextureCompressor.h>
 
 namespace ImageProcessingAtom
 {
     ICompressorPtr ICompressor::FindCompressor(EPixelFormat fmt, ColorSpace colorSpace, bool isCompressing)
     {
+        // Hearth Engine: BC1, BC1a, BC4 and BC5 (and decompressing BC1-BC5) are done in Rust.
+        if (isCompressing ? HearthRustCompressor::IsCompressedPixelFormatSupported(fmt) : HearthRustCompressor::DoesSupportDecompress(fmt))
+        {
+            return ICompressorPtr(new HearthRustCompressor());
+        }
+
         if (ISPCCompressor::IsCompressedPixelFormatSupported(fmt))
         {
             if ((isCompressing && ISPCCompressor::IsSourceColorSpaceSupported(colorSpace, fmt)) || (!isCompressing && ISPCCompressor::DoesSupportDecompress(fmt)))

@@ -115,6 +115,8 @@ set(FILES
     Source/Compressors/Compressor.h
     Source/Compressors/Compressor.cpp
     Source/Compressors/CTSquisher.h
+    Source/Compressors/HearthRustCompressor.h
+    Source/Compressors/HearthRustCompressor.cpp
     Source/Compressors/CTSquisher.cpp
     Source/Compressors/CryTextureSquisher/ColorBlockRGBA4x4f.cpp
     Source/Compressors/CryTextureSquisher/ColorBlockRGBA4x4s.cpp

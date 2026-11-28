@@ -27,6 +27,14 @@ add_custom_command(
 )
 add_custom_target(HearthRust.Cargo DEPENDS "${HEARTH_FFI_LIB}")
 
+# The Rust library for anything in the engine that uses it (this gem, and the image processor's texture compressor).
+# Its symbols stay inside each module that links it, so two modules with their own copy never mix them up.
+add_library(HearthRust.Ffi INTERFACE)
+target_include_directories(HearthRust.Ffi INTERFACE "${HEARTH_RUST_DIR}/hearth-ffi/include")
+target_link_libraries(HearthRust.Ffi INTERFACE "${HEARTH_FFI_LIB}" pthread dl m)
+target_link_options(HearthRust.Ffi INTERFACE "LINKER:--exclude-libs,libhearth_ffi.a")
+add_dependencies(HearthRust.Ffi HearthRust.Cargo)
+
 ly_add_target(
     NAME HearthRust.Static STATIC
     NAMESPACE Gem
@@ -37,7 +45,6 @@ ly_add_target(
             Include
         PRIVATE
             Source
-            ${HEARTH_RUST_DIR}/hearth-ffi/include
     BUILD_DEPENDENCIES
         PUBLIC
             AZ::AzCore
@@ -45,8 +52,7 @@ ly_add_target(
             Gem::Atom_RPI.Public
             Gem::Atom_Feature_Common.Public
 )
-add_dependencies(HearthRust.Static HearthRust.Cargo)
-target_link_libraries(HearthRust.Static PUBLIC "${HEARTH_FFI_LIB}" pthread dl m)
+target_link_libraries(HearthRust.Static PUBLIC HearthRust.Ffi)
 
 ly_add_target(
     NAME HearthRust ${PAL_TRAIT_MONOLITHIC_DRIVEN_MODULE_TYPE}

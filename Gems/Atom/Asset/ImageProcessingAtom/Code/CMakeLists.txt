@@ -78,6 +78,9 @@ ly_add_target(
             Gem::Atom_Utils.Static
 
 )
+# Hearth Engine: the Rust texture compressor (Gems/HearthRust builds hearth-ffi).
+target_link_libraries(${gem_name}.Editor.Static PUBLIC HearthRust.Ffi)
+
 ly_add_source_properties(
     SOURCES
         Source/Processing/ImageConvert.cpp
