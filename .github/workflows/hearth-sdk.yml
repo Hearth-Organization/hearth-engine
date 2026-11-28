@@ -80,6 +80,14 @@ jobs:
           clang --version | head -1
           df -h "$GITHUB_WORKSPACE"
 
+      - name: Rust (the HearthRust gem builds Hearth Engine's Rust parts)
+        run: |
+          if ! command -v cargo >/dev/null 2>&1 && [ ! -x "$HOME/.cargo/bin/cargo" ]; then
+            curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+          fi
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          ("$HOME/.cargo/bin/cargo" --version || cargo --version)
+
       - name: Restore compiler cache
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:

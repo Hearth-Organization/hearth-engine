@@ -14,3 +14,16 @@ The whole engine in Hearth's own look, built from the approved mockups:
 
 - First Hearth Engine .deb: the engine SDK built on GitHub, `hearth-engine`, `hearth-engine-editor` and
   `hearth-engine-assets` commands, and a log of every run in `~/O3DE/HearthEngine/logs`.
+
+## The HearthRust gem (Nov 28, 2026)
+
+Hearth Engine's Rust parts in the game, built by cargo as part of the engine (`Gems/HearthRust`, Rust in
+`hearth-rust/hearth-ffi`):
+
+- **Hearth Script** component: runs a `.hs` file on an entity (`position()`, `move_to(x, y, z)`, `time()`,
+  `send(name, ...)` to the game), fires `start` and `tick(dt)`, reloads within a second of the file being saved
+  (the last good version keeps running on a mistake). Script Canvas and Lua: `HearthScriptRequestBus.Fire` /
+  `Reload`, and `HearthScriptNotificationBus` (`OnScriptSent`, `OnScriptMistake`, `OnScriptSaid`).
+- **Detail Mesh** component: Nanite-style detail for a `.glb`, `.obj` or `.hdetail` model with a standard material.
+  The pieces to draw are picked from the camera ten times a second; full detail up close, far fewer triangles far
+  away, no cracks. Shows in game mode (Play) for now.

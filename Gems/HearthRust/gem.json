@@ -1,0 +1,20 @@
+{
+    "gem_name": "HearthRust",
+    "version": "0.0.0",
+    "display_name": "Hearth Rust parts",
+    "license": "Apache-2.0 Or MIT",
+    "license_url": "https://github.com/o3de/o3de/blob/development/LICENSE.txt",
+    "origin": "Hearth Engine",
+    "origin_url": "https://hearthos.fun",
+    "type": "Code",
+    "summary": "Hearth Engine's Rust parts in the game: Hearth Script (the small language for what happens in a game) and Nanite-style detail for models.",
+    "canonical_tags": ["Gem"],
+    "user_tags": ["Hearth", "Scripting", "Rendering"],
+    "platforms": ["Linux"],
+    "icon_path": "preview.png",
+    "requirements": "Rust (cargo) to build. The Rust code is in the engine's hearth-rust folder.",
+    "documentation_url": "",
+    "dependencies": ["Atom_RPI", "Atom_Feature_Common"],
+    "compatible_engines": [],
+    "engine_api_dependencies": []
+}
