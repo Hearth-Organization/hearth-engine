@@ -38,8 +38,12 @@ fn colour_is_averaged_as_light() {
 
 #[test]
 fn cut_outs_keep_their_coverage_and_normals_stay_unit() {
-    // Thin solid strands on a see-through background, like leaves or a fence.
-    let fence = image(64, 64, |x, _| if x % 8 < 2 { [0.3, 0.6, 0.2, 1.0] } else { [0.3, 0.6, 0.2, 0.0] });
+    // Uneven leafy blobs on a see-through background.
+    let fence = image(64, 64, |x, y| {
+        let (fx, fy) = (x as f32, y as f32);
+        let leaf = ((fx * 0.37).sin() + (fy * 0.23).cos() + (fx * 0.11 + fy * 0.17).sin()) > 0.9;
+        if leaf { [0.3, 0.6, 0.2, 1.0] } else { [0.3, 0.6, 0.2, 0.0] }
+    });
     let want = coverage(&fence, 0.5);
     let c = chain(&fence, &Options { alpha_cutoff: Some(0.5), ..Options::default() });
     for level in c.iter().take(4) {
