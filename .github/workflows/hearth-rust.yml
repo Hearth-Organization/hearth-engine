@@ -60,7 +60,7 @@ jobs:
       - name: Tests
         env:
           HEARTH_NEED_GPU: "1"
-        run: cargo test 2>&1 | tee test.log; test ${PIPESTATUS[0]} -eq 0 || { grep -E -A2 "panicked|FAILED|error" test.log | head -40 | sed 's/^/::error::/'; exit 1; }
+        run: cargo test 2>&1 | tee test.log; test ${PIPESTATUS[0]} -eq 0 || { { grep -A3 "panicked at" test.log; grep -E "^test .*FAILED|^error" test.log; } | head -40 | sed 's/^/::error::/'; exit 1; }
 
       - name: Lint
         run: cargo clippy --all-targets -- -D warnings 2>&1 | tee clippy.log; test ${PIPESTATUS[0]} -eq 0 || { grep -E "^(error|warning)" -A3 clippy.log | head -40 | sed 's/^/::error::/'; exit 1; }
