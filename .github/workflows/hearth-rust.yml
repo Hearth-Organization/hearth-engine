@@ -46,7 +46,13 @@ jobs:
           restore-keys: hearth-rust-
 
       - name: Build
-        run: cargo build --all-targets
+        run: |
+          cargo build --all-targets 2>&1 | tee build.log; code=${PIPESTATUS[0]}
+          if [ $code -ne 0 ]; then
+            # Each error with the lines that say where and why, as annotations (CI logs can't be downloaded here).
+            awk '/^error/{n=8} n>0{print; n--}' build.log | head -c 60000 | awk 'BEGIN{RS="\n\n"} {gsub(/\n/,"%0A"); print "::error::" $0}' | head -60
+            exit $code
+          fi
 
       - name: Tests
         run: cargo test 2>&1 | tee test.log; test ${PIPESTATUS[0]} -eq 0 || { grep -E "panicked|FAILED|error" test.log | head -20 | sed 's/^/::error::/'; exit 1; }
