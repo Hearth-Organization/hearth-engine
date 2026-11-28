@@ -25,9 +25,9 @@ fn main() {
         }
         (Some("check"), Some(seed)) => {
             let s = Settings { seed: seed as u64, ..Settings::default() };
-            let r = 30;
+            let r: i32 = 30;
             let mut seen = std::collections::HashSet::new();
-            let mut todo = vec![(0, 0)];
+            let mut todo: Vec<(i32, i32)> = vec![(0, 0)];
             seen.insert((0, 0));
             while let Some((x, y)) = todo.pop() {
                 for (dx, dy) in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
