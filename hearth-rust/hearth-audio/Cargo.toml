@@ -1,0 +1,15 @@
+[package]
+name = "hearth-audio"
+version = "0.0.0"  # the owner picks version numbers; this one isn't shipped on its own
+description = "Hearth Engine's audio in Rust: Kira for sound, plus our own acoustics (muffled behind walls, echoes that fit the room) worked out with physics rays"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+# Kira (MIT OR Apache-2.0): game audio in Rust. Decoding by Symphonia (pure Rust).
+kira = { version = "0.12", default-features = false, features = ["cpal", "ogg", "vorbis", "wav", "mp3", "flac", "pcm"] }
+glam = { version = "0.34", features = ["serde", "mint-05"] }
+serde = { version = "1", features = ["derive"] }
+hearth-world = { path = "../hearth-world" }
+hearth-physics = { path = "../hearth-physics" }

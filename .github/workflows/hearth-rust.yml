@@ -30,8 +30,8 @@ jobs:
           show-progress: false
           lfs: false
 
-      - name: Software graphics (Mesa's Vulkan driver, so hearth-render can draw without a graphics card)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends mesa-vulkan-drivers libvulkan1 >/dev/null
+      - name: Software graphics (Mesa's Vulkan driver, so hearth-render can draw without a graphics card) and ALSA headers (hearth-audio)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends mesa-vulkan-drivers libvulkan1 libasound2-dev pkg-config >/dev/null
 
       - name: Rust
         run: |
