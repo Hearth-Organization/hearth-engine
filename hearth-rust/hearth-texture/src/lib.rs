@@ -96,7 +96,7 @@ pub fn to_rgba8(src: &[u8], source: Source, width: usize, height: usize, pitch: 
     for y in 0..height {
         let row = &src[y * pitch..y * pitch + width * bpp];
         let dst = &mut out[y * width * 4..(y + 1) * width * 4];
-        for (x, d) in dst.chunks_exact_mut(4).enumerate() {
+        for (x, d) in dst.as_chunks_mut::<4>().0.iter_mut().enumerate() {
             let p = &row[x * bpp..(x + 1) * bpp];
             let px = match source {
                 Source::Rgba8 => [p[0], p[1], p[2], p[3]],
@@ -133,7 +133,7 @@ pub fn decompress(data: &[u8], width: usize, height: usize, bc: Bc) -> Result<Ve
     let mut out = vec![0u8; width * height * 4];
     bc.format().decompress(data, width, height, &mut out);
     if matches!(bc, Bc::Bc4 | Bc::Bc5) {
-        for p in out.chunks_exact_mut(4) {
+        for p in out.as_chunks_mut::<4>().0.iter_mut() {
             if bc == Bc::Bc4 {
                 p[1] = 0;
             }
@@ -149,7 +149,7 @@ pub fn decompress(data: &[u8], width: usize, height: usize, bc: Bc) -> Result<Ve
 pub fn psnr(a: &[u8], b: &[u8], channels: &[usize]) -> f64 {
     let mut sum = 0f64;
     let mut n = 0usize;
-    for (pa, pb) in a.chunks_exact(4).zip(b.chunks_exact(4)) {
+    for (pa, pb) in a.as_chunks::<4>().0.iter().zip(b.as_chunks::<4>().0.iter()) {
         for &c in channels {
             let d = pa[c] as f64 - pb[c] as f64;
             sum += d * d;

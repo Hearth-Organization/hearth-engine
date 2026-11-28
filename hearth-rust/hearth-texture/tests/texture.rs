@@ -45,13 +45,13 @@ fn slower_is_at_least_as_good_and_odd_sizes_work() {
 fn bc1_ignores_alpha_and_bc1a_cuts_it_out() {
     let (w, h) = (8, 8);
     let mut src = picture(w, h);
-    for p in src.chunks_exact_mut(4) {
+    for p in src.as_chunks_mut::<4>().0.iter_mut() {
         p[3] = if p[0] > 128 { 255 } else { 0 };
     }
     let solid = decompress(&compress(&to_rgba8(&src, Source::Rgba8, w, h, w * 4, Bc::Bc1).unwrap(), w, h, Bc::Bc1, 2, [1.0; 3]), w, h, Bc::Bc1).unwrap();
-    assert!(solid.chunks_exact(4).all(|p| p[3] == 255));
+    assert!(solid.as_chunks::<4>().0.iter().all(|p| p[3] == 255));
     let cut = decompress(&compress(&to_rgba8(&src, Source::Rgba8, w, h, w * 4, Bc::Bc1a).unwrap(), w, h, Bc::Bc1a, 2, [1.0; 3]), w, h, Bc::Bc1a).unwrap();
-    for (a, b) in src.chunks_exact(4).zip(cut.chunks_exact(4)) {
+    for (a, b) in src.as_chunks::<4>().0.iter().zip(cut.as_chunks::<4>().0.iter()) {
         assert_eq!(a[3] == 0, b[3] == 0, "see-through pixels stay see-through");
     }
 }

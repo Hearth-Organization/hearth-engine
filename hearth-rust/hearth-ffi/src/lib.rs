@@ -457,7 +457,7 @@ pub unsafe extern "C" fn ht_decompress(bc: u32, data: *const u8, data_len: u64, 
         let row = &rgba[y * w * 4..(y + 1) * w * 4];
         let dst = &mut output[y * pitch..y * pitch + w * bpp];
         if as_float {
-            for (d, s) in dst.chunks_exact_mut(16).zip(row.chunks_exact(4)) {
+            for (d, s) in dst.as_chunks_mut::<16>().0.iter_mut().zip(row.as_chunks::<4>().0.iter()) {
                 for (k, v) in s.iter().enumerate() {
                     d[k * 4..k * 4 + 4].copy_from_slice(&(*v as f32 / 255.0).to_le_bytes());
                 }
