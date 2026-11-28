@@ -1,0 +1,13 @@
+# Hearth Engine's Rust parts (the owner, Nov 28, 2026: keep O3DE's C++ core, make Hearth's own parts Rust).
+# Built and tested on GitHub (.github/workflows/hearth-rust.yml), never only on a computer here.
+[workspace]
+resolver = "2"
+members = ["hearth-link"]
+
+[workspace.package]
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+
+[profile.release]
+opt-level = 3
+lto = "thin"

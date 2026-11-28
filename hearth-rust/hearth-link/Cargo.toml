@@ -1,0 +1,18 @@
+[package]
+name = "hearth-link"
+version = "0.0.0"  # the owner picks version numbers; this one isn't shipped on its own
+description = "Hearth Engine's link between its Rust parts and the editor: open levels, place things, Play, read the selection"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "hearth-link"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

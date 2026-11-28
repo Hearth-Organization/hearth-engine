@@ -1,0 +1,55 @@
+# Hearth Engine's Rust parts (hearth-rust/): build, test and lint on GitHub's free 4-core machine.
+# Only runs when something under hearth-rust/ (or this file) changes; the big SDK build ignores hearth-rust/.
+
+name: Hearth Engine Rust parts
+
+on:
+  push:
+    branches: [ "hearth/main" ]
+    paths: [ "hearth-rust/**", ".github/workflows/hearth-rust.yml" ]
+  workflow_dispatch:
+
+concurrency:
+  group: hearth-rust-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: hearth-rust
+    steps:
+      - name: "Checkout (no Git LFS, the Rust parts don't need the engine's big files)"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          show-progress: false
+          lfs: false
+
+      - name: Rust
+        run: |
+          rustup toolchain install stable --profile minimal --component clippy,rustfmt
+          rustc --version
+
+      - name: Keep built parts between runs
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            hearth-rust/target
+          key: hearth-rust-${{ hashFiles('hearth-rust/**/Cargo.toml', 'hearth-rust/Cargo.lock') }}
+          restore-keys: hearth-rust-
+
+      - name: Build
+        run: cargo build --all-targets
+
+      - name: Tests
+        run: cargo test 2>&1 | tee test.log; test ${PIPESTATUS[0]} -eq 0 || { grep -E "panicked|FAILED|error" test.log | head -20 | sed 's/^/::error::/'; exit 1; }
+
+      - name: Lint
+        run: cargo clippy --all-targets -- -D warnings 2>&1 | tee clippy.log; test ${PIPESTATUS[0]} -eq 0 || { grep -E "^(error|warning)" -A3 clippy.log | head -40 | sed 's/^/::error::/'; exit 1; }
