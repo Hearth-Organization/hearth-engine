@@ -8,7 +8,19 @@
 
 #include "QtViewPaneManager.h"
 
+#include <AzCore/Utils/Utils.h>
+
 #include <QCloseEvent>
+#include <QDateTime>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QProcess>
+#include <QSaveFile>
+#include <QToolButton>
+#include <QWindow>
 #include <QContextMenuEvent>
 #include <QCoreApplication>
 #include <QCursor>
@@ -26,7 +38,16 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <functional>
+
+#if defined(Q_OS_LINUX)
+#include <signal.h>
+#include <unistd.h>
+#else
+#define SIGSTOP 19
+#define SIGCONT 18
+#endif
 
 namespace
 {
@@ -102,11 +123,104 @@ HearthWorkspace::HearthWorkspace(QWidget* world)
     : m_world(world)
 {
     setObjectName(QStringLiteral("HearthWorkspace"));
-    auto* layout = new QVBoxLayout(this);
+    auto* outer = new QVBoxLayout(this);
+    outer->setContentsMargins(0, 0, 0, 0);
+    outer->setSpacing(0);
+
+    // The games row: this editor's game first, then the other games open in this window, then "+".
+    m_gamesRow = new QWidget(this);
+    m_gamesRow->setObjectName(QStringLiteral("HearthGamesRow"));
+    m_gamesRow->setStyleSheet(QStringLiteral("QWidget#HearthGamesRow { background-color: #0D0C0B;"
+                                             " border-bottom: 1px solid rgba(255, 255, 255, 14); }"));
+    auto* gamesLayout = new QHBoxLayout(m_gamesRow);
+    gamesLayout->setContentsMargins(8, 0, 8, 0);
+    gamesLayout->setSpacing(4);
+    m_games = new QTabBar(m_gamesRow);
+    m_games->setObjectName(QStringLiteral("HearthGameTabs"));
+    m_games->setDocumentMode(true);
+    m_games->setExpanding(false);
+    m_games->setDrawBase(false);
+    m_games->setTabsClosable(true);
+    m_games->setElideMode(Qt::ElideNone);
+    m_games->setCursor(Qt::PointingHandCursor);
+    m_games->setStyleSheet(QStringLiteral(
+        "QTabBar#HearthGameTabs::tab { background-color: transparent; color: #8D857B; border: none;"
+        " border-bottom: 2px solid transparent; padding: 7px 14px; margin: 0px; font-weight: 600; }"
+        "QTabBar#HearthGameTabs::tab:hover { color: #ECE6DE; }"
+        "QTabBar#HearthGameTabs::tab:selected { color: #ECE6DE; border-bottom: 2px solid #E8743B; }"));
+    gamesLayout->addWidget(m_games);
+    m_addGame = new QToolButton(m_gamesRow);
+    m_addGame->setText(QStringLiteral("+"));
+    m_addGame->setToolTip(tr("Open another game in this window"));
+    m_addGame->setCursor(Qt::PointingHandCursor);
+    m_addGame->setStyleSheet(QStringLiteral("QToolButton { color: #B8AFA4; background: transparent; border: none;"
+                                            " font-size: 18px; padding: 2px 10px; } QToolButton:hover { color: #ECE6DE; }"));
+    connect(m_addGame, &QToolButton::clicked, this, &HearthWorkspace::GamesMenu);
+    gamesLayout->addWidget(m_addGame);
+    gamesLayout->addStretch(1);
+    outer->addWidget(m_gamesRow);
+
+    m_gameStack = new QStackedWidget(this);
+    outer->addWidget(m_gameStack, 1);
+    m_local = new QWidget(m_gameStack);
+    m_gameStack->addWidget(m_local);
+
+    const QString here = QString::fromUtf8(AZ::Utils::GetProjectPath().c_str());
+    QString hereName = QFileInfo(here).fileName();
+    {
+        QFile projectFile(QDir(here).filePath(QStringLiteral("project.json")));
+        if (projectFile.open(QIODevice::ReadOnly))
+        {
+            const QJsonObject data = QJsonDocument::fromJson(projectFile.readAll()).object();
+            const QString display = data.value(QStringLiteral("display_name")).toString();
+            hereName = display.isEmpty() ? data.value(QStringLiteral("project_name")).toString(hereName) : display;
+        }
+    }
+    const int hereTab = m_games->addTab(hereName);
+    m_games->setTabData(hereTab, here);
+    m_games->setTabButton(hereTab, QTabBar::RightSide, nullptr);   // this editor's own game isn't closed from here
+    m_games->setTabButton(hereTab, QTabBar::LeftSide, nullptr);
+    connect(m_games, &QTabBar::currentChanged, this, &HearthWorkspace::ShowGame);
+    connect(m_games, &QTabBar::tabCloseRequested, this, &HearthWorkspace::CloseGame);
+
+    if (Embedded())
+    {
+        // A game shown inside another editor: that editor has the games row. Say where our window is, once shown.
+        m_gamesRow->setVisible(false);
+        auto* tell = new QTimer(this);
+        connect(tell, &QTimer::timeout, this, [this, tell]()
+        {
+            QWidget* top = window();
+            if (!top || !top->isVisible() || !top->windowHandle())
+            {
+                return;
+            }
+            QSaveFile out(qEnvironmentVariable("HEARTH_EMBED_FILE"));
+            if (out.open(QIODevice::WriteOnly))
+            {
+                QJsonObject data;
+                data[QStringLiteral("winId")] = QString::number(static_cast<qulonglong>(top->winId()));
+                data[QStringLiteral("pid")] = static_cast<qint64>(QCoreApplication::applicationPid());
+                out.write(QJsonDocument(data).toJson(QJsonDocument::Compact));
+                out.commit();
+            }
+            tell->stop();
+            tell->deleteLater();
+        });
+        tell->start(200);
+    }
+    else
+    {
+        m_memoryTimer = new QTimer(this);
+        connect(m_memoryTimer, &QTimer::timeout, this, &HearthWorkspace::LookAfterMemory);
+        m_memoryTimer->start(5000);
+    }
+
+    auto* layout = new QVBoxLayout(m_local);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
-    m_tabs = new QTabBar(this);
+    m_tabs = new QTabBar(m_local);
     m_tabs->setObjectName(QStringLiteral("HearthWorkspaceTabs"));
     m_tabs->setDocumentMode(true);
     m_tabs->setExpanding(false);
@@ -126,7 +240,7 @@ HearthWorkspace::HearthWorkspace(QWidget* world)
     m_tabs->installEventFilter(this);
     layout->addWidget(m_tabs);
 
-    m_stack = new QStackedWidget(this);
+    m_stack = new QStackedWidget(m_local);
     m_stack->addWidget(world);
     layout->addWidget(m_stack, 1);
 
@@ -228,6 +342,7 @@ void HearthWorkspace::Show(const QString& paneName)
     {
         return;
     }
+    m_games->setCurrentIndex(0);   // a tool of this editor's own game
     m_tabs->setCurrentIndex(tab);
     m_stack->setCurrentWidget(dock);
     if (QWidget* content = dock->widget())
@@ -238,6 +353,10 @@ void HearthWorkspace::Show(const QString& paneName)
 
 void HearthWorkspace::ShowWorld()
 {
+    if (m_games)
+    {
+        m_games->setCurrentIndex(0);
+    }
     m_tabs->setCurrentIndex(0);
     m_stack->setCurrentWidget(m_world);
 }
@@ -454,4 +573,398 @@ void HearthWorkspace::Forget()
         ShowWorld();
     }
     m_tabs->setVisible(m_tabs->count() > 1);
+}
+
+// ---------- games: one window, many games ----------
+
+bool HearthWorkspace::Embedded()
+{
+    return qEnvironmentVariableIsSet("HEARTH_EMBED_FILE");
+}
+
+namespace
+{
+    // MB from /proc/meminfo (MemTotal, MemAvailable); 0 when it can't be read.
+    qint64 MemInfo(const char* key)
+    {
+        QFile file(QStringLiteral("/proc/meminfo"));
+        if (!file.open(QIODevice::ReadOnly))
+        {
+            return 0;
+        }
+        const QByteArray want = QByteArray(key) + ':';
+        for (const QByteArray& line : file.readAll().split('\n'))
+        {
+            if (line.startsWith(want))
+            {
+                return line.mid(want.size()).trimmed().split(' ').value(0).toLongLong() / 1024;
+            }
+        }
+        return 0;
+    }
+
+    QString GameName(const QString& path)
+    {
+        QFile projectFile(QDir(path).filePath(QStringLiteral("project.json")));
+        if (projectFile.open(QIODevice::ReadOnly))
+        {
+            const QJsonObject data = QJsonDocument::fromJson(projectFile.readAll()).object();
+            const QString display = data.value(QStringLiteral("display_name")).toString();
+            return display.isEmpty() ? data.value(QStringLiteral("project_name")).toString(QFileInfo(path).fileName()) : display;
+        }
+        return QFileInfo(path).fileName();
+    }
+
+    // Asks a game's editor to save its level, through its Claude bridge's file inbox (the same as the helper does).
+    void AskToSave(const QString& projectPath)
+    {
+        const QString folder = QDir(projectPath).filePath(QStringLiteral("user/ClaudeBridge"));
+        QFile session(QDir(folder).filePath(QStringLiteral("session.json")));
+        if (!session.open(QIODevice::ReadOnly))
+        {
+            return;
+        }
+        const QString token = QJsonDocument::fromJson(session.readAll()).object().value(QStringLiteral("token")).toString();
+        if (token.isEmpty())
+        {
+            return;
+        }
+        QDir().mkpath(QDir(folder).filePath(QStringLiteral("inbox")));
+        const QString id = QStringLiteral("workspace-%1").arg(QDateTime::currentMSecsSinceEpoch());
+        QJsonObject request;
+        request[QStringLiteral("id")] = id;
+        request[QStringLiteral("token")] = token;
+        request[QStringLiteral("op")] = QStringLiteral("python");
+        request[QStringLiteral("code")] = QStringLiteral(
+            "import azlmbr.legacy.general as g\nif g.is_in_game_mode(): g.exit_game_mode()\ng.save_level()\nprint('saved')\n");
+        QSaveFile out(QDir(folder).filePath(QStringLiteral("inbox/%1.json").arg(id)));
+        if (out.open(QIODevice::WriteOnly))
+        {
+            out.write(QJsonDocument(request).toJson(QJsonDocument::Compact));
+            out.commit();
+        }
+    }
+
+    void Signal(QProcess* process, [[maybe_unused]] int which)
+    {
+#if defined(Q_OS_LINUX)
+        if (process && process->processId() > 0)
+        {
+            ::kill(static_cast<pid_t>(process->processId()), which);
+        }
+#endif
+    }
+}
+
+int HearthWorkspace::GameTab(const QString& path) const
+{
+    for (int i = 0; i < m_games->count(); ++i)
+    {
+        if (QFileInfo(m_games->tabData(i).toString()).canonicalFilePath() == QFileInfo(path).canonicalFilePath())
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+HearthWorkspace::Game* HearthWorkspace::GameAt(int tab)
+{
+    const QString path = m_games->tabData(tab).toString();
+    for (Game& game : m_otherGames)
+    {
+        if (game.path == path)
+        {
+            return &game;
+        }
+    }
+    return nullptr;
+}
+
+void HearthWorkspace::GamesMenu()
+{
+    const QString here = m_games->tabData(0).toString();
+    const QDir folder = QFileInfo(here).dir();
+    QMenu menu(this);
+    for (const QFileInfo& entry : folder.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name))
+    {
+        if (!QFileInfo::exists(QDir(entry.filePath()).filePath(QStringLiteral("project.json"))))
+        {
+            continue;
+        }
+        const QString path = entry.canonicalFilePath();
+        const bool open = GameTab(path) >= 0;
+        QAction* action = menu.addAction(GameName(path) + (open ? tr("  · open") : QString()));
+        connect(action, &QAction::triggered, this, [this, path]() { OpenGame(path); });
+    }
+    if (menu.isEmpty())
+    {
+        menu.addAction(tr("No other games in %1").arg(folder.path()))->setEnabled(false);
+    }
+    menu.exec(m_addGame->mapToGlobal(QPoint(0, m_addGame->height())));
+}
+
+void HearthWorkspace::OpenGame(const QString& projectPath)
+{
+    const int existing = GameTab(projectPath);
+    if (existing >= 0)
+    {
+        m_games->setCurrentIndex(existing);
+        return;
+    }
+    Game game;
+    game.path = QFileInfo(projectPath).canonicalFilePath();
+    game.name = GameName(game.path);
+    game.page = new QWidget(m_gameStack);
+    game.page->setStyleSheet(QStringLiteral("background-color: #0D0C0B;"));
+    auto* pageLayout = new QVBoxLayout(game.page);
+    pageLayout->setContentsMargins(0, 0, 0, 0);
+    game.note = new QLabel(game.page);
+    game.note->setAlignment(Qt::AlignCenter);
+    game.note->setStyleSheet(QStringLiteral("color: #B8AFA4; font-size: 15px;"));
+    pageLayout->addWidget(game.note);
+    m_gameStack->addWidget(game.page);
+    m_otherGames.push_back(game);
+    const int tab = m_games->addTab(game.name);
+    m_games->setTabData(tab, game.path);
+    m_games->setTabToolTip(tab, game.path);
+    StartGame(m_otherGames.last());
+    m_games->setCurrentIndex(tab);
+}
+
+void HearthWorkspace::StartGame(Game& game)
+{
+    game.closedForMemory = false;
+    game.embedded = false;
+    game.paused = false;
+    game.note->setText(tr("Opening %1…").arg(game.name));
+    game.note->show();
+    const QString runtime = qEnvironmentVariable("XDG_RUNTIME_DIR", QDir::tempPath());
+    game.embedFile = QDir(runtime).filePath(QStringLiteral("hearth-embed-%1-%2.json")
+        .arg(QCoreApplication::applicationPid()).arg(QDateTime::currentMSecsSinceEpoch()));
+    QFile::remove(game.embedFile);
+    auto* process = new QProcess(this);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("HEARTH_EMBED_FILE"), game.embedFile);
+    env.insert(QStringLiteral("QT_QPA_PLATFORM"), QStringLiteral("xcb"));   // a window this one can show inside it
+    env.remove(QStringLiteral("LD_LIBRARY_PATH"));
+    process->setProcessEnvironment(env);
+    process->setWorkingDirectory(game.path);
+    process->setProgram(QCoreApplication::applicationFilePath());
+    process->setArguments({ QStringLiteral("--project-path=%1").arg(game.path) });
+    process->setProcessChannelMode(QProcess::ForwardedChannels);
+    game.process = process;
+    const QString path = game.path;
+    connect(process, &QProcess::finished, this, [this, path]()
+    {
+        const int tab = GameTab(path);
+        Game* g = tab >= 0 ? GameAt(tab) : nullptr;
+        if (!g || g->closedForMemory)
+        {
+            return;
+        }
+        // It closed (from its own File menu, or it stopped): its tab goes.
+        if (g->page)
+        {
+            g->page->deleteLater();
+        }
+        m_games->removeTab(tab);
+        m_otherGames.erase(std::remove_if(m_otherGames.begin(), m_otherGames.end(), [&](const Game& x) { return x.path == path; }),
+                           m_otherGames.end());
+    });
+    process->start();
+
+    // Waits for its window, then shows it in the tab.
+    auto* wait = new QTimer(this);
+    const qint64 started = QDateTime::currentMSecsSinceEpoch();
+    connect(wait, &QTimer::timeout, this, [this, path, wait, started]()
+    {
+        const int tab = GameTab(path);
+        Game* g = tab >= 0 ? GameAt(tab) : nullptr;
+        if (!g || !g->process || g->process->state() == QProcess::NotRunning)
+        {
+            wait->deleteLater();
+            return;
+        }
+        if (QFile::exists(g->embedFile))
+        {
+            wait->stop();
+            wait->deleteLater();
+            Embed(*g);
+        }
+        else if (QDateTime::currentMSecsSinceEpoch() - started > 5 * 60 * 1000)
+        {
+            wait->stop();
+            wait->deleteLater();
+            g->note->setText(tr("%1 is taking a long time to open. It's still starting; its own window will show when it's ready.").arg(g->name));
+        }
+    });
+    wait->start(250);
+}
+
+void HearthWorkspace::Embed(Game& game)
+{
+    QFile file(game.embedFile);
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        return;
+    }
+    const WId id = static_cast<WId>(QJsonDocument::fromJson(file.readAll()).object().value(QStringLiteral("winId")).toString().toULongLong());
+    file.close();
+    QFile::remove(game.embedFile);
+    if (QGuiApplication::platformName() != QLatin1String("xcb") || !id)
+    {
+        // Only X11 lets a window be shown inside another: it stays its own window, still one click away here.
+        game.note->setText(tr("%1 is open in its own window (this desktop can't show it inside this one).").arg(game.name));
+        return;
+    }
+    QWindow* foreign = QWindow::fromWinId(id);
+    if (!foreign)
+    {
+        game.note->setText(tr("%1 is open in its own window.").arg(game.name));
+        return;
+    }
+    QWidget* container = QWidget::createWindowContainer(foreign, game.page);
+    container->setFocusPolicy(Qt::StrongFocus);
+    container->setMinimumSize(320, 200);
+    game.page->layout()->addWidget(container);
+    game.note->hide();
+    game.embedded = true;
+    if (m_gameStack->currentWidget() == game.page)
+    {
+        container->setFocus();
+    }
+}
+
+void HearthWorkspace::ShowGame(int tab)
+{
+    if (tab < 0)
+    {
+        return;
+    }
+    if (tab == 0)
+    {
+        m_gameStack->setCurrentWidget(m_local);
+        return;
+    }
+    Game* game = GameAt(tab);
+    if (!game || !game->page)
+    {
+        return;
+    }
+    if (game->closedForMemory)
+    {
+        StartGame(*game);   // it was closed to free memory: open it again
+    }
+    else if (game->paused)
+    {
+        Signal(game->process, SIGCONT);
+        game->paused = false;
+    }
+    game->lastShown = QDateTime::currentMSecsSinceEpoch();
+    m_gameStack->setCurrentWidget(game->page);
+}
+
+void HearthWorkspace::SaveAndStop(Game& game, bool forMemory)
+{
+    QPointer<QProcess> process = game.process;
+    if (!process)
+    {
+        return;
+    }
+    if (game.paused)
+    {
+        Signal(process, SIGCONT);
+        game.paused = false;
+    }
+    game.closedForMemory = forMemory;
+    AskToSave(game.path);
+    // Gives the save a moment, then closes it; stops it for good if it hasn't closed after 20 seconds.
+    QTimer::singleShot(4000, this, [process]() { if (process) process->terminate(); });
+    QTimer::singleShot(20000, this, [process]() { if (process && process->state() != QProcess::NotRunning) process->kill(); });
+    if (forMemory)
+    {
+        game.embedded = false;
+        if (game.page && game.page->layout())
+        {
+            while (game.page->layout()->count() > 1)
+            {
+                QLayoutItem* item = game.page->layout()->takeAt(1);
+                if (item->widget())
+                {
+                    item->widget()->deleteLater();
+                }
+                delete item;
+            }
+        }
+        game.note->setText(tr("%1 was saved and closed to free memory. Click its tab to open it again.").arg(game.name));
+        game.note->show();
+        const int tab = GameTab(game.path);
+        if (tab >= 0)
+        {
+            m_games->setTabText(tab, tr("%1 · closed").arg(game.name));
+        }
+    }
+}
+
+void HearthWorkspace::CloseGame(int tab)
+{
+    Game* game = GameAt(tab);
+    if (!game)
+    {
+        return;
+    }
+    const QString path = game->path;
+    QPointer<QWidget> page = game->page;
+    SaveAndStop(*game, false);
+    m_games->removeTab(tab);
+    m_otherGames.erase(std::remove_if(m_otherGames.begin(), m_otherGames.end(), [&](const Game& x) { return x.path == path; }),
+                       m_otherGames.end());
+    if (page)
+    {
+        page->deleteLater();
+    }
+}
+
+void HearthWorkspace::LookAfterMemory()
+{
+    if (m_otherGames.isEmpty())
+    {
+        return;
+    }
+    // A laptop-sized computer (under 12 GB): the games you aren't looking at are paused after half a minute.
+    const qint64 total = MemInfo("MemTotal");
+    const bool small = total > 0 && total < 12 * 1024;
+    const qint64 now = QDateTime::currentMSecsSinceEpoch();
+    QWidget* shown = m_gameStack->currentWidget();
+    for (Game& game : m_otherGames)
+    {
+        if (game.page == shown)
+        {
+            game.lastShown = now;
+            continue;
+        }
+        if (small && !game.paused && !game.closedForMemory && game.embedded && now - game.lastShown > 30 * 1000)
+        {
+            Signal(game.process, SIGSTOP);
+            game.paused = true;
+        }
+    }
+    // Memory running short: the background game used longest ago is saved and closed.
+    const qint64 available = MemInfo("MemAvailable");
+    if (available > 0 && available < 1200)
+    {
+        Game* oldest = nullptr;
+        for (Game& game : m_otherGames)
+        {
+            if (game.page != shown && !game.closedForMemory && game.process && (!oldest || game.lastShown < oldest->lastShown))
+            {
+                oldest = &game;
+            }
+        }
+        if (oldest)
+        {
+            SaveAndStop(*oldest, true);
+        }
+    }
 }

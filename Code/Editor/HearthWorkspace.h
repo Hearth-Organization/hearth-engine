@@ -11,6 +11,12 @@
  * A tool can still be pulled out into a window of its own when it's needed (the owner, Nov 28): drag its tab off
  * the row, or right-click the tab › Open in its own window. The window's "Put back in the tabs" button returns it.
  * Closing that window closes the tool. Opening the tool again while it's out brings its window to the front.
+ *
+ * Games (the owner, Nov 28: one editor, many games, "without loading or switching need to just work"): a row of game
+ * tabs over everything. The first is the game this editor has open; "+" opens another game in the same window.
+ * Each other game runs in its own engine (O3DE loads one game per program) and its window is shown inside its tab
+ * (X11), so switching is instant. On a computer with little memory, the games you aren't looking at are paused,
+ * and when memory runs short the one used longest ago is saved and closed (its tab says so; a click reopens it).
  */
 #pragma once
 
@@ -25,6 +31,10 @@
 #endif
 
 QT_FORWARD_DECLARE_CLASS(QDockWidget)
+QT_FORWARD_DECLARE_CLASS(QLabel)
+QT_FORWARD_DECLARE_CLASS(QProcess)
+QT_FORWARD_DECLARE_CLASS(QTimer)
+QT_FORWARD_DECLARE_CLASS(QToolButton)
 QT_FORWARD_DECLARE_CLASS(QEvent)
 QT_FORWARD_DECLARE_CLASS(QPoint)
 QT_FORWARD_DECLARE_CLASS(QStackedWidget)
@@ -55,6 +65,11 @@ public:
     //! Puts a pulled-out tool back into a tab.
     void PutBack(const QString& paneName);
 
+    //! Opens another game in a tab of this window (or brings its tab to the front).
+    void OpenGame(const QString& projectPath);
+    //! True when this editor is a game shown inside another editor's window.
+    static bool Embedded();
+
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -67,8 +82,38 @@ private:
     int TabFor(const QString& paneName) const;
     void AddTab(const QString& paneName);
 
+    struct Game
+    {
+        QString path;
+        QString name;
+        QPointer<QProcess> process;
+        QPointer<QWidget> page;
+        QPointer<QLabel> note;
+        QString embedFile;
+        qint64 lastShown = 0;
+        bool paused = false;
+        bool embedded = false;
+        bool closedForMemory = false;
+    };
+    void GamesMenu();
+    void ShowGame(int tab);
+    void CloseGame(int tab);
+    void StartGame(Game& game);
+    void Embed(Game& game);
+    void SaveAndStop(Game& game, bool forMemory);
+    void LookAfterMemory();
+    int GameTab(const QString& path) const;
+    Game* GameAt(int tab);
+
     QTabBar* m_tabs = nullptr;
     QStackedWidget* m_stack = nullptr;
+    QTabBar* m_games = nullptr;
+    QToolButton* m_addGame = nullptr;
+    QWidget* m_gamesRow = nullptr;
+    QStackedWidget* m_gameStack = nullptr;
+    QWidget* m_local = nullptr;   //!< this editor's own game: its tool tabs and the World
+    QList<Game> m_otherGames;
+    QTimer* m_memoryTimer = nullptr;
     QWidget* m_world = nullptr;
     QHash<QString, QPointer<QDockWidget>> m_tools;
     QHash<QString, QPointer<QWidget>> m_windows;   //!< the tools pulled out into windows of their own
