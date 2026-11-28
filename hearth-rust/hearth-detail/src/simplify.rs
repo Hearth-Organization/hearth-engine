@@ -111,7 +111,7 @@ pub fn simplify(tris: &[Tri], topo: &Topology, target: usize) -> Simplified {
             border.insert(b);
         }
     }
-    let locked: Vec<bool> = (0..n).map(|v| topo.seam[global[v] as usize] || border.contains(&pid[v])).collect();
+    let locked: Vec<bool> = (0..n).map(|v| topo.seam[pid[v] as usize] || border.contains(&pid[v])).collect();
 
     let mut quadric = vec![Quadric::default(); n];
     let mut around: Vec<Vec<usize>> = vec![Vec::new(); n];

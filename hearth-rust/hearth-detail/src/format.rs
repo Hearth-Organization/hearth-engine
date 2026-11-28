@@ -30,7 +30,7 @@ fn put_sphere(out: &mut Vec<u8>, s: &Sphere) {
 }
 
 pub fn write(d: &Detail) -> Vec<u8> {
-    let mut out = Vec::with_capacity(24 + d.vertices.len() * 32 + d.indices.len() * 4 + d.clusters.len() * 76);
+    let mut out = Vec::with_capacity(24 + d.vertices.len() * 32 + d.indices.len() * 4 + d.clusters.len() * 68);
     out.extend_from_slice(MAGIC);
     for x in [FORMAT, d.vertices.len() as u32, d.indices.len() as u32, d.clusters.len() as u32, d.levels] {
         put_u(&mut out, x);
@@ -85,7 +85,7 @@ pub fn read(b: &[u8]) -> Result<Detail, String> {
         return Err(format!("this detail file is format {format}; this reads format {FORMAT}"));
     }
     let (nv, ni, nc, levels) = (r.u()? as usize, r.u()? as usize, r.u()? as usize, r.u()?);
-    let need = 24 + nv * 32 + ni * 4 + nc * 76;
+    let need = 24 + nv * 32 + ni * 4 + nc * 68;
     if b.len() < need {
         return Err("the file ends too soon".into());
     }
