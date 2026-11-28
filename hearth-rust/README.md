@@ -32,6 +32,10 @@ of its own). Built and tested on GitHub only (`.github/workflows/hearth-rust.yml
   shift), groups that spread out at the goal, fighting, gathering, training with costs and supply, buildings that
   block paths, fog of war per team, drag-select, click-select and control groups, and events for sounds and Hearth
   Script. The same orders always give the same game (for multiplayer that sends only orders).
+- `hearth-kits`: the other genres' parts. Platformer movement (named feel numbers, coyote time, jump buffer, short
+  hops), dialogue written as plain text with choices and remembered flags, quests that count game events and unlock
+  the next, inventory stacks and crafting (with workbenches), turn-based tactics (turn order by speed, where a unit
+  can walk, who it can hit), and tower defense (waves, paths that change when towers go up, never fully blocked).
 
 Next, in this order: Nanite-style detail in Atom, wiring Hearth Script into the game, the Level Generator's core, packaging and Share, import
 checks, safe saving.

@@ -1,0 +1,10 @@
+[package]
+name = "hearth-kits"
+version = "0.0.0"  # the owner picks version numbers; this one isn't shipped on its own
+description = "Hearth Engine's genre kits: platformer movement, dialogue, quests, inventory and crafting, turn-based tactics, tower defense"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+hearth-rts = { path = "../hearth-rts" }
