@@ -70,25 +70,13 @@ pub fn walls_between(p: &Physics, from: Vec3, to: Vec3, ignore_a: Option<Entity>
         return 0;
     }
     let d = dir / total;
-    let mut at = from;
-    let mut left = total;
+    let mut skip: Vec<Entity> = ignore_a.into_iter().chain(ignore_b).collect();
     let mut walls = 0;
+    // Each ray passes through the walls already counted, so each wall is counted once however thick it is.
     while walls < 16 {
-        let Some((hit, dist)) = p.ray(at, d, left, ignore_a) else { break };
-        if Some(hit) == ignore_b {
-            break;
-        }
+        let Some((hit, _)) = p.ray_past(from, d, total, &skip) else { break };
         walls += 1;
-        // Step through the wall: find its far side with a ray back toward us from beyond it.
-        let probe = (dist + 4.0).min(left);
-        let back_from = at + d * probe;
-        let exit = p.ray(back_from, -d, probe, None).map(|(_, b)| probe - b).unwrap_or(dist);
-        let step = exit.max(dist) + 0.01;
-        at += d * step;
-        left -= step;
-        if left <= 0.0 {
-            break;
-        }
+        skip.push(hit);
     }
     walls
 }

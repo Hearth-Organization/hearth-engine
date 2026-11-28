@@ -219,10 +219,14 @@ impl Physics {
 
     /// What a ray from `from` along `dir` hits first, and how far away (within `max`).
     pub fn ray(&self, from: Vec3, dir: Vec3, max: f32, ignore: Option<Entity>) -> Option<(Entity, f32)> {
-        let mut filter = QueryFilter::default();
-        if let Some(h) = ignore.and_then(|e| self.bodies.get(&e)) {
-            filter = filter.exclude_rigid_body(*h);
-        }
+        self.ray_past(from, dir, max, ignore.as_slice())
+    }
+
+    /// A ray that passes through the given entities.
+    pub fn ray_past(&self, from: Vec3, dir: Vec3, max: f32, ignore: &[Entity]) -> Option<(Entity, f32)> {
+        let skip: Vec<_> = ignore.iter().filter_map(|e| self.bodies.get(e).copied()).collect();
+        let pred = |_: rapier3d::geometry::ColliderHandle, c: &rapier3d::geometry::Collider| c.parent().is_none_or(|p| !skip.contains(&p));
+        let filter = QueryFilter::default().predicate(&pred);
         let q = self.world.query_pipeline_with_filter(filter);
         let (collider, toi) = q.cast_ray(&Ray::new(to_r(from), to_r(dir.normalize_or_zero())), max, true)?;
         let parent = self.world.colliders.get(collider)?.parent()?;
