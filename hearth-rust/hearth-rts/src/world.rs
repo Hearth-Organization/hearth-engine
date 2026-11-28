@@ -304,7 +304,7 @@ impl World {
         let gap = movers.iter().map(|&i| self.kinds[self.units[i].kind].radius).fold(0.0, f32::max) * 2.2;
         let side = (movers.len() as f32).sqrt().ceil() as i32;
         let mut spots: Vec<Pos> = Vec::new();
-        let mut r = 0;
+        let mut r: i32 = 0;
         while spots.len() < movers.len() * 2 && r < 64 {
             for dy in -r..=r {
                 for dx in -r..=r {
