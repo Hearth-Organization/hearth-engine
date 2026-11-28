@@ -10,8 +10,8 @@ notices kept next to the code (ideas only from closed engines).
 | 2 | Sound muffled behind walls, echoes in halls | Steam Audio (Apache-2.0) | an audio gem | planned |
 | 3 | Edit the game while it runs; see the running game's things and their values live | Godot (MIT) | editor + game | planned |
 | 4 | Jolt physics (fast, used by Godot 4) | Jolt Physics (MIT), Rust bindings | physics, the rewrite | planned |
-| 5 | Levels from a few example tiles (Wave Function Collapse) | WFC (MIT) | hearth-levelgen | building |
-| 6 | Rollback netcode for smooth co-op | GGRS (MIT/Apache-2.0) | co-op, the RTS kit | planned |
+| 5 | Levels from a few example tiles (Wave Function Collapse) | WFC (MIT) | hearth-levelgen | done (`hearth-levelgen::wfc`) |
+| 6 | Rollback netcode for smooth co-op | GGRS (MIT/Apache-2.0) | co-op, the RTS kit | done (`hearth-net`, proven by GGRS's rollback check and a two-player test) |
 | 7 | Game code in Rust that reloads while running; an animation state editor | Fyrox (MIT) | Hearth Script / Rust game code, animation | planned |
 | 8 | Linked prefabs: change one, every copy follows, copies keep their own tweaks | Stride (MIT) | editor | planned |
 | 9 | Build and test levels inside Blender | Armory3D (zlib) | a Blender add-on | planned |

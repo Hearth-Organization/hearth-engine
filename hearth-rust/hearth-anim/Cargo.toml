@@ -1,0 +1,10 @@
+[package]
+name = "hearth-anim"
+version = "0.0.0"  # the owner picks version numbers; this one isn't shipped on its own
+description = "Hearth Engine's animation: a state machine for characters (idle, walk, run, attack) with blending, an animate-anything timeline, and linked prefabs"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+serde_json = { version = "1", features = ["preserve_order"] }
