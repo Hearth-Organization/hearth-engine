@@ -53,7 +53,8 @@ fn a_lit_scene_renders_and_is_saved() {
         .collect();
     assert!(ball_px[0] > ball_px[1] + 30 && ball_px[0] > 60, "the middle should be the red ball: {}", samples.join(" "));
     let sky = pixel(&img, w, 2, 2);
-    assert!(bright(sky) < 60, "the corner should be the background: {sky:?}");
+    // The background colour, linear (0.02, 0.02, 0.03), shown in sRGB: about (39, 39, 48).
+    assert!((sky[0] as i32 - 39).abs() <= 3 && (sky[2] as i32 - 48).abs() <= 3, "the corner should be the background: {sky:?}");
     // Without the lights the ball goes dark.
     scene.sun = None;
     scene.lights.clear();
